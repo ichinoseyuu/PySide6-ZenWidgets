@@ -7,12 +7,11 @@ from ZenWidgets.component.base import (
     ZFlashEffect,
     ZAnimatedColor,
     ZAnimatedFloat,
-    ZStyleController,
-    ZWidget,
-    ZContentWidget
+    ZColorController,
+    ZWidget
 )
 from ZenWidgets.core import ZDebug,ZPosition,ZPadding,ZMargin
-from ZenWidgets.gui import ZToolTipStyleData,ZWidgetEffect
+from ZenWidgets.gui import ZToolTipColorData,ZWidgetEffect
 
 # region ZToolTip
 class ZToolTip(ZWidget):
@@ -21,8 +20,11 @@ class ZToolTip(ZWidget):
     radiusCtrl: ZAnimatedFloat
     flashCtrl: ZFlashEffect
     textColorCtrl: ZAnimatedColor
-    styleDataCtrl: ZStyleController[ZToolTipStyleData]
-    __controllers_kwargs__ = {'styleDataCtrl':{'key': 'ZToolTip'}}
+    colorDataCtrl: ZColorController[ZToolTipColorData]
+    __controllers_kwargs__ = {
+        'colorDataCtrl': {'key': 'ZToolTip'},
+        'radiusCtrl': {'value': 4.0},
+        }
 
     class Mode(IntEnum):
         TrackMouse = auto()
@@ -69,19 +71,18 @@ class ZToolTip(ZWidget):
 
         self.widgetSizeCtrl.animation.init(factor=0.15, bias=1)
         self.widgetPositionCtrl.animation.init(factor=0.1, bias=1)
-        self._init_style_()
+        self._init_color_data_()
         self.resize(self.sizeHint())
 
     # region private
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.textColorCtrl.color = data.Text
         self.bodyColorCtrl.color = data.Body
         self.borderColorCtrl.color = data.Border
-        self.radiusCtrl.value = 5.0
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.textColorCtrl.setColorTo(data.Text)
         self.bodyColorCtrl.setColorTo(data.Body)
         self.borderColorCtrl.setColorTo(data.Border)

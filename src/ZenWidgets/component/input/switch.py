@@ -1,25 +1,15 @@
-from enum import Enum
-from dataclasses import dataclass
 from PySide6.QtGui import QPainter, QPen
 from PySide6.QtCore import Qt, QRectF, QPointF
-from PySide6.QtWidgets import QWidget
 from ZenWidgets.component.base import (
     ZAnimatedColor,
     ZAnimatedOpacity,
     ZAnimatedFloat,
-    ZStyleController,
+    ZColorController,
     ZWidget,
     ABCToggleButton
 )
 from ZenWidgets.core import ZDebug
-from ZenWidgets.gui import ZSwitchStyleData
-
-@dataclass
-class SwitchStyle:
-    Height: int
-    Width: int
-    HandleDiameter: int
-    Margin: int
+from ZenWidgets.gui import ZSwitchColorData,ZSwitchStyle
 
 # region SwitchHandle
 class SwitchHandle(ZWidget):
@@ -43,42 +33,32 @@ class SwitchHandle(ZWidget):
         event.accept()
 
 # region ZSwitch
-class ZSwitch(ABCToggleButton):
+class ZSwitch(ABCToggleButton[ZSwitchStyle]):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     opacityCtrl: ZAnimatedOpacity
-    styleDataCtrl: ZStyleController[ZSwitchStyleData]
-    __controllers_kwargs__ = {'styleDataCtrl':{'key': 'ZSwitch'}}
-
-    class Style(Enum):
-        Compact = SwitchStyle(Height=20, Width=40, HandleDiameter=16, Margin=2)
-        Standard = SwitchStyle(Height=24, Width=48, HandleDiameter=18, Margin=3)
-        Comfortable = SwitchStyle(Height=28, Width=56, HandleDiameter=22 , Margin=3)
-
+    colorDataCtrl: ZColorController[ZSwitchColorData]
+    __controllers_kwargs__ = {'colorDataCtrl':{'key': 'ZSwitch'}}
     def __init__(self,
                  parent: ZWidget | None = None,
                  tun_on: bool = False,
                  is_group_member: bool = False,
-                 switch_style: Style = Style.Standard,
+                 style: ZSwitchStyle = ZSwitchStyle.Standard,
                  objectName: str | None = None,
                  ):
         super().__init__(parent,
                          checked=tun_on,
+                         style=style,
                          is_group_member=is_group_member,
                          objectName=objectName,
                          )
-        self._switch_style: ZSwitch.Style = switch_style
         self._handle = SwitchHandle(self)
+        self._init_color_data_()
         self._init_style_()
 
     # private method
-    def _init_style_(self):
-        style = self._switch_style.value
-        self.setFixedSize(style.Width, style.Height)
-        self._handle.setFixedSize(style.HandleDiameter, style.HandleDiameter)
-        self._handle.move(style.Margin, style.Margin)
-
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.setColor(data.Body)
         self._handle.bodyCtrl.color = data.HandleToggled
         if not self._checked:
@@ -86,8 +66,8 @@ class ZSwitch(ABCToggleButton):
             self._handle.bodyCtrl.color = data.Handle
         self.borderColorCtrl.color = data.Border
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         if self._checked:
             self.bodyColorCtrl.setColorTo(data.Body)
             self._handle.bodyCtrl.setColorTo(data.HandleToggled)
@@ -97,35 +77,38 @@ class ZSwitch(ABCToggleButton):
             self._handle.bodyCtrl.setColorTo(data.Handle)
         self.borderColorCtrl.setColorTo(data.Border)
 
+    def _init_style_(self):
+        style = self._style.value
+        self.setFixedSize(style.Width, style.Height)
+        self._handle.setFixedSize(style.HandleDiameter, style.HandleDiameter)
+        self._handle.move(style.Margin, style.Margin)
+
+    def _update_style_(self):
+        style = self._style.value
+        self.setFixedSize(style.Width, style.Height)
+        self._handle.setFixedSize(style.HandleDiameter, style.HandleDiameter)
+        self._handle.move(style.Margin, style.Margin)
+
     def _mouse_enter_(self): self._handle.scaleCtrl.setValueTo(self._handle.scale_hover)
 
     def _mouse_leave_(self): self._handle.scaleCtrl.setValueTo(self._handle.scale_nomal)
 
     def _button_toggle_(self):
-        data = self.styleDataCtrl.data
+        data = self.colorDataCtrl.data
         if self._checked:
             self.bodyColorCtrl.toOpaque()
             self._handle.bodyCtrl.setColorTo(data.HandleToggled)
         else:
             self.bodyColorCtrl.toTransparent()
             self._handle.bodyCtrl.setColorTo(data.Handle)
-        style = self._switch_style.value
         handle_width = self._handle.width()
-        margin = style.Margin
+        margin = self._style.value.Margin
         target_x = self.width() - handle_width - margin if self._checked else margin
         target_y = margin
         self._handle.widgetPositionCtrl.moveTo(target_x, target_y)
 
     # public method
     def isTurnOn(self) -> bool: return self._checked
-
-    def switchStyle(self): return self._switch_style
-
-    def setSwitchStyle(self, v: Style):
-        if v == self._switch_style: return
-        self._button_toggle_()
-        self._switch_style = v
-        self.update()
 
     # event
     def paintEvent(self, event):

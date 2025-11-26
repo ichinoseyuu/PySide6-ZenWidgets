@@ -5,12 +5,12 @@ from ZenWidgets.component.base import (
     ZOpacityEffect,
     ZAnimatedColor,
     ZAnimatedFloat,
-    ZStyleController,
+    ZColorController,
     ZWidget
 )
 from ZenWidgets.core import ZDebug,ZPadding,ZTextSnapshot
 
-from ZenWidgets.gui import ZLineEditStyleData,ZPalette
+from ZenWidgets.gui import ZLineEditColorData,ZPalette
 
 class ZLineEdit(ZWidget):
     editingFinished = Signal()
@@ -25,9 +25,9 @@ class ZLineEdit(ZWidget):
     placeHolderColorCtrl: ZAnimatedColor
     underlineColorCtrl: ZAnimatedColor
     underlineWeightCtrl: ZAnimatedFloat
-    styleDataCtrl: ZStyleController[ZLineEditStyleData]
+    colorDataCtrl: ZColorController[ZLineEditColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZLineEdit'},
+        'colorDataCtrl':{'key': 'ZLineEdit'},
         'radiusCtrl': {'value': 4.0},
         'underlineWeightCtrl': {'value': 1.3},
     }
@@ -74,7 +74,7 @@ class ZLineEdit(ZWidget):
 
         self.cursorColorCtrl.animationAlpha.setDuration(500)
         self.cursorColorCtrl.animationAlpha.finished.connect(self._toggle_cursor)
-        self._init_style_()
+        self._init_color_data_()
 
 
     # region public method
@@ -120,8 +120,8 @@ class ZLineEdit(ZWidget):
         self.resize(self.sizeHint())
 
     # region private method
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.color = data.Body
         self.borderColorCtrl.color = data.Border
         self.textColorCtrl.color = data.Text
@@ -130,8 +130,8 @@ class ZLineEdit(ZWidget):
         self.placeHolderColorCtrl.color = data.PlaceHolder
         self.underlineColorCtrl.color = data.Underline
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         if self.hasFocus():
             self.underlineColorCtrl.setColorTo(data.UnderlineFocused)
             self.bodyColorCtrl.setColorTo(data.BodyFocused)
@@ -619,16 +619,16 @@ class ZLineEdit(ZWidget):
         super().focusInEvent(event)
         if not self._read_only:
             self.cursorColorCtrl.toOpaque()
-        self.bodyColorCtrl.setColorTo(self.styleDataCtrl.data.BodyFocused)
-        self.underlineColorCtrl.setColorTo(self.styleDataCtrl.data.UnderlineFocused)
+        self.bodyColorCtrl.setColorTo(self.colorDataCtrl.data.BodyFocused)
+        self.underlineColorCtrl.setColorTo(self.colorDataCtrl.data.UnderlineFocused)
         self.underlineWeightCtrl.setValueTo(1.8)
 
     def focusOutEvent(self, event):
         super().focusOutEvent(event)
         self.cursorColorCtrl.transparent()
         self.cursorColorCtrl.stopAnimation()
-        self.bodyColorCtrl.setColorTo(self.styleDataCtrl.data.Body)
-        self.underlineColorCtrl.setColorTo(self.styleDataCtrl.data.Underline)
+        self.bodyColorCtrl.setColorTo(self.colorDataCtrl.data.Body)
+        self.underlineColorCtrl.setColorTo(self.colorDataCtrl.data.Underline)
         self.underlineWeightCtrl.setValueTo(1.4)
         self._clear_selection()
 

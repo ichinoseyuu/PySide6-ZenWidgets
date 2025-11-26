@@ -3,10 +3,10 @@ from PySide6.QtGui import QPainter,QPen,QColor,QPainterPath,QIcon,QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 from ZenWidgets.component.window.win32utils import startSystemMove,toggleWindowState
 from ZenWidgets.component.base.abstract import ABCButton
-from ZenWidgets.component.base.controller import ZAnimatedColor,ZStyleController
+from ZenWidgets.component.base.controller import ZAnimatedColor,ZColorController
 from ZenWidgets.component.text import ZHeadLine
 from ZenWidgets.core import ZDebug,ZGlobal,ZPosition
-from ZenWidgets.gui import ZTitleBarButtonStyleData,ZTheme
+from ZenWidgets.gui import ZTitleBarButtonColorData,ZTheme
 
 __all__ = [
     'ZTitleBarButton',
@@ -22,20 +22,20 @@ __all__ = [
 class ZTitleBarButton(ABCButton):
     bodyColorCtrl: ZAnimatedColor
     iconColorCtrl: ZAnimatedColor
-    styleDataCtrl: ZStyleController[ZTitleBarButtonStyleData]
+    colorDataCtrl: ZColorController[ZTitleBarButtonColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl': {'key': 'ZTitleBarButton'}
+        'colorDataCtrl': {'key': 'ZTitleBarButton'}
         }
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setAttribute(Qt.WidgetAttribute.WA_NoMousePropagation) # 防止鼠标事件传播到父组件
         self.setFixedSize(46, 32)
 
-    def _init_style_(self):
+    def _init_color_data_(self):
         self.bodyColorCtrl.setColor(QColor(140, 140, 140, 0))
-        self.iconColorCtrl.color = self.styleDataCtrl.data.Icon
+        self.iconColorCtrl.color = self.colorDataCtrl.data.Icon
 
-    def _style_change_handler_(self): self.iconColorCtrl.setColorTo(self.styleDataCtrl.data.Icon)
+    def _color_data_change_handler_(self): self.iconColorCtrl.setColorTo(self.colorDataCtrl.data.Icon)
 
     def _show_tooltip_(self):
         if self.toolTip() != '':
@@ -62,11 +62,11 @@ class ZTitleBarButton(ABCButton):
 class CloseButton(ZTitleBarButton):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._init_style_()
+        self._init_color_data_()
 
-    def _init_style_(self):
+    def _init_color_data_(self):
         self.bodyColorCtrl.setColor(QColor('#00E81B23'))
-        self.iconColorCtrl.color = self.styleDataCtrl.data.Icon
+        self.iconColorCtrl.color = self.colorDataCtrl.data.Icon
 
     def _mouse_enter_(self):
         self.bodyColorCtrl.setAlphaFTo(1.0)
@@ -74,7 +74,7 @@ class CloseButton(ZTitleBarButton):
 
     def _mouse_leave_(self):
         self.bodyColorCtrl.toTransparent()
-        self.iconColorCtrl.setColorTo(self.styleDataCtrl.data.Icon)
+        self.iconColorCtrl.setColorTo(self.colorDataCtrl.data.Icon)
 
     def _mouse_press_(self): self.bodyColorCtrl.setAlphaFTo(0.6)
 
@@ -113,7 +113,7 @@ class CloseButton(ZTitleBarButton):
 class MaximizeButton(ZTitleBarButton):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._init_style_()
+        self._init_color_data_()
 
     def _mouse_enter_(self): self.bodyColorCtrl.setAlphaFTo(0.2)
 
@@ -159,7 +159,7 @@ class MaximizeButton(ZTitleBarButton):
 class MinimizeButton(ZTitleBarButton):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._init_style_()
+        self._init_color_data_()
 
     def _mouse_enter_(self): self.bodyColorCtrl.setAlphaFTo(0.2)
 
@@ -202,7 +202,7 @@ class ToggleThemeButton(ZTitleBarButton):
             state=QIcon.State.On
         )
         self._icon: QIcon = icon
-        self._init_style_()
+        self._init_color_data_()
 
     def _mouse_enter_(self): self.bodyColorCtrl.setAlphaFTo(0.2)
 

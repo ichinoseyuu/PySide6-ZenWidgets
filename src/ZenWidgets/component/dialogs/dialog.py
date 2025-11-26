@@ -8,11 +8,11 @@ from ZenWidgets.component.base import(
     ZContentWidget,
     ZAnimatedColor,
     ZAnimatedFloat,
-    ZStyleController
+    ZColorController
 )
 from ZenWidgets.component.text import ZHeadLine,ZTextBlock
 from ZenWidgets.core import ZMargin,ZDebug
-from ZenWidgets.gui import ZWidgetEffect,ZDialogStyleData
+from ZenWidgets.gui import ZWidgetEffect,ZDialogColorData
 
 #region ZDialog
 class ZDialog(ZWidget):
@@ -24,10 +24,10 @@ class ZDialog(ZWidget):
     footerColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
-    styleDataCtrl: ZStyleController[ZDialogStyleData]
+    colorDataCtrl: ZColorController[ZDialogColorData]
     __controllers_kwargs__ = {
         'radiusCtrl': {'value': 5.0},
-        'styleDataCtrl': {'key': 'ZDialog'}
+        'colorDataCtrl': {'key': 'ZDialog'}
     }
     def __init__(self,
                  parent: ZWidget | None = None,
@@ -79,17 +79,17 @@ class ZDialog(ZWidget):
         self._content.layout().addWidget(self._footer, stretch=0)
 
         self.windowOpacityCtrl.completelyHide.connect(self.close)
-        self._init_style_()
+        self._init_color_data_()
 
     # private
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.color = data.Body
         self.footerColorCtrl.color = data.RegionFooter
         self.borderColorCtrl.color = data.Border
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.setColorTo(data.Body)
         self.footerColorCtrl.setColorTo(data.RegionFooter)
         self.borderColorCtrl.setColorTo(data.Border)

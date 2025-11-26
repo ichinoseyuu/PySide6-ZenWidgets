@@ -1,10 +1,11 @@
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Qt, Signal, Slot, QEvent, QTimer
 from PySide6.QtGui import QMouseEvent, QEnterEvent
-from ZenWidgets.core import ZState,ZStyle
+from ZenWidgets.core import ZState
 from ZenWidgets.component.base.widget import ZWidget
 from ZenWidgets.component.base.controller import ZAnimatedFloat
-from  typing import TYPE_CHECKING,Optional
+from ZenWidgets.gui import StyleT
+from typing import TYPE_CHECKING,Optional
 if TYPE_CHECKING:
     from ZenWidgets.component.base.group import ZButtonGroup
 
@@ -17,7 +18,7 @@ __All__ = [
 ]
 
 # region ABCButton
-class ABCButton(ZWidget):
+class ABCButton(ZWidget[StyleT]):
     entered = Signal()
     '''鼠标进入信号'''
     leaved = Signal()
@@ -31,7 +32,7 @@ class ABCButton(ZWidget):
     def __init__(self,
                  parent: QWidget | ZWidget | None = None,
                  *args,
-                 style: ZStyle = ZStyle.Default,
+                 style: Optional[StyleT] = None,
                  objectName: str | None = None,
                  toolTip: str | None = None,
                  **kwargs
@@ -120,7 +121,7 @@ class ABCButton(ZWidget):
 
 
 # region ABCToggleButton
-class ABCToggleButton(ABCButton):
+class ABCToggleButton(ABCButton[StyleT]):
     toggled = Signal(bool)
     def __init__(self,
                  parent: QWidget | ZWidget | None = None,
@@ -128,7 +129,7 @@ class ABCToggleButton(ABCButton):
                  checked: bool = False,
                  checkable: bool = True,
                  is_group_member: bool = False,
-                 style: ZStyle = ZStyle.Default,
+                 style: Optional[StyleT] = None,
                  objectName: str | None = None,
                  toolTip: str | None = None,
                  **kwargs
@@ -183,14 +184,14 @@ class ABCToggleButton(ABCButton):
                 self.toggled.emit(self._checked)
 
 # region ABCRepeatButton
-class ABCRepeatButton(ABCButton):
+class ABCRepeatButton(ABCButton[StyleT]):
     def __init__(self,
                  parent: QWidget | ZWidget | None = None,
                  *args,
                  repeatable: bool = True,
                  interval: int = 50,
                  delay: int = 500,
-                 style: ZStyle = ZStyle.Default,
+                 style: Optional[StyleT] = None,
                  objectName: str | None = None,
                  toolTip: str | None = None,
                  **kwargs
@@ -259,7 +260,7 @@ class ABCRepeatButton(ABCButton):
             self._repeat_count = 0
 
 # region ABCLongPressButton
-class ABCLongPressButton(ABCButton):
+class ABCLongPressButton(ABCButton[StyleT]):
     longPressClicked = Signal()
     '''长按信号'''
 
@@ -267,7 +268,7 @@ class ABCLongPressButton(ABCButton):
     def __init__(self,
                  parent: QWidget | ZWidget | None = None,
                  *args,
-                 style: ZStyle = ZStyle.Default,
+                 style: Optional[StyleT] = None,
                  objectName: str | None = None,
                  toolTip: str | None = None,
                  **kwargs
@@ -313,7 +314,7 @@ class ABCLongPressButton(ABCButton):
             self.progressCtrl.setValue(progress)
 
 # region ABCProgressButton
-class ABCProgressButton(ABCButton):
+class ABCProgressButton(ABCButton[StyleT]):
     progressChanged = Signal(float)
     '''进度改变信号'''
     progressFinished = Signal()
@@ -324,14 +325,12 @@ class ABCProgressButton(ABCButton):
                  parent: QWidget | ZWidget | None = None,
                  *args,
                  reset_on_finish: bool = True,
-                 style: ZStyle = ZStyle.Default,
                  objectName: str | None = None,
                  toolTip: str | None = None,
                  **kwargs
                  ):
         super().__init__(parent,
                          *args,
-                         style=style,
                          objectName=objectName,
                          toolTip=toolTip,
                          **kwargs

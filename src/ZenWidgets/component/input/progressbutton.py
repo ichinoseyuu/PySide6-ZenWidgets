@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QWidget
 from ZenWidgets.component.base import (
     ZAnimatedColor,
     ZAnimatedFloat,
-    ZStyleController,
+    ZColorController,
     ZOpacityEffect,
     ABCProgressButton,
     ZWidget
@@ -14,7 +14,7 @@ from ZenWidgets.core import (
     ZGlobal,
     ZPosition
 )
-from ZenWidgets.gui import ZProgressButtonStyleData
+from ZenWidgets.gui import ZProgressButtonColorData
 
 class ZProgressButton(ABCProgressButton):
     bodyColorCtrl: ZAnimatedColor
@@ -24,9 +24,9 @@ class ZProgressButton(ABCProgressButton):
     hoverLayerCtrl: ZOpacityEffect
     textColorCtrl: ZAnimatedColor
     iconColorCtrl: ZAnimatedColor
-    styleDataCtrl: ZStyleController[ZProgressButtonStyleData]
+    colorDataCtrl: ZColorController[ZProgressButtonColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZProgressButton'},
+        'colorDataCtrl':{'key': 'ZProgressButton'},
         'radiusCtrl': {'value': 4.0},
         'progressCtrl': {'value': 0.0},
     }
@@ -51,20 +51,20 @@ class ZProgressButton(ABCProgressButton):
         self._icon_size = icon_size
         self._spacing = spacing
         self._reset_on_finish = reset_on_finish
-        self._init_style_()
+        self._init_color_data_()
         self.resize(self.sizeHint())
 
     # region private method
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.color = data.Body
         self.progressColorCtrl.color = data.Progress
         self.textColorCtrl.color = data.Text
         self.iconColorCtrl.color = data.Icon
         self.borderColorCtrl.color = data.Border
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.setColorTo(data.Body)
         self.progressColorCtrl.setColorTo(data.Progress)
         self.borderColorCtrl.setColorTo(data.Border)

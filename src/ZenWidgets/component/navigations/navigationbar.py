@@ -8,7 +8,7 @@ from ZenWidgets.component.base import (
     ZAnimatedColor,
     ZAnimatedOpacity,
     ZAnimatedFloat,
-    ZStyleController,
+    ZColorController,
     ZButtonGroup,
     ZWidget,
     ABCButton,
@@ -21,9 +21,9 @@ from ZenWidgets.core import (
     ZPosition
 )
 from ZenWidgets.gui import (
-    ZNavigationBarStyleData,
-    ZNavBarButtonStyleData,
-    ZNavBarToggleButtonStyleData,
+    ZNavigationBarColorData,
+    ZNavBarButtonColorData,
+    ZNavBarToggleButtonColorData,
 )
 
 # region ZNavBarButton
@@ -32,9 +32,9 @@ class ZNavBarButton(ABCButton):
     iconColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
     opacityCtrl: ZAnimatedOpacity
-    styleDataCtrl: ZStyleController[ZNavBarButtonStyleData]
+    colorDataCtrl: ZColorController[ZNavBarButtonColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZNavBarButton'},
+        'colorDataCtrl':{'key': 'ZNavBarButton'},
         'radiusCtrl': {'value': 5.0},
     }
 
@@ -51,15 +51,15 @@ class ZNavBarButton(ABCButton):
                          )
         self._icon: QIcon = icon
         self._icon_size = QSize(20, 20)
-        self._init_style_()
+        self._init_color_data_()
         self.setFixedSize(fixed_size)
 
     # private method
-    def _init_style_(self):
-        self.iconColorCtrl.color = self.styleDataCtrl.data.Icon
+    def _init_color_data_(self):
+        self.iconColorCtrl.color = self.colorDataCtrl.data.Icon
 
-    def _style_change_handler_(self):
-        self.iconColorCtrl.setColorTo(self.styleDataCtrl.data.Icon)
+    def _color_data_change_handler_(self):
+        self.iconColorCtrl.setColorTo(self.colorDataCtrl.data.Icon)
 
     def _show_tooltip_(self):
         if self.toolTip() != '':
@@ -138,9 +138,9 @@ class ZNavBarToggleButton(ABCToggleButton):
     iconColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
     opacityCtrl: ZAnimatedOpacity
-    styleDataCtrl: ZStyleController[ZNavBarToggleButtonStyleData]
+    colorDataCtrl: ZColorController[ZNavBarToggleButtonColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZNavBarToggleButton'},
+        'colorDataCtrl':{'key': 'ZNavBarToggleButton'},
         'radiusCtrl': {'value': 5.0},
     }
     def __init__(self,
@@ -157,20 +157,20 @@ class ZNavBarToggleButton(ABCToggleButton):
         self.setButtonGroup(True)
         self._icon = icon
         self._icon_size = QSize(20, 20)
-        self._init_style_()
+        self._init_color_data_()
         self.setFixedSize(fixed_size)
 
     # private method
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         if self._checked:
             self.opacityEffectCtrl.setAlphaF(0.1)
             self.iconColorCtrl.color = data.IconToggled
         else:
             self.iconColorCtrl.color = data.Icon
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         if self._checked:
             self.iconColorCtrl.setColorTo(data.IconToggled)
         else:
@@ -198,7 +198,7 @@ class ZNavBarToggleButton(ABCToggleButton):
     def _mouse_release_(self): self.opacityEffectCtrl.setAlphaFTo(0.08)
 
     def _button_toggle_(self):
-        data = self.styleDataCtrl.data
+        data = self.colorDataCtrl.data
         if self._checked:
             self.opacityEffectCtrl.setAlphaFTo(0.12)
             self.iconColorCtrl.setColorTo(data.IconToggled)
@@ -336,8 +336,8 @@ class Indicator(ZWidget):
 
 # region ZNavigationBar
 class ZNavigationBar(ZWidget):
-    styleDataCtrl: ZStyleController[ZNavigationBarStyleData]
-    __controllers_kwargs__ = {'styleDataCtrl':{'key': 'ZNavigationBar'}}
+    colorDataCtrl: ZColorController[ZNavigationBarColorData]
+    __controllers_kwargs__ = {'colorDataCtrl':{'key': 'ZNavigationBar'}}
 
     def __init__(self,
                  parent: QWidget | ZWidget | None = None,
@@ -362,7 +362,7 @@ class ZNavigationBar(ZWidget):
         self._btn_manager = ZButtonGroup()
         self._btn_manager.toggled.connect(self._update_indicator_)
         self._panel.wheeled.connect(self._sync_indicator_)
-        self._init_style_()
+        self._init_color_data_()
 
     # region public
     def panel(self) -> Panel:
@@ -442,13 +442,12 @@ class ZNavigationBar(ZWidget):
         event.accept()
 
     # region private
-    def _init_style_(self):
+    def _init_color_data_(self):
         self._indicator.resize(3, self._btn_size.height()-20)
-        self._indicator.bodyColorCtrl.color = self.styleDataCtrl.data.Indicator
-        self._indicator.update()
+        self._indicator.bodyColorCtrl.color = self.colorDataCtrl.data.Indicator
 
-    def _style_change_handler_(self):
-        self._indicator.bodyColorCtrl.setColorTo(self.styleDataCtrl.data.Indicator)
+    def _color_data_change_handler_(self):
+        self._indicator.bodyColorCtrl.setColorTo(self.colorDataCtrl.data.Indicator)
 
     @Slot()
     def _update_indicator_(self):

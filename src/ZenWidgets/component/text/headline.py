@@ -5,11 +5,11 @@ from ZenWidgets.component.base import (
     ZFlashEffect,
     ZAnimatedColor,
     ZAnimatedFloat,
-    ZStyleController,
+    ZColorController,
     ZWidget
 )
 from ZenWidgets.core import ZDebug,ZPadding
-from ZenWidgets.gui import ZHeadLineStyleData
+from ZenWidgets.gui import ZHeadLineColorData
 
 class ZHeadLine(ZWidget):
     bodyColorCtrl: ZAnimatedColor
@@ -19,9 +19,9 @@ class ZHeadLine(ZWidget):
     textColorCtrl: ZAnimatedColor
     textBackColorCtrl: ZAnimatedColor
     indicatorColorCtrl: ZAnimatedColor
-    styleDataCtrl: ZStyleController[ZHeadLineStyleData]
+    colorDataCtrl: ZColorController[ZHeadLineColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZHeadLine'},
+        'colorDataCtrl':{'key': 'ZHeadLine'},
         'radiusCtrl': {'value': 4.0}
     }
 
@@ -52,7 +52,7 @@ class ZHeadLine(ZWidget):
         self._selection_end = -1
         self._is_selecting = False
 
-        self._init_style_()
+        self._init_color_data_()
         self.setMinimumSize(self._padding.horizontal(), 24)
 
     # region public
@@ -124,16 +124,16 @@ class ZHeadLine(ZWidget):
         self.resize(self.sizeHint())
 
     # region private
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.textColorCtrl.color = data.Text
         self.bodyColorCtrl.color = data.Body
         self.borderColorCtrl.color = data.Border
         self.textBackColorCtrl.color = data.TextBackSectcted
         self.indicatorColorCtrl.color = data.Indicator
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.setColorTo(data.Body)
         self.borderColorCtrl.setColorTo(data.Border)
         self.textColorCtrl.setColorTo(data.Text)

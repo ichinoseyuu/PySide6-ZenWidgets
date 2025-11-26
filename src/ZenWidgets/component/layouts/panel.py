@@ -1,16 +1,16 @@
 from PySide6.QtCore import Qt,QRectF
 from PySide6.QtGui import QPainter,QPen
-from ZenWidgets.component.base import ZAnimatedColor,ZAnimatedFloat,ZStyleController,ZWidget
+from ZenWidgets.component.base import ZAnimatedColor,ZAnimatedFloat,ZColorController,ZWidget
 from ZenWidgets.core import ZDebug
-from ZenWidgets.gui import ZPanelStyleData
+from ZenWidgets.gui import ZPanelColorData
 
 class ZPanel(ZWidget):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
-    styleDataCtrl: ZStyleController[ZPanelStyleData]
+    colorDataCtrl: ZColorController[ZPanelColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZPanel'},
+        'colorDataCtrl':{'key': 'ZPanel'},
         'radiusCtrl': {'value': 5.0},
     }
     def __init__(self,
@@ -18,16 +18,16 @@ class ZPanel(ZWidget):
                  objectName: str | None = None,
                  ):
         super().__init__(parent=parent, objectName=objectName)
-        self._init_style_()
+        self._init_color_data_()
 
     # region private
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.color = data.Body
         self.borderColorCtrl.color = data.Border
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.setColorTo(data.Body)
         self.borderColorCtrl.setColorTo(data.Border)
 

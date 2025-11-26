@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QWidget
 from ZenWidgets.component.base import (
     ZAnimatedColor,
     ZAnimatedFloat,
-    ZStyleController,
+    ZColorController,
     ZOpacityEffect,
     ABCLongPressButton,
     ZWidget
@@ -14,7 +14,7 @@ from ZenWidgets.core import (
     ZGlobal,
     ZPosition
 )
-from ZenWidgets.gui import ZLongPressButtonStyleData
+from ZenWidgets.gui import ZLongPressButtonColorData
 
 class ZLongPressButton(ABCLongPressButton):
     bodyColorCtrl: ZAnimatedColor
@@ -24,9 +24,9 @@ class ZLongPressButton(ABCLongPressButton):
     hoverLayerCtrl: ZOpacityEffect
     textColorCtrl: ZAnimatedColor
     iconColorCtrl: ZAnimatedColor
-    styleDataCtrl: ZStyleController[ZLongPressButtonStyleData]
+    colorDataCtrl: ZColorController[ZLongPressButtonColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZLongPressButton'},
+        'colorDataCtrl':{'key': 'ZLongPressButton'},
         'radiusCtrl': {'value': 4.0},
         'progressCtrl': {'value': 0.0},
     }
@@ -49,20 +49,20 @@ class ZLongPressButton(ABCLongPressButton):
         self._icon: QIcon | None = icon
         self._icon_size = icon_size
         self._spacing = spacing
-        self._init_style_()
+        self._init_color_data_()
         self.resize(self.sizeHint())
 
     # region private method
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.color = data.Body
         self.progressColorCtrl.color = data.Progress
         self.textColorCtrl.color = data.Text
         self.iconColorCtrl.color = data.Icon
         self.borderColorCtrl.color = data.Border
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.setColorTo(data.Body)
         self.progressColorCtrl.setColorTo(data.Progress)
         self.borderColorCtrl.setColorTo(data.Border)

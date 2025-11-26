@@ -34,7 +34,7 @@ class PanelWidget(ZScrollPanel):
         card.layout().addWidget(container)
 
         btn_icon = ZGlobal.iconPack.toIcon('ic_fluent_save_regular')
-        self.btn_1 = ZButton(container, icon=btn_icon, style=ZStyle.Flat)
+        self.btn_1 = ZButton(container, icon=btn_icon, style=ZButtonStyle.Flat)
         container.addWidget(self.btn_1, spacing=16)
         self.btn_1.clicked.connect(
             lambda: ZGlobal.tooltip.showTip(
@@ -47,7 +47,7 @@ class PanelWidget(ZScrollPanel):
                 )
             )
 
-        self.btn_2 = ZButton(container, text='保存', style=ZStyle.Flat)
+        self.btn_2 = ZButton(container, text='保存', style=ZButtonStyle.Flat)
         container.addWidget(self.btn_2, spacing=16)
         self.btn_2.clicked.connect(
             lambda: ZGlobal.tooltip.showTip(
@@ -60,7 +60,7 @@ class PanelWidget(ZScrollPanel):
                 )
             )
 
-        self.btn_3 = ZButton(container, icon=btn_icon, text='保存', style=ZStyle.Flat)
+        self.btn_3 = ZButton(container, icon=btn_icon, text='保存', style=ZButtonStyle.Flat)
         container.addWidget(self.btn_3, spacing=16)
         self.btn_3.clicked.connect(
             lambda: ZGlobal.tooltip.showTip(
@@ -123,13 +123,13 @@ class PanelWidget(ZScrollPanel):
         container = ZHContainer(card)
         card.layout().addWidget(container)
 
-        self.toggle_btn_1 = ZToggleButton(container, icon=btn_icon, style=ZStyle.Flat)
+        self.toggle_btn_1 = ZToggleButton(container, icon=btn_icon, style=ZButtonStyle.Flat)
         container.addWidget(self.toggle_btn_1, spacing=16)
 
-        self.toggle_btn_2 = ZToggleButton(container, text='自动保存', style=ZStyle.Flat)
+        self.toggle_btn_2 = ZToggleButton(container, text='自动保存', style=ZButtonStyle.Flat)
         container.addWidget(self.toggle_btn_2, spacing=16)
 
-        self.toggle_btn_3 = ZToggleButton(container, icon=btn_icon, text='自动保存', style=ZStyle.Flat)
+        self.toggle_btn_3 = ZToggleButton(container, icon=btn_icon, text='自动保存', style=ZButtonStyle.Flat)
         container.addWidget(self.toggle_btn_3, spacing=16)
 
         self.toggle_btn_4 = ZToggleButton(container, icon=btn_icon)
@@ -156,7 +156,7 @@ class PanelWidget(ZScrollPanel):
         info_repeat = ZHeadLine(container, text= '连续点击次数: 0')
         container.addWidget(info_repeat)
 
-        self.repeat_btn_1 = ZRepeatButton(container, text='长按连点',style=ZStyle.Flat)
+        self.repeat_btn_1 = ZRepeatButton(container, text='长按连点',style=ZButtonStyle.Flat)
         container.addWidget(self.repeat_btn_1)
         self.repeat_btn_1.clicked.connect(
             lambda: info_repeat.setText(f'连续点击次数: {self.repeat_btn_1.repeatCount()}',flash=True)
@@ -225,13 +225,13 @@ class PanelWidget(ZScrollPanel):
         container.setAlignment(Qt.AlignmentFlag.AlignBottom)
         card.layout().addWidget(container)
 
-        self.switch_1 = ZSwitch(container, switch_style= ZSwitch.Style.Compact)
+        self.switch_1 = ZSwitch(container, style= ZSwitchStyle.Compact)
         container.addWidget(self.switch_1, spacing=16)
 
-        self.switch_2 = ZSwitch(container, switch_style= ZSwitch.Style.Standard)
+        self.switch_2 = ZSwitch(container, style= ZSwitchStyle.Standard)
         container.addWidget(self.switch_2, spacing=16)
 
-        self.switch_3 = ZSwitch(container, switch_style= ZSwitch.Style.Comfortable)
+        self.switch_3 = ZSwitch(container, style= ZSwitchStyle.Comfortable)
         container.addWidget(self.switch_3, spacing=16)
 
         # region ZComboBox
@@ -274,7 +274,7 @@ class PanelWidget(ZScrollPanel):
         self.hslider_1 = ZSlider(
             parent=container1,
             direction=ZDirection.Horizontal,
-            style=ZSlider.Style.Thin,
+            style=ZSliderStyle.Thin,
             scope=(0, 10),
             step=0.5,
             accuracy=0.1,
@@ -286,7 +286,7 @@ class PanelWidget(ZScrollPanel):
         self.hslider_2 = ZSlider(
             parent=container1,
             direction=ZDirection.Horizontal,
-            style=ZSlider.Style.Normal,
+            style=ZSliderStyle.Default,
             scope=(0, 100),
             step=1,
             accuracy=1,
@@ -298,7 +298,7 @@ class PanelWidget(ZScrollPanel):
         self.hslider_3 = ZSlider(
             parent=container1,
             direction=ZDirection.Horizontal,
-            style=ZSlider.Style.Thick,
+            style=ZSliderStyle.Thick,
             scope=(0, 100),
             step=0.5,
             accuracy=0.1,
@@ -316,7 +316,7 @@ class PanelWidget(ZScrollPanel):
         self.vslider_1 = ZSlider(
             parent=container2,
             direction=ZDirection.Vertical,
-            style=ZSlider.Style.Thin,
+            style=ZSliderStyle.Thin,
             scope=(0, 10),
             step=0.5,
             accuracy=0.1,
@@ -327,7 +327,7 @@ class PanelWidget(ZScrollPanel):
         self.vslider_2 = ZSlider(
             parent=container2,
             direction=ZDirection.Vertical,
-            style=ZSlider.Style.Normal,
+            style=ZSliderStyle.Default,
             scope=(0, 100),
             step=1,
             accuracy=1,
@@ -338,7 +338,7 @@ class PanelWidget(ZScrollPanel):
         self.vslider_3 = ZSlider(
             parent=container2,
             direction=ZDirection.Vertical,
-            style=ZSlider.Style.Thick,
+            style=ZSliderStyle.Thick,
             scope=(0, 100),
             step=0.5,
             accuracy=0.1,

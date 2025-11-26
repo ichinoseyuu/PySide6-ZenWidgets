@@ -13,10 +13,6 @@ class ZWindowType(IntEnum):
     Frameless = auto()
     Translucent = auto()
 
-class ZStyle(IntEnum):
-    Default = auto()
-    Flat = auto()
-
 class ZState(IntEnum):
     Idle = auto()
     Hover = auto()

@@ -7,12 +7,12 @@ from ZenWidgets.component.base import (
     ZOpacityEffect,
     ZAnimatedColor,
     ZAnimatedFloat,
-    ZStyleController,
+    ZColorController,
     ZWidget
 )
 from ZenWidgets.core import ZDebug,ZPadding,ZTextSnapshot
 
-from ZenWidgets.gui import ZNumberEditStyleData
+from ZenWidgets.gui import ZNumberEditColorData
 
 class ZNumberEdit(ZWidget):
     editingFinished = Signal()
@@ -27,9 +27,9 @@ class ZNumberEdit(ZWidget):
     cursorColorCtrl: ZAnimatedColor
     underlineColorCtrl: ZAnimatedColor
     underlineWeightCtrl: ZAnimatedFloat
-    styleDataCtrl: ZStyleController[ZNumberEditStyleData]
+    colorDataCtrl: ZColorController[ZNumberEditColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZNumberEdit'},
+        'colorDataCtrl':{'key': 'ZNumberEdit'},
         'radiusCtrl': {'value': 4.0},
         'underlineWeightCtrl': {'value': 1.3},
     }
@@ -74,7 +74,7 @@ class ZNumberEdit(ZWidget):
         self._pending_undo = None
         self.cursorColorCtrl.animationAlpha.setDuration(500)
         self.cursorColorCtrl.animationAlpha.finished.connect(self._toggle_cursor)
-        self._init_style_()
+        self._init_color_data_()
 
 
     # region public method
@@ -178,8 +178,8 @@ class ZNumberEdit(ZWidget):
         self.resize(self.sizeHint())
 
     # region private method
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.color = data.Body
         self.borderColorCtrl.color = data.Border
         self.textColorCtrl.color = data.Text
@@ -187,8 +187,8 @@ class ZNumberEdit(ZWidget):
         self.cursorColorCtrl.color = data.Cursor
         self.underlineColorCtrl.color = data.Underline
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         if self.hasFocus():
             self.underlineColorCtrl.setColorTo(data.UnderlineFocused)
             self.bodyColorCtrl.setColorTo(data.BodyFocused)
@@ -647,16 +647,16 @@ class ZNumberEdit(ZWidget):
         self._selection_start = 0
         self._selection_end = len(self._text)
         self._focus_select_complete = True
-        self.bodyColorCtrl.setColorTo(self.styleDataCtrl.data.BodyFocused)
-        self.underlineColorCtrl.setColorTo(self.styleDataCtrl.data.UnderlineFocused)
+        self.bodyColorCtrl.setColorTo(self.colorDataCtrl.data.BodyFocused)
+        self.underlineColorCtrl.setColorTo(self.colorDataCtrl.data.UnderlineFocused)
         self.underlineWeightCtrl.setValueTo(1.8)
 
     def focusOutEvent(self, event):
         super().focusOutEvent(event)
         self.cursorColorCtrl.transparent()
         self.cursorColorCtrl.stopAnimation()
-        self.bodyColorCtrl.setColorTo(self.styleDataCtrl.data.Body)
-        self.underlineColorCtrl.setColorTo(self.styleDataCtrl.data.Underline)
+        self.bodyColorCtrl.setColorTo(self.colorDataCtrl.data.Body)
+        self.underlineColorCtrl.setColorTo(self.colorDataCtrl.data.Underline)
         self.underlineWeightCtrl.setValueTo(1.4)
         self._clear_selection()
 

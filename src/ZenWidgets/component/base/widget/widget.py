@@ -1,42 +1,35 @@
 import inspect
-from typing import TypeVar,cast,get_origin,overload,Any,Union,Optional,TYPE_CHECKING
+from typing import TypeVar,get_origin,overload,Any,Union,Dict,List,Tuple,Optional,Generic,TYPE_CHECKING
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Qt,QEvent,QPoint,QSize,Signal
 from PySide6.QtGui import QMouseEvent
 from ZenWidgets.component.base.controller import *
-from ZenWidgets.core import make_getter,ZState,ZStyle
-if TYPE_CHECKING:
-    from ZenWidgets.component.layouts.layout import ZBoxLayout
+from ZenWidgets.core import make_getter,ZState
+from ZenWidgets.gui import StyleT
+if TYPE_CHECKING: from ZenWidgets.component.layouts.layout import ZBoxLayout
 
-T = TypeVar('T')
+ControllerUnion = Union[
+    ZAnimatedColor,
+    ZAnimatedOpacity,
+    ZAnimatedPoint,
+    ZAnimatedPointF,
+    ZAnimatedSize,
+    ZAnimatedRect,
+    ZAnimatedFloat,
+    ZAnimatedLinearGradient,
+    ZColorController,
+    ZFlashEffect,
+    ZOpacityEffect,
+    ZAnimatedInt
+    ]
 
-class ZPlaceHolderWidget(QWidget):
-    '''占位组件'''
+ControllerT = TypeVar('ControllerT', bound=ControllerUnion)
 
-    def parentWidget(self) -> Optional['ZWidget']:
-        return super().parentWidget()
-
-    def layout(self) -> Optional['ZBoxLayout']:
-        return super().layout()
-
-    def heightHint(self) -> int: return self.sizeHint().height()
-
-    def widthHint(self) -> int: return self.sizeHint().width()
-
-class ZContentWidget(QWidget):
-    '''内容组件'''
-    def parentWidget(self) -> Optional['ZWidget']:
-        return super().parentWidget()
-
-    def layout(self) -> Optional['ZBoxLayout']:
-        return super().layout()
-
-    def heightHint(self) -> int: return self.sizeHint().height()
-
-    def widthHint(self) -> int: return self.sizeHint().width()
-
-class ZWidget(QWidget):
+# region ZWidget
+class ZWidget(QWidget, Generic[StyleT]):
     '''ZenWidgets 组件的基类'''
+    __controllers_cache__: Dict[type, List[Tuple[str, ControllerT, dict]]] = {}
+    '''控制器缓存：键为类，值为控制器信息列表 (属性名称, 注解类型, 初始化参数)'''
     __controllers_types__ = (
         ZAnimatedColor,
         ZAnimatedOpacity,
@@ -46,14 +39,16 @@ class ZWidget(QWidget):
         ZAnimatedRect,
         ZAnimatedFloat,
         ZAnimatedLinearGradient,
-        ZStyleController,
+        ZColorController,
         ZFlashEffect,
         ZOpacityEffect,
-        ZAnimatedInt,
+        ZAnimatedInt
     )
-    '''控制器类型'''
+    '''支持注解的控制器类型'''
     __controllers_kwargs__: dict[str, Any] = {}
-    '''控制器参数'''
+    '''传递到支持注解的控制器的参数'''
+
+
     dragged = Signal(QPoint)
     '''拖拽信号'''
     moved = Signal(QPoint)
@@ -63,7 +58,7 @@ class ZWidget(QWidget):
     def __init__(self,
                  parent: Optional['ZWidget'] = None,
                  *args,
-                 style: ZStyle = ZStyle.Default,
+                 style: Optional[StyleT] = None,
                  dragable: bool = False,
                  move_anchor: QPoint = QPoint(0, 0),
                  objectName: str | None = None,
@@ -76,8 +71,9 @@ class ZWidget(QWidget):
                          toolTip=toolTip,
                          **kwargs
                          )
+        self._create_controllers_()
         self._state: ZState = ZState.Idle
-        self._style: ZStyle = style
+        self._style: Optional[StyleT] = style
         self._move_anchor: QPoint = move_anchor
         self._draggable: bool = dragable
         self._drag_pos: QPoint | None = None
@@ -86,7 +82,6 @@ class ZWidget(QWidget):
         self._widgetPositionCtrl: ZWidgetPosition = ZWidgetPosition(self)
         self._widgetRectCtrl: ZWidgetRect = ZWidgetRect(self)
         self._opacityCtrl: ZAnimatedOpacity = ZAnimatedOpacity(self)
-        self._create_controllers_()
 
     # region property
     @property
@@ -105,63 +100,65 @@ class ZWidget(QWidget):
     def opacityCtrl(self) -> ZAnimatedOpacity: return self._opacityCtrl
 
     # region private method
-    def _create_controllers_(self) -> None:
-        '''创建控制器，不需要子类重写'''
-        allowed_types = self.__controllers_types__
+    @classmethod
+    def _resolve_controllers_(cls):
+        """解析类的控制器信息，子类不可重写"""
+        if cls in cls.__controllers_cache__: return cls.__controllers_cache__[cls]
+
+        allowed_types = cls.__controllers_types__
         controllers_kwargs: dict[str, Any] = {}
         annotations: dict[str, Any] = {}
-        # 遍历类的继承链，从ZWidget类和其子类中获取注解和控制器参数，让子类的注解覆盖父类的注解
-        for cls in reversed(self.__class__.__mro__):
-            if not issubclass(cls, ZWidget): continue
-            controllers_kwargs.update(getattr(cls, '__controllers_kwargs__', {}))
-            annotations.update(getattr(cls, '__annotations__', {}))
+
+        # 遍历类的继承链，收集注解和控制器参数
+        for base_cls in reversed(cls.__mro__):
+            if not issubclass(base_cls, ZWidget): continue
+            controllers_kwargs.update(getattr(base_cls, '__controllers_kwargs__', {}))
+            annotations.update(getattr(base_cls, '__annotations__', {}))
 
         # 过滤出属于控制器类型的注解
-        filtered_annotations: dict[str, Any] = {}
-        for name, ctrl_type in annotations.items():
-            # 获取注解的实际类型
-            origin_type = get_origin(ctrl_type) or ctrl_type
-            # 如果注解类型是控制器类型，则添加到过滤后的注解中
+        controllers_info = []
+        for name, annotation in annotations.items():
+            origin_type = get_origin(annotation) or annotation
             if inspect.isclass(origin_type) and issubclass(origin_type, allowed_types):
-                filtered_annotations[name] = ctrl_type
+                ckwargs = controllers_kwargs.get(name, {})
+                controllers_info.append((name, annotation, ckwargs))
 
-        # 创建控制器实例并绑定到实例与类上（若需要则创建 property）
-        for name, ctrl_type in filtered_annotations.items():
-            ckwargs = controllers_kwargs.get(name, {})
-            controller = ctrl_type(self, **ckwargs)
-            # 创建实例变量
+        # 缓存解析结果
+        cls.__controllers_cache__[cls] = controllers_info
+        return controllers_info
+
+    def _create_controllers_(self) -> None:
+        '''创建控制器，子类不可重写'''
+        controller_info = self.__class__._resolve_controllers_()
+
+        for name, annotation, ckwargs in controller_info:
+            controller = annotation(self, **ckwargs)
             setattr(self, f'_{name}', controller)
-            # 创建类属性
             if not hasattr(self.__class__, name): setattr(self.__class__, name, property(make_getter(name)))
-            # 如果是样式控制器，则绑定样式改变时的槽函数
-            if ctrl_type.__name__ == 'ZStyleController':
-                style_controller = cast(ZStyleController[T], controller)
-                style_controller.styleChanged.connect(self._style_change_handler_)
+            if isinstance(controller, ZColorController): controller.styleChanged.connect(self._color_data_change_handler_)
 
-    def _init_style_(self) -> None:
-        '''初始化样式'''
+    def _init_color_data_(self) -> None:
+        '''初始化颜色数据样式,子类选择实现'''
         ...
 
-    def _style_change_handler_(self) -> None:
-        '''样式变化槽函数'''
+    def _color_data_change_handler_(self) -> None:
+        '''颜色数据变化槽函数,子类选择实现'''
         ...
 
     def _show_tooltip_(self) -> None:
-        '''显示提示框'''
+        '''显示提示框,子类选择实现'''
         ...
 
     def _hide_tooltip_(self) -> None:
-        '''隐藏提示框'''
+        '''隐藏提示框,子类选择实现'''
         ...
 
     # region public method
     def state(self) -> ZState: return self._state
 
-    def style(self) -> ZStyle: return self._style
+    def style(self) -> Optional[StyleT]: return self._style
 
     def moveAnchor(self): return self._move_anchor
-
-    def isFlat(self) -> bool: return self._style == ZStyle.Flat
 
     def isPressed(self) -> bool: return self._state == ZState.Pressed
 
@@ -185,9 +182,19 @@ class ZWidget(QWidget):
         if d == self._draggable: return
         self._draggable = d
 
-    def setStyle(self, s: ZStyle):
-        self._style = s
-        self.update()
+    def setStyle(self, style: StyleT) -> None:
+        if self._style is None: raise NotImplementedError('this class is not supported style property')
+        if self._style != style:
+            self._style = style
+            self._update_style_()
+
+    def _init_style_(self) -> None:
+        """样式初始化,子类选择实现"""
+        ...
+
+    def _update_style_(self) -> None:
+        """样式变更,子类选择实现"""
+        ...
 
     @overload
     def setMoveAnchor(self, x: int, y: int) -> None: ...
@@ -221,17 +228,13 @@ class ZWidget(QWidget):
 
     def move(self, *args): point = QPoint(*args); super().move(point - self._move_anchor)
 
-    def fadeIn(self) -> None:
-        self.opacityCtrl.fadeIn()
+    def fadeIn(self) -> None: self.opacityCtrl.fadeIn()
 
-    def fadeOut(self) -> None:
-        self.opacityCtrl.fadeOut()
+    def fadeOut(self) -> None: self.opacityCtrl.fadeOut()
 
-    def windowFadeIn(self) -> None:
-        self.windowOpacityCtrl.fadeIn()
+    def windowFadeIn(self) -> None: self.windowOpacityCtrl.fadeIn()
 
-    def windowFadeOut(self) -> None:
-        self.windowOpacityCtrl.fadeOut()
+    def windowFadeOut(self) -> None: self.windowOpacityCtrl.fadeOut()
 
     def setEnabled(self, e: bool) -> None:
         if e == self.isEnabled(): return
@@ -239,11 +242,9 @@ class ZWidget(QWidget):
         else: self.opacityCtrl.fadeTo(0.3)
         super().setEnabled(e)
 
-    def parentWidget(self) -> Optional['ZWidget']:
-        return super().parentWidget()
+    def parentWidget(self) -> Optional['ZWidget']: return super().parentWidget()
 
-    def layout(self) -> Optional['ZBoxLayout']:
-        return super().layout()
+    def layout(self) -> Optional['ZBoxLayout']: return super().layout()
 
     def heightHint(self) -> int: return self.sizeHint().height()
 
@@ -275,11 +276,15 @@ class ZWidget(QWidget):
                 self.dragged.emit(delta)
 
 
+
+# region ZPlaceHolderWidget
 class ZPlaceHolderWidget(ZWidget):
     '''占位组件'''
     pass
 
 
+
+# region ZContentWidget
 class ZContentWidget(ZWidget):
     '''内容组件'''
     pass

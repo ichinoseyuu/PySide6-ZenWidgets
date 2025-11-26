@@ -6,11 +6,11 @@ from ZenWidgets.component.base import (
     ZOpacityEffect,
     ZAnimatedColor,
     ZAnimatedFloat,
-    ZStyleController,
+    ZColorController,
     ZWidget
 )
 from ZenWidgets.core import ZDebug,ZPadding,ZTextSnapshot
-from ZenWidgets.gui import ZLoginEditStyleData
+from ZenWidgets.gui import ZLoginEditColorData
 
 class ZLoginEdit(ZWidget):
     editingFinished = Signal()
@@ -25,9 +25,9 @@ class ZLoginEdit(ZWidget):
     cursorColorCtrl: ZAnimatedColor
     underlineColorCtrl: ZAnimatedColor
     underlineWeightCtrl: ZAnimatedFloat
-    styleDataCtrl: ZStyleController[ZLoginEditStyleData]
+    colorDataCtrl: ZColorController[ZLoginEditColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZLoginEdit'},
+        'colorDataCtrl':{'key': 'ZLoginEdit'},
         'radiusCtrl': {'value': 4.0},
         'underlineWeightCtrl': {'value': 1.3},
     }
@@ -66,7 +66,7 @@ class ZLoginEdit(ZWidget):
         self._pending_undo = None
         self.cursorColorCtrl.animationAlpha.setDuration(500)
         self.cursorColorCtrl.animationAlpha.finished.connect(self._toggle_cursor)
-        self._init_style_()
+        self._init_color_data_()
 
 
     # region public method
@@ -89,8 +89,8 @@ class ZLoginEdit(ZWidget):
         self.resize(self.sizeHint())
 
     # region private method
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.textColorCtrl.color = data.Text
         self.textBackColorCtrl.color = data.TextBackSectcted
         self.cursorColorCtrl.color = data.Cursor
@@ -98,8 +98,8 @@ class ZLoginEdit(ZWidget):
         self.bodyColorCtrl.color = data.Body
         self.borderColorCtrl.color = data.Border
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         if self.hasFocus():
             self.underlineColorCtrl.setColorTo(data.UnderlineFocused)
             self.bodyColorCtrl.setColorTo(data.BodyFocused)
@@ -528,16 +528,16 @@ class ZLoginEdit(ZWidget):
     def focusInEvent(self, event):
         super().focusInEvent(event)
         self.cursorColorCtrl.toOpaque()
-        self.bodyColorCtrl.setColorTo(self.styleDataCtrl.data.BodyFocused)
-        self.underlineColorCtrl.setColorTo(self.styleDataCtrl.data.UnderlineFocused)
+        self.bodyColorCtrl.setColorTo(self.colorDataCtrl.data.BodyFocused)
+        self.underlineColorCtrl.setColorTo(self.colorDataCtrl.data.UnderlineFocused)
         self.underlineWeightCtrl.setValueTo(1.8)
 
     def focusOutEvent(self, event):
         super().focusOutEvent(event)
         self.cursorColorCtrl.transparent()
         self.cursorColorCtrl.stopAnimation()
-        self.bodyColorCtrl.setColorTo(self.styleDataCtrl.data.Body)
-        self.underlineColorCtrl.setColorTo(self.styleDataCtrl.data.Underline)
+        self.bodyColorCtrl.setColorTo(self.colorDataCtrl.data.Body)
+        self.underlineColorCtrl.setColorTo(self.colorDataCtrl.data.Underline)
         self.underlineWeightCtrl.setValueTo(1.4)
         self._clear_selection()
 

@@ -10,7 +10,7 @@ from ZenWidgets.component.base import (
     ZAnimatedOpacity,
     ZAnimatedFloat,
     ZAnimatedPointF,
-    ZStyleController,
+    ZColorController,
     ABCButton,
     ZWidget,
     ZContentWidget,
@@ -24,9 +24,9 @@ from ZenWidgets.core import (
     ZPadding
 )
 from ZenWidgets.gui import (
-    ZComboBoxStyleData,
-    ZComboBoxItemStyleData,
-    ZComboBoxViewStyleData,
+    ZComboBoxColorData,
+    ZComboBoxItemColorData,
+    ZComboBoxViewColorData,
     ZWidgetEffect
 )
 
@@ -40,9 +40,9 @@ class ZComboBoxItem(ABCToggleButton):
     iconColorCtrl: ZAnimatedColor
     indicatorColorCtrl: ZAnimatedColor
     opacityCtrl: ZAnimatedOpacity
-    styleDataCtrl: ZStyleController[ZComboBoxItemStyleData]
+    colorDataCtrl: ZColorController[ZComboBoxItemColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZComboBoxItem'},
+        'colorDataCtrl':{'key': 'ZComboBoxItem'},
         'radiusCtrl': {'value': 4.0},
     }
     def __init__(self,
@@ -64,19 +64,19 @@ class ZComboBoxItem(ABCToggleButton):
         self._icon_size = QSize(16, 16)
         self._padding = ZPadding(4, 4, 16, 4)
         self._spacing = 4
-        self._init_style_()
+        self._init_color_data_()
         self.resize(self.sizeHint())
 
     # region private method
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.textColorCtrl.color = data.Text
         self.iconColorCtrl.color = data.Icon
         self.indicatorColorCtrl.color = data.Indicator
         self.indicatorColorCtrl.opaque() if self._checked else self.indicatorColorCtrl.transparent()
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.indicatorColorCtrl.color = data.Indicator
         self.textColorCtrl.setColorTo(data.Text)
         self.iconColorCtrl.setColorTo(data.Icon)
@@ -219,15 +219,14 @@ class ZComboBoxView(ZWidget):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
-    styleDataCtrl: ZStyleController[ZComboBoxViewStyleData]
+    colorDataCtrl: ZColorController[ZComboBoxViewColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZComboBoxView'},
+        'colorDataCtrl':{'key': 'ZComboBoxView'},
         'radiusCtrl': {'value': 5.0},
     }
-    def __init__(self, target: ZWidget | None = None, items: list[str] = None):
-        super().__init__(f=Qt.WindowType.FramelessWindowHint|Qt.WindowType.WindowStaysOnTopHint|Qt.WindowType.Tool)
+    def __init__(self, parent: ZWidget | None = None, items: list[str] = None):
+        super().__init__(parent=parent,f=Qt.WindowType.FramelessWindowHint|Qt.WindowType.WindowStaysOnTopHint|Qt.WindowType.Tool)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self._target: ZWidget | None = target
         self._margin = ZMargin(8, 8, 8, 8)
         self._content = ZContentWidget(self)
         self._content.setLayout(ZVBoxLayout(self, margins=QMargins(4, 4, 4, 4), spacing=2))
@@ -236,18 +235,17 @@ class ZComboBoxView(ZWidget):
         self._item_group = ZButtonGroup(self)
         self._item_group.toggled.connect(self._item_toggle_handler_)
         self.windowOpacityCtrl.completelyHide.connect(self.hide)
-        self._init_style_()
+        self._init_color_data_()
         self._init_items_()
 
     # region private method
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.color = data.Body
         self.borderColorCtrl.color = data.Border
-        self.update()
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.setColorTo(data.Body)
         self.borderColorCtrl.setColorTo(data.Border)
 
@@ -267,7 +265,7 @@ class ZComboBoxView(ZWidget):
         self.windowOpacityCtrl.fadeOut()
 
     def _get_top_left_position_(self) -> QPoint:
-        target = self._target
+        target = self.parentWidget()
         checked_item = self._item_group.checkedButton()
         offset = self._margin.topLeft() + QPoint(ZComboBoxItem.indicatorWidth, 0)
         if not checked_item: return target.mapToGlobal(target.rect().bottomLeft()) - offset
@@ -330,8 +328,7 @@ class ZComboBoxView(ZWidget):
             return True
         return super().eventFilter(obj, event)
 
-    def sizeHint(self):
-        return QSize(self._target.widthHint() + self._content.layout().horizontalMargin(), self._content.layout().heightHint()) + self._margin.size()
+    def sizeHint(self): return QSize(self.parentWidget().widthHint() + self._content.layout().horizontalMargin(), self._content.layout().heightHint()) + self._margin.size()
 
     # region event
     def resizeEvent(self, event):
@@ -382,9 +379,9 @@ class ZComboBox(ABCButton):
     textColorCtrl: ZAnimatedColor
     dropIconColorCtrl: ZAnimatedColor
     dropIconPosCtrl: ZAnimatedPointF
-    styleDataCtrl: ZStyleController[ZComboBoxStyleData]
+    colorDataCtrl: ZColorController[ZComboBoxColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZComboBox'},
+        'colorDataCtrl':{'key': 'ZComboBox'},
         'radiusCtrl': {'value': 4.0},
     }
     def __init__(self,
@@ -412,20 +409,20 @@ class ZComboBox(ABCButton):
 
         self.dropIconPosCtrl.animation.setBias(0.1)
         self.dropIconPosCtrl.animation.setFactor(0.2)
-        self._init_style_()
+        self._init_color_data_()
         self.resize(self.sizeHint())
         self.dropIconPosCtrl.setPos(self._get_drop_icon_pos())
 
     # region private method
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.color = data.Body
         self.borderColorCtrl.color = data.Border
         self.dropIconColorCtrl.color = data.Icon
         self.textColorCtrl.color = data.Text
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.setColorTo(data.Body)
         self.borderColorCtrl.setColorTo(data.Border)
         self.dropIconColorCtrl.setColorTo(data.Icon)

@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QWidget
 from ZenWidgets.component.base import (
     ZAnimatedColor,
     ZAnimatedFloat,
-    ZStyleController,
+    ZColorController,
     ZOpacityEffect,
     ZWidget,
     ABCToggleButton
@@ -12,21 +12,20 @@ from ZenWidgets.component.base import (
 from ZenWidgets.core import (
     ZDebug,
     ZGlobal,
-    ZPosition,
-    ZStyle
+    ZPosition
 )
-from ZenWidgets.gui import ZToggleButtonStyleData
+from ZenWidgets.gui import ZToggleButtonColorData,ZButtonStyle
 
-class ZToggleButton(ABCToggleButton):
+class ZToggleButton(ABCToggleButton[ZButtonStyle]):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
     opacityLayerCtrl: ZOpacityEffect
     textColorCtrl: ZAnimatedColor
     iconColorCtrl: ZAnimatedColor
-    styleDataCtrl: ZStyleController[ZToggleButtonStyleData]
+    colorDataCtrl: ZColorController[ZToggleButtonColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZToggleButton'},
+        'colorDataCtrl':{'key': 'ZToggleButton'},
         'radiusCtrl': {'value': 4.0},
     }
     def __init__(self,
@@ -39,7 +38,7 @@ class ZToggleButton(ABCToggleButton):
                  checked: bool = False,
                  checkable: bool = True,
                  is_group_member: bool = False,
-                 style: ZStyle = ZStyle.Default,
+                 style: ZButtonStyle = ZButtonStyle.Default,
                  objectName: str | None = None,
                  toolTip: str | None = None,
                  ):
@@ -56,12 +55,12 @@ class ZToggleButton(ABCToggleButton):
         self._icon: QIcon | None = icon
         self._icon_size = icon_size
         self._spacing = spacing
-        self._init_style_()
+        self._init_color_data_()
         self.resize(self.sizeHint())
 
     # region private method
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         if self._checked:
             self.bodyColorCtrl.setColor(data.BodyToggled)
             self.textColorCtrl.setColor(data.TextToggled)
@@ -72,8 +71,8 @@ class ZToggleButton(ABCToggleButton):
             self.iconColorCtrl.setColor(data.Icon)
         self.borderColorCtrl.setColor(data.Border)
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         if self._checked:
             self.bodyColorCtrl.setColorTo(data.BodyToggled)
             self.textColorCtrl.setColorTo(data.TextToggled)
@@ -105,13 +104,15 @@ class ZToggleButton(ABCToggleButton):
     def _mouse_release_(self): self.opacityLayerCtrl.setAlphaFTo(0.11 if self.isFlat() else 0.06)
 
     def _button_toggle_(self):
-        data = self.styleDataCtrl.data
+        data = self.colorDataCtrl.data
         if self._checked:
             self.bodyColorCtrl.setColorTo(data.BodyToggled)
         else:
             self.bodyColorCtrl.setColorTo(data.Body) if not self.isFlat() else self.bodyColorCtrl.setAlphaFTo(0.0)
 
     # region public method
+    def isFlat(self) -> bool: return self._style == ZButtonStyle.Flat
+
     def text(self) -> str: return self._text
 
     def icon(self) -> QIcon: return QIcon(self._icon)
@@ -173,11 +174,11 @@ class ZToggleButton(ABCToggleButton):
             )
         rect = QRectF(self.rect())
         radius = self.radiusCtrl.value
-        if self._checked or self._style == ZStyle.Flat:
+        if self._checked or self._style == ZButtonStyle.Flat:
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(self.bodyColorCtrl.color)
             painter.drawRoundedRect(rect, radius, radius)
-        elif not self._checked and self._style != ZStyle.Flat:
+        elif not self._checked and self._style != ZButtonStyle.Flat:
             painter.setPen(QPen(self.borderColorCtrl.color, 1))
             painter.setBrush(self.bodyColorCtrl.color)
             painter.drawRoundedRect(rect.adjusted(0.5, 0.5, -0.5, -0.5), radius, radius)

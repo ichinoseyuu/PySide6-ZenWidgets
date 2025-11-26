@@ -4,11 +4,11 @@ from PySide6.QtGui import QPainter,QFont,QFontMetrics,QPen,QTextLayout,QTextOpti
 from ZenWidgets.component.base import (
     ZAnimatedColor,
     ZAnimatedFloat,
-    ZStyleController,
+    ZColorController,
     ZWidget
 )
 from ZenWidgets.core import ZDebug,ZPadding,ZWrapMode
-from ZenWidgets.gui import ZTextBlockStyleData
+from ZenWidgets.gui import ZTextBlockColorData
 
 class ZTextBlock(ZWidget):
     bodyColorCtrl: ZAnimatedColor
@@ -16,9 +16,9 @@ class ZTextBlock(ZWidget):
     radiusCtrl: ZAnimatedFloat
     textColorCtrl: ZAnimatedColor
     textBackColorCtrl: ZAnimatedColor
-    styleDataCtrl: ZStyleController[ZTextBlockStyleData]
+    colorDataCtrl: ZColorController[ZTextBlockColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZTextBlock'},
+        'colorDataCtrl':{'key': 'ZTextBlock'},
         'radiusCtrl': {'value': 4.0}
     }
 
@@ -47,7 +47,7 @@ class ZTextBlock(ZWidget):
         self._selection_end = -1
         self._is_selecting = False
         self._select_start_pos: QPoint | None = None
-        self._init_style_()
+        self._init_color_data_()
         self.setMinimumSize(self._padding.horizontal(), 24)
 
     # region public
@@ -147,15 +147,15 @@ class ZTextBlock(ZWidget):
         return max(total_height + m.vertical(), self.minimumHeight())
 
     # region private
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.textColorCtrl.color = data.Text
         self.bodyColorCtrl.color = data.Body
         self.borderColorCtrl.color = data.Border
         self.textBackColorCtrl.color = data.TextBackSectcted
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.setColorTo(data.Body)
         self.borderColorCtrl.setColorTo(data.Border)
         self.textColorCtrl.setColorTo(data.Text)

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QWidget
 from ZenWidgets.component.base import (
     ZAnimatedColor,
     ZAnimatedFloat,
-    ZStyleController,
+    ZColorController,
     ZOpacityEffect,
     ZFlashEffect,
     ZWidget,
@@ -14,12 +14,11 @@ from ZenWidgets.component.base import (
 from ZenWidgets.core import (
     ZDebug,
     ZGlobal,
-    ZPosition,
-    ZStyle
+    ZPosition
 )
-from ZenWidgets.gui import ZRepeatButtonStyleData
+from ZenWidgets.gui import ZRepeatButtonColorData,ZButtonStyle
 
-class ZRepeatButton(ABCRepeatButton):
+class ZRepeatButton(ABCRepeatButton[ZButtonStyle]):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
@@ -27,9 +26,9 @@ class ZRepeatButton(ABCRepeatButton):
     flashLayerCtrl: ZFlashEffect
     textColorCtrl: ZAnimatedColor
     iconColorCtrl: ZAnimatedColor
-    styleDataCtrl: ZStyleController[ZRepeatButtonStyleData]
+    colorDataCtrl: ZColorController[ZRepeatButtonColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZRepeatButton'},
+        'colorDataCtrl':{'key': 'ZRepeatButton'},
         'radiusCtrl': {'value': 4.0},
     }
 
@@ -43,7 +42,7 @@ class ZRepeatButton(ABCRepeatButton):
                  repeatable: bool = True,
                  interval: int = 50,
                  delay: int = 500,
-                 style: ZStyle = ZStyle.Default,
+                 style: ZButtonStyle = ZButtonStyle.Default,
                  objectName: str | None = None,
                  toolTip: str | None = None,
                  ):
@@ -60,19 +59,19 @@ class ZRepeatButton(ABCRepeatButton):
         self._icon: QIcon | None = icon
         self._icon_size = icon_size
         self._spacing = spacing
-        self._init_style_()
+        self._init_color_data_()
         self.resize(self.sizeHint())
 
     # region private method
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.color = data.Body
         self.textColorCtrl.color = data.Text
         self.iconColorCtrl.color = data.Icon
         self.borderColorCtrl.color = data.Border
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.setColorTo(data.Body)
         self.borderColorCtrl.setColorTo(data.Border)
         self.iconColorCtrl.setColorTo(data.Icon)
@@ -97,6 +96,8 @@ class ZRepeatButton(ABCRepeatButton):
     def _mouse_click_(self): self.flashLayerCtrl.flash()
 
     # region public method
+    def isFlat(self) -> bool: return self._style == ZButtonStyle.Flat
+
     def text(self) -> str: return self._text
 
     def icon(self) -> QIcon: return QIcon(self._icon)
@@ -157,7 +158,7 @@ class ZRepeatButton(ABCRepeatButton):
         rect = QRectF(self.rect())
         radius = self.radiusCtrl.value
 
-        if self._style != ZStyle.Flat:
+        if self._style != ZButtonStyle.Flat:
             painter.setPen(QPen(self.borderColorCtrl.color, 1))
             painter.setBrush(self.bodyColorCtrl.color)
             painter.drawRoundedRect(rect.adjusted(0.5, 0.5, -0.5, -0.5), radius, radius)

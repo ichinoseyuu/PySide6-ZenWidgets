@@ -4,27 +4,27 @@ from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import QObject, Signal,Slot
 from PySide6.QtGui import QColor
 from ZenWidgets.core import ZGlobal
-from ZenWidgets.gui import StyleDataT,ZStyleDataKey
+from ZenWidgets.gui import ColorDataT,ZColorDataKey
 
-__all__ = ['ZStyleController']
+__all__ = ['ZColorController']
 
-class ZStyleController(QObject, Generic[StyleDataT]):
-    '''样式管理器
-    - 决定控件的当前样式
-    - 存储自定义样式数据
+class ZColorController(QObject, Generic[ColorDataT]):
+    '''颜色数据管理器
+    - 决定控件的当前颜色
+    - 存储自定义颜色数据
     '''
     styleChanged = Signal()
     def __init__(self, parent: QWidget, key: str=''):
         super().__init__(parent)
         self._custom: bool = False
         self._key: str = key
-        self._data: StyleDataT = None
-        self._custom_data: Dict[str, StyleDataT] = {'Light': None, 'Dark': None}
+        self._data: ColorDataT = None
+        self._custom_data: Dict[str, ColorDataT] = {'Light': None, 'Dark': None}
         if key: self._data = ZGlobal.styleDataManager.getStyleData(key)
         ZGlobal.themeManager.themeChanged.connect(self._theme_change_handler_)
 
     @property
-    def data(self) -> StyleDataT:return self._data
+    def data(self) -> ColorDataT: return self._data
 
     @Slot(str)
     def _theme_change_handler_(self, theme:str) -> None:
@@ -49,7 +49,7 @@ class ZStyleController(QObject, Generic[StyleDataT]):
         if update: self.styleChanged.emit()
 
 
-    def setCustomDataComplete(self, theme: str, data: StyleDataT, /, update: bool = False) -> None:
+    def setCustomDataComplete(self, theme: str, data: ColorDataT, /, update: bool = False) -> None:
         '''
         完全自定义样式数据
 
@@ -64,7 +64,7 @@ class ZStyleController(QObject, Generic[StyleDataT]):
             self._data = data
             self.styleChanged.emit()
 
-    def setCustomData(self, theme: str, data_key: ZStyleDataKey, value: QColor, /, update: bool = False) -> None:
+    def setCustomData(self, theme: str, data_key: ZColorDataKey, value: QColor, /, update: bool = False) -> None:
         '''
         自定义样式数据中的特定字段
 
@@ -89,9 +89,6 @@ class ZStyleController(QObject, Generic[StyleDataT]):
     def setDefault(self):
         self._data = ZGlobal.styleDataManager.getStyleData(self._key)
         self.styleChanged.emit()
-
-    def parent(self) -> QWidget:
-        return super().parent()
 
 # import sys
 # from PySide6.QtWidgets import QApplication

@@ -1,10 +1,10 @@
 from PySide6.QtWidgets import QWidget,QSizePolicy
 from PySide6.QtCore import Qt,QRectF,QMargins
 from PySide6.QtGui import QPainter,QPen,QPainterPath
-from ZenWidgets.component.base import ZAnimatedColor,ZAnimatedFloat,ZStyleController,ZWidget
+from ZenWidgets.component.base import ZAnimatedColor,ZAnimatedFloat,ZColorController,ZWidget
 from ZenWidgets.component.layouts import ZVBoxLayout,ZHBoxLayout
 from ZenWidgets.core import ZDebug
-from ZenWidgets.gui import ZCardStyleData,ZWidgetEffect
+from ZenWidgets.gui import ZCardColorData,ZWidgetEffect
 
 class ZCard(ZWidget):
     bodyColorCtrl: ZAnimatedColor
@@ -12,9 +12,9 @@ class ZCard(ZWidget):
     radiusCtrl: ZAnimatedFloat
     underlineColorCtrl: ZAnimatedColor
     underlineWeightCtrl: ZAnimatedFloat
-    styleDataCtrl: ZStyleController[ZCardStyleData]
+    colorDataCtrl: ZColorController[ZCardColorData]
     __controllers_kwargs__ = {
-        'styleDataCtrl':{'key': 'ZCard'},
+        'colorDataCtrl':{'key': 'ZCard'},
         'radiusCtrl': {'value': 8.0},
         'underlineWeightCtrl': {'value': 1.5},
     }
@@ -29,7 +29,7 @@ class ZCard(ZWidget):
         self._display_border = display_border
         self._display_underline = display_underline
         self._display_shadow = display_shadow
-        self._init_style_()
+        self._init_color_data_()
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setLayout(ZVBoxLayout(self,margins=QMargins(16,16,16,16),spacing=16))
         if self._display_shadow: ZWidgetEffect.applyGraphicsShadow(self)
@@ -46,14 +46,14 @@ class ZCard(ZWidget):
         self.update()
 
     # region private
-    def _init_style_(self):
-        data = self.styleDataCtrl.data
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.color = data.Body
         self.borderColorCtrl.color = data.Border
         self.underlineColorCtrl.color = data.Underline
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.setColorTo(data.Body)
         self.borderColorCtrl.setColorTo(data.Border)
         self.underlineColorCtrl.setColorTo(data.Underline)

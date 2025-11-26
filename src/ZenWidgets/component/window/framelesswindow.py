@@ -8,7 +8,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QResizeEvent
 from ZenWidgets.component.info import ZToolTip
 from ZenWidgets.component.base import (
-    ZStyleController,
+    ZColorController,
     ZWindowBackGround,
 )
 from ZenWidgets.component.window.titlebar import ZTitleBar
@@ -23,7 +23,7 @@ from ZenWidgets.component.window.win32utils import (
     getResizeBorderThickness
 )
 from ZenWidgets.core.globals import ZGlobal
-from ZenWidgets.gui import ZFramelessWindowStyleData
+from ZenWidgets.gui import ZFramelessWindowColorData
 
 # region ZFramelessWindow
 class ZFramelessWindow(QWidget):
@@ -36,8 +36,8 @@ class ZFramelessWindow(QWidget):
         self._windowEffect.addShadowEffect(self.winId())
         self._windowEffect.setBorderAccentColor(self.winId(),getSystemAccentColor())
         self._windowBodyColorCtrl = ZWindowBackGround(self)
-        self._styleDataCtrl = ZStyleController[ZFramelessWindowStyleData](self,'ZFramelessWindow')
-        self._styleDataCtrl.styleChanged.connect(self._style_change_handler_)
+        self._colorDataCtrl = ZColorController[ZFramelessWindowColorData](self,'ZFramelessWindow')
+        self._colorDataCtrl.styleChanged.connect(self._style_change_handler_)
         self.windowHandle().screenChanged.connect(self.__onScreenChanged)
         self._init_style_()
 
@@ -58,10 +58,10 @@ class ZFramelessWindow(QWidget):
 
     # region private
     def _init_style_(self):
-        self._windowBodyColorCtrl.color = self._styleDataCtrl.data.Body
+        self._windowBodyColorCtrl.color = self._colorDataCtrl.data.Body
 
     def _style_change_handler_(self):
-        self._windowBodyColorCtrl.setColorTo(self._styleDataCtrl.data.Body)
+        self._windowBodyColorCtrl.setColorTo(self._colorDataCtrl.data.Body)
 
     def __onScreenChanged(self):
         hWnd = int(self.windowHandle().winId())

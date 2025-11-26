@@ -4,7 +4,7 @@ from PySide6.QtGui import *
 from ZenWidgets.component.base import (
     ZAnimatedColor,
     ZAnimatedFloat,
-    ZStyleController,
+    ZColorController,
     ZWidget,
     ZContentWidget
 )
@@ -15,7 +15,7 @@ from ZenWidgets.core import (
     ZDirection,
     ZState
 )
-from ZenWidgets.gui import ZScrollPanelStyleData
+from ZenWidgets.gui import ZScrollPanelColorData
 
 # region ScrollHandle
 class ScrollHandle(ZWidget):
@@ -162,8 +162,11 @@ class ZScrollPanel(ZWidget):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
-    styleDataCtrl: ZStyleController[ZScrollPanelStyleData]
-    __controllers_kwargs__ = {'styleDataCtrl':{'key': 'ZScrollPanel'}}
+    colorDataCtrl: ZColorController[ZScrollPanelColorData]
+    __controllers_kwargs__ = {
+        'colorDataCtrl':{'key': 'ZScrollPanel'},
+        'radiusCtrl': {'value': 5.0},
+    }
 
     def __init__(self,
                  parent: ZWidget | None = None,
@@ -180,7 +183,7 @@ class ZScrollPanel(ZWidget):
         self._handle_v = ScrollHandle(self,ZDirection.Vertical)
         self._handle_h = ScrollHandle(self,ZDirection.Horizontal)
         self._content.resized.connect(self._update_handles_and_content)
-        self._init_style_()
+        self._init_color_data_()
 
     def content(self): return self._content
 
@@ -263,18 +266,17 @@ class ZScrollPanel(ZWidget):
         event.accept()
 
     # region private
-    def _init_style_(self):
+    def _init_color_data_(self):
         self._update_handles_and_content()
-        data = self.styleDataCtrl.data
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.color = data.Body
         self.borderColorCtrl.color = data.Border
-        self.radiusCtrl.value = 5.0
         self._handle_h.bodyColorCtrl.color = data.Handle
         self._handle_v.bodyColorCtrl.color = data.Handle
 
 
-    def _style_change_handler_(self):
-        data = self.styleDataCtrl.data
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
         self.bodyColorCtrl.setColorTo(data.Body)
         self.borderColorCtrl.setColorTo(data.Border)
         self._handle_h.bodyColorCtrl.setColorTo(data.Handle)
