@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import Qt, Signal, Slot, QEvent, QTimer
-from PySide6.QtGui import QMouseEvent, QEnterEvent
+from PySide6.QtCore import Qt,Signal,Slot,QTimer
+from PySide6.QtGui import QMouseEvent
 from ZenWidgets.core import ZState
 from ZenWidgets.component.base.widget import ZWidget
 from ZenWidgets.component.base.controller import ZAnimatedFloat
@@ -19,10 +19,6 @@ __All__ = [
 
 # region ABCButton
 class ABCButton(ZWidget[StyleT]):
-    entered = Signal()
-    '''鼠标进入信号'''
-    leaved = Signal()
-    '''鼠标离开信号'''
     pressed = Signal()
     '''鼠标按下信号'''
     released = Signal()
@@ -46,39 +42,13 @@ class ABCButton(ZWidget[StyleT]):
                          )
 
     # private method
-    def _mouse_enter_(self) -> None:
-        '''鼠标进入效果'''
-        ...
+    def _mouse_press_(self): ...
 
-    def _mouse_leave_(self):
-        '''鼠标离开效果'''
-        ...
+    def _mouse_release_(self): ...
 
-    def _mouse_press_(self):
-        '''鼠标按下效果'''
-        ...
-
-    def _mouse_release_(self):
-        '''鼠标释放效果'''
-        ...
-
-    def _mouse_click_(self):
-        '''鼠标点击效果'''
-        ...
+    def _mouse_click_(self): ...
 
     # event
-    def enterEvent(self, event: QEnterEvent):
-        super().enterEvent(event)
-        self._state = ZState.Hover
-        self._mouse_enter_()
-        self.entered.emit()
-
-    def leaveEvent(self, event: QEvent):
-        super().leaveEvent(event)
-        self._state = ZState.Idle
-        self._mouse_leave_()
-        self.leaved.emit()
-
     def mousePressEvent(self, event: QMouseEvent):
         super().mousePressEvent(event)
         if event.button() == Qt.MouseButton.LeftButton:
@@ -147,9 +117,7 @@ class ABCToggleButton(ABCButton[StyleT]):
         self._button_group: Optional['ZButtonGroup']= None
 
     # private method
-    def _button_toggle_(self):
-        '''按钮切换效果'''
-        ...
+    def _button_toggle_(self): ...
 
     # public method
     def isChecked(self) -> bool: return self._checked

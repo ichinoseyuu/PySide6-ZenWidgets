@@ -1,8 +1,8 @@
 from typing import Any,Dict,cast
-from PySide6.QtGui import QPainter,QFont,QPen,QIcon,QPixmap,QColor,QBrush,QPainterPath,QRadialGradient
+from PySide6.QtGui import QPainter,QFont,QPen,QIcon,QPixmap
 from PySide6.QtCore import Qt,QSize,QRect,QRectF,QPointF,Signal,Slot,QMargins,QPoint,QEvent
-from PySide6.QtWidgets import QWidget,QApplication
-from ZenWidgets.component.layouts import ZVBoxLayout,ZVContainer
+from PySide6.QtWidgets import QApplication,QSizePolicy
+from ZenWidgets.component.layouts import ZVBoxLayout
 from ZenWidgets.component.base import (
     ZOpacityEffect,
     ZFlashEffect,
@@ -52,12 +52,14 @@ class ZComboBoxItem(ABCToggleButton):
                  icon: QIcon | None = None,
                  checked: bool = False,
                  objectName: str | None = None,
+                 sizePolicy: QSizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
                  ):
         super().__init__(parent=parent,
                          checked=checked,
                          is_group_member=True,
                          objectName=objectName,
                          font=font,
+                         sizePolicy=sizePolicy
                          )
         self._text: str | None = text
         self._icon: QIcon | None = icon

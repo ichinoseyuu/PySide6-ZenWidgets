@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget,QPushButton
+from PySide6.QtWidgets import QWidget,QSizePolicy
 from PySide6.QtCore import Qt,QRectF,QSize,QRect,QMargins,QPoint,Signal,QEventLoop
 from PySide6.QtGui import QPainter,QPen,QColor,QFont
 from ZenWidgets.component.input import ZButton,ZLongPressButton
@@ -67,12 +67,12 @@ class ZDialog(ZWidget):
         self._btn_long_press.setVisible(have_long_press_btn)
         self._btn_long_press.longPressClicked.connect(self.accept)
 
-        self._btn_accept = ZButton(self._footer, text=accept)
+        self._btn_accept = ZButton(self._footer, text=accept, sizePolicy=QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed))
         self._btn_accept.setFixedHeight(40)
         self._btn_accept.clicked.connect(self.accept)
         self._footer.layout().addWidget(self._btn_accept)
 
-        self._btn_reject = ZButton(self._footer, text=inject)
+        self._btn_reject = ZButton(self._footer, text=inject, sizePolicy=QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed))
         self._btn_reject.setFixedHeight(40)
         self._btn_reject.clicked.connect(self.reject)
         self._footer.layout().addWidget(self._btn_reject)

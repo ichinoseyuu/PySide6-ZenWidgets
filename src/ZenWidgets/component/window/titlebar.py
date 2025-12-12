@@ -202,6 +202,7 @@ class ToggleThemeButton(ZTitleBarButton):
             state=QIcon.State.On
         )
         self._icon: QIcon = icon
+        self._icon_size: QSize = QSize(16, 16)
         self._init_color_data_()
 
     def _mouse_enter_(self): self.bodyColorCtrl.setAlphaFTo(0.2)
@@ -216,14 +217,13 @@ class ToggleThemeButton(ZTitleBarButton):
 
     def paintEvent(self, e):
         painter = QPainter(self)
-        painter.setRenderHints(QPainter.RenderHint.SmoothPixmapTransform)
+        #painter.setRenderHints(QPainter.RenderHint.Antialiasing|QPainter.RenderHint.SmoothPixmapTransform)
         painter.setBrush(self.bodyColorCtrl.color)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawRect(self.rect().adjusted(0, 1, 0, 0))
-        if ZGlobal.themeManager.getTheme() is ZTheme.Dark:
-            pixmap = self._icon.pixmap(QSize(16, 16), state=QIcon.State.On)
-        else:
-            pixmap = self._icon.pixmap(QSize(16, 16), state=QIcon.State.Off)
+        icon_size = self._icon_size
+        is_dark = ZGlobal.themeManager.getTheme() is ZTheme.Dark
+        pixmap = self._icon.pixmap(icon_size, state=QIcon.State.On if is_dark else QIcon.State.Off)
         colored_pixmap = QPixmap(pixmap.size())
         colored_pixmap.setDevicePixelRatio(self.devicePixelRatioF())
         colored_pixmap.fill(Qt.transparent)
@@ -232,7 +232,7 @@ class ToggleThemeButton(ZTitleBarButton):
         painter_pix.setCompositionMode(QPainter.CompositionMode_SourceIn)
         painter_pix.fillRect(colored_pixmap.rect(), self.iconColorCtrl.color)
         painter_pix.end()
-        painter.drawPixmap((46 - 16) // 2,(32 - 16) // 2,colored_pixmap)
+        painter.drawPixmap((46 - icon_size.width()) // 2,(32 - icon_size.height()) // 2,colored_pixmap)
         if ZDebug.draw_rect: ZDebug.drawRect(painter, self.rect())
         e.accept()
 

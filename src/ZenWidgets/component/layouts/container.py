@@ -25,7 +25,6 @@ class ZHContainer(QWidget):
         self._alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         self._margin = margin
         self._spacing = spacing
-        self._batch_updating = False
         self._height_expand = False
         self._uniform_height = False
         self._shrinking = False
@@ -264,7 +263,6 @@ class ZVContainer(QWidget):
         self._alignment: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
         self._margin = margin
         self._spacing = spacing
-        self._batch_updating = False
         self._width_expand = False
         self._uniform_width = False
         self._shrinking = False

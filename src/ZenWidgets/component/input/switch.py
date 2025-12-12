@@ -1,3 +1,4 @@
+from PySide6.QtWidgets import QSizePolicy
 from PySide6.QtGui import QPainter, QPen
 from PySide6.QtCore import Qt, QRectF, QPointF
 from ZenWidgets.component.base import (
@@ -51,6 +52,7 @@ class ZSwitch(ABCToggleButton[ZSwitchStyle]):
                          style=style,
                          is_group_member=is_group_member,
                          objectName=objectName,
+                         sizePolicy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
                          )
         self._handle = SwitchHandle(self)
         self._init_color_data_()

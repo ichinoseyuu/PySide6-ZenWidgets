@@ -28,12 +28,13 @@ class ZTextBlock(ZWidget):
                  font: QFont = QFont('Microsoft YaHei', 9),
                  wrap_mode: ZWrapMode = ZWrapMode.WordWrap,
                  selectable: bool = False,
-                 stretchable: bool = True,
+                 height_for_width: bool = True,
                  objectName: str | None = None,
                  ):
         super().__init__(parent=parent,
+                         height_for_width=height_for_width,
                          objectName=objectName,
-                         font=font,
+                         font=font
                          )
         if selectable: self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self._text = text
@@ -42,7 +43,6 @@ class ZTextBlock(ZWidget):
         self._wrap_mode = wrap_mode
         self._alignment = Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter
         self._selectable = selectable
-        self._stretchable = stretchable
         self._selection_start = -1
         self._selection_end = -1
         self._is_selecting = False
@@ -68,14 +68,6 @@ class ZTextBlock(ZWidget):
         else:
             self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
             self._clear_selection()
-        self.adjustSize()
-        self.update()
-
-    def isStretchable(self) -> bool: return self._stretchable
-
-    def setStretchable(self, stretchable: bool) -> None:
-        if self._stretchable == stretchable: return
-        self._stretchable = stretchable
         self.adjustSize()
         self.update()
 
@@ -107,21 +99,15 @@ class ZTextBlock(ZWidget):
         if self._wrap_mode == ZWrapMode.NoWrap:
             height = max(fm.height() + m.vertical(), self.minimumHeight())
             return QSize(text_width, height)
-        if self.maximumWidth() < 16777215:
-            width = self.maximumWidth()
-        else:
-            width = text_width
-        height = self.heightForWidth(width)
+        width = self.width()
+        height = self._caculate_text_layout(width)
         return QSize(width, height)
 
     def adjustSize(self): self.resize(self.sizeHint())
 
-    def hasHeightForWidth(self):
-        if self._stretchable: return False
-        if self._wrap_mode == ZWrapMode.NoWrap: return False
-        return True
+    def heightForWidth(self, width: int) -> int: return self._caculate_text_layout(width)
 
-    def heightForWidth(self, width: int) -> int:
+    def _caculate_text_layout(self, width: int) -> int:
         m = self._padding
         fm = QFontMetrics(self.font())
         available_width = width - m.horizontal()
@@ -195,13 +181,12 @@ class ZTextBlock(ZWidget):
     def _get_text_layout(self, text_rect: QRectF, fm: QFontMetrics):
         """获取文本的行布局信息，返回每行的文本内容、在原文本中的位置和精确的 Y 坐标"""
         if self._wrap_mode == ZWrapMode.NoWrap:
-            # 单行文本也需要考虑垂直对齐
             line_height = fm.height()
             if self._alignment & Qt.AlignmentFlag.AlignVCenter:
                 y_pos = text_rect.top() + (text_rect.height() - line_height) / 2
             elif self._alignment & Qt.AlignmentFlag.AlignBottom:
                 y_pos = text_rect.bottom() - line_height
-            else:  # AlignTop or default
+            else:
                 y_pos = text_rect.top()
             return [(self._text, 0, y_pos)]
 
@@ -240,7 +225,7 @@ class ZTextBlock(ZWidget):
             start_y = text_rect.top() + (text_rect.height() - total_height) / 2
         elif self._alignment & Qt.AlignmentFlag.AlignBottom:
             start_y = text_rect.bottom() - total_height
-        else:  # AlignTop or default
+        else:
             start_y = text_rect.top()
 
         current_y = start_y
@@ -293,18 +278,12 @@ class ZTextBlock(ZWidget):
         return min(line_start_pos + char_pos_in_line, len(self._text))
 
 
-    def _draw_selection_background(self,
-                                   painter: QPainter,
-                                   text_rect: QRectF,
-                                   start: int,
-                                   end: int,
-                                   fm: QFontMetrics
-                                   ):
+    def _draw_selection_background(self, painter: QPainter, text_rect: QRectF, start: int, end: int, fm: QFontMetrics):
         """绘制选中区域背景（统一处理单行和多行）"""
         if start >= end: return
 
         lines_info = self._get_text_layout(text_rect, fm)
-        line_height = fm.height() + 2 # 加上一些额外的空间
+        line_height = fm.height() + 2
 
         painter.setPen(Qt.NoPen)
         painter.setBrush(self.textBackColorCtrl.color)
@@ -418,7 +397,7 @@ class ZTextBlock(ZWidget):
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if not self._stretchable and self.hasHeightForWidth():
+        if self.hasHeightForWidth():
             new_height = self.heightForWidth(event.size().width())
             if new_height != event.size().height():
                 self.resize(event.size().width(), new_height)

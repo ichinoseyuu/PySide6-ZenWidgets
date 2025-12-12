@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QApplication,QWidget,QVBoxLayout
+from PySide6.QtWidgets import QApplication,QWidget,QVBoxLayout,QSizePolicy
 from PySide6.QtCore import Signal,QSize,QTimer,QPoint,QPointF,QRectF,Qt,QRect
 from PySide6.QtGui import QFontMetrics,QFont,QMouseEvent,QPainterPath,QPainter,QKeyEvent,QPen,QInputMethodEvent
 from ZenWidgets.component.base import (

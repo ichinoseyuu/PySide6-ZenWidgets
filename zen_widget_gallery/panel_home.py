@@ -16,11 +16,6 @@ class PanelHome(ZPanel):
         self._load_bg_image()
         self._setup_ui()
 
-
-    def layout(self) -> ZVBoxLayout:
-        return super().layout()
-
-
     def _load_bg_image(self):
         if ZGlobal.themeManager.getTheme() == ZTheme.Light:
             self.image_bg.setImage(":/image/home_bg_light.svg")

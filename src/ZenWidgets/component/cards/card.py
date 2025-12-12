@@ -24,18 +24,18 @@ class ZCard(ZWidget):
                  display_underline: bool = True,
                  display_shadow: bool = False,
                  objectName: str | None = None,
+                 sizePolicy: QSizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
                  ):
-        super().__init__(parent=parent, objectName=objectName)
+        super().__init__(parent=parent,
+                         objectName=objectName,
+                         sizePolicy=sizePolicy
+                         )
         self._display_border = display_border
         self._display_underline = display_underline
         self._display_shadow = display_shadow
         self._init_color_data_()
-        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setLayout(ZVBoxLayout(self,margins=QMargins(16,16,16,16),spacing=16))
         if self._display_shadow: ZWidgetEffect.applyGraphicsShadow(self)
-
-    def layout(self)-> ZVBoxLayout | ZHBoxLayout:
-        return super().layout()
 
     def setShadowDisplay(self, display: bool,/):
         self._display_shadow = display
@@ -44,6 +44,8 @@ class ZCard(ZWidget):
     def setBorderDisplay(self, display: bool,/):
         self._display_border = display
         self.update()
+
+    def sizeHint(self): return self.layout().sizeHint()
 
     # region private
     def _init_color_data_(self):

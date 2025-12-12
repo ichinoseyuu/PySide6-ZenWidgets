@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout,QSizePolicy
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout,QSizePolicy,QLabel
 from PySide6.QtCore import Qt, QMargins,QPoint,QSize
 from PySide6.QtGui import QFont, QIcon, QColor
 from ZenWidgets import *
@@ -16,15 +16,14 @@ class PanelWidget(ZScrollPanel):
         title.setPadding(ZPadding(6, 6, 6, 6))
         self.layout().addWidget(title)
 
-        # region ZButton
         title = ZHeadLine(self, text= '基本输入组件', display_indicator=True)
         title.setFont(QFont('Microsoft YaHei', 14, QFont.Weight.Bold))
         title.setPadding(ZPadding(6, 6, 6, 6))
         self.layout().addWidget(title)
 
-
+        # region ZButton
         card = ZCard(self)
-        self.layout().addWidget(card, stretch=0)
+        self.layout().addWidget(card)
 
         title = ZHeadLine(card, text= 'ZButton')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -114,7 +113,7 @@ class PanelWidget(ZScrollPanel):
 
         # region ZToggleButton
         card = ZCard(self)
-        self.layout().addWidget(card, stretch=0)
+        self.layout().addWidget(card)
 
         title = ZHeadLine(card, text= 'ZToggleButton')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -253,7 +252,7 @@ class PanelWidget(ZScrollPanel):
 
         # region ZSlider
         card = ZCard(self)
-        self.layout().addWidget(card, stretch=0)
+        self.layout().addWidget(card)
 
         title = ZHeadLine(card, text= 'ZSlider')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -309,7 +308,7 @@ class PanelWidget(ZScrollPanel):
         container1.addWidget(self.hslider_3)
 
         container2 = ZHContainer(card)
-        container2.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignCenter)
+        container2.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
         container2.setDefaultSpacing(16)
         hlayout.layout().addWidget(container2)
 
@@ -388,15 +387,16 @@ class PanelWidget(ZScrollPanel):
 
         text= '''ZenWidgets 是一款为追求极致用户体验的开发者打造的现代化风格的组件库，它基于 PySide6 中的 QWidget 架构设计而成，在保持界面简洁的同时，融入了流畅的交互动画。与 QWidget 不同，ZenWidgets 支持动态切换主题和自定义主题配色，通过舍弃对 QSS 样式表的依赖，采用完全自定义的绘制逻辑，让UI具有流畅的交互动画且风格更符合现代审美。目前，ZenWidgets 已提供覆盖基础界面开发需求的核心组件。ZenWidgets 组件库正处于持续进化中，未来计划加入更多实用模块，致力于为 PySide6 开发者提供一套既美观又高效的界面解决方案，在 QWidget 界面开发上变得更简单快捷。'''
 
-        self.textblock_1 = ZTextBlock(container)
-        self.textblock_1.setMaximumWidth(600)
-        self.textblock_1.setText(text)
+        self.textblock_1 = ZTextBlock(container, text=text, selectable=True)
+        self.textblock_1.resize(600, 400)
         container.addWidget(self.textblock_1)
 
-        self.textblock_2 = ZTextBlock(container, selectable=True)
-        self.textblock_2.setMaximumWidth(600)
-        self.textblock_2.setText(text)
+        self.textblock_2 = ZTextBlock(container, text=text, selectable=True)
+        self.textblock_2.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.textblock_2.resize(600, 400)
         container.addWidget(self.textblock_2)
+        #card.layout().addWidget(self.textblock_2)
+
 
         # region ZLineEdit
         card = ZCard(self)

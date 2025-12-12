@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget,QSizePolicy
 from PySide6.QtCore import Qt,QSize,QRectF
 from PySide6.QtGui import QPainter,QFont,QFontMetrics,QPen
 from ZenWidgets.component.base import (
@@ -30,13 +30,14 @@ class ZHeadLine(ZWidget):
                  text: str = "",
                  font: QFont = QFont('Microsoft YaHei', 9),
                  display_indicator: bool = False,
-                 indicator_is_leading: bool = False,
+                 indicator_leading: bool = False,
                  selectable: bool = False,
                  objectName: str | None = None,
                  ):
         super().__init__(parent=parent,
                          objectName=objectName,
                          font=font,
+                         sizePolicy=QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
                          )
         if selectable: self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self._text = text
@@ -44,14 +45,13 @@ class ZHeadLine(ZWidget):
         self._spacing = 6
         self._indicator_width = 4
         self._isdisplay_indicator = display_indicator
-        self._indicator_is_leading = indicator_is_leading
+        self._indicator_leading = indicator_leading
         self._padding = ZPadding(4, 4, 4, 4)
         self._alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         self._selectable = selectable
         self._selection_start = -1
         self._selection_end = -1
         self._is_selecting = False
-
         self._init_color_data_()
         self.setMinimumSize(self._padding.horizontal(), 24)
 
@@ -73,10 +73,10 @@ class ZHeadLine(ZWidget):
         self.adjustSize()
         self.update()
 
-    def isIndicatorLeading(self) -> bool: return self._indicator_is_leading
+    def isIndicatorLeading(self) -> bool: return self._indicator_leading
 
     def setIndicatorLeading(self, v: bool) -> None:
-        self._indicator_is_leading = v
+        self._indicator_leading = v
         self.adjustSize()
         self.update()
 
@@ -209,7 +209,7 @@ class ZHeadLine(ZWidget):
         text_height = fm.height()
         indicator_h = max(2.0, min(text_rect.height(), text_height - fm.descent()))
 
-        if self._indicator_is_leading:
+        if self._indicator_leading:
             indicator_x = self.rect().left() + self._padding.left
         else:
             indicator_x = text_rect.left() - self._spacing - indicator_w

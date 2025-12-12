@@ -8,6 +8,7 @@ from panel_home import PanelHome
 from panel_widget import PanelWidget
 from panel_test import PanelTest
 from panel_info import PanelInfo
+from panel_debug import PanelDebug
 from panel_about import PanelAbout
 from panel_settings import PanelSettings
 
@@ -43,6 +44,9 @@ class ZenUIGallery(ZStandardFramelessWindow):
         self.panelInfo = PanelInfo(self.stackContainer)
         self.stackContainer.addWidget(self.panelInfo)
 
+        self.panelDebug = PanelDebug(self.stackContainer)
+        self.stackContainer.addWidget(self.panelDebug)
+
         self.panelAbout = PanelAbout(self.stackContainer)
         self.stackContainer.addWidget(self.panelAbout)
 
@@ -62,6 +66,9 @@ class ZenUIGallery(ZStandardFramelessWindow):
             lambda: self.stackContainer.setCurrentWidget(self.panelInfo)
             )
         self.navigationBar.getButton(4).clicked.connect(
+            lambda: self.stackContainer.setCurrentWidget(self.panelDebug)
+            )
+        self.navigationBar.getButton(5).clicked.connect(
             lambda: self.stackContainer.setCurrentWidget(self.panelAbout)
             )
         self.navigationBar.getButton(6).clicked.connect(

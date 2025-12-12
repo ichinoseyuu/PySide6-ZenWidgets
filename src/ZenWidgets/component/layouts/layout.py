@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QWidget, QGridLayout, QBoxLayout, QLayoutItem
-from PySide6.QtCore import Qt, QMargins, QSize, QPoint
+from PySide6.QtWidgets import QWidget,QGridLayout,QBoxLayout,QLayoutItem
+from PySide6.QtCore import Qt,QMargins,QSize,QPoint
 
 __all__ = [
     'ZBoxLayout',

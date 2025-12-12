@@ -1,8 +1,8 @@
 import inspect
-from typing import TypeVar,get_origin,overload,Any,Union,Dict,List,Tuple,Optional,Generic,TYPE_CHECKING
+from typing import TypeVar,get_origin,overload,override,Any,Union,Dict,List,Tuple,Optional,Generic,TYPE_CHECKING
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Qt,QEvent,QPoint,QSize,Signal
-from PySide6.QtGui import QMouseEvent
+from PySide6.QtGui import QMouseEvent,QEnterEvent,QResizeEvent,QMoveEvent
 from ZenWidgets.component.base.controller import *
 from ZenWidgets.core import make_getter,ZState
 from ZenWidgets.gui import StyleT
@@ -48,19 +48,19 @@ class ZWidget(QWidget, Generic[StyleT]):
     __controllers_kwargs__: dict[str, Any] = {}
     '''传递到支持注解的控制器的参数'''
 
-
     dragged = Signal(QPoint)
-    '''拖拽信号'''
     moved = Signal(QPoint)
-    '''移动信号'''
     resized = Signal(QSize)
-    '''调整大小信号'''
+    entered = Signal()
+    leaved = Signal()
+
     def __init__(self,
                  parent: Optional['ZWidget'] = None,
                  *args,
                  style: Optional[StyleT] = None,
                  dragable: bool = False,
                  move_anchor: QPoint = QPoint(0, 0),
+                 height_for_width: bool = False,
                  objectName: str | None = None,
                  toolTip: str | None = None,
                  **kwargs
@@ -77,6 +77,7 @@ class ZWidget(QWidget, Generic[StyleT]):
         self._move_anchor: QPoint = move_anchor
         self._draggable: bool = dragable
         self._drag_pos: QPoint | None = None
+        self._height_for_width = height_for_width
         self._windowOpacityCtrl: ZWindowOpacity = ZWindowOpacity(self)
         self._widgetSizeCtrl: ZWidgetSize = ZWidgetSize(self)
         self._widgetPositionCtrl: ZWidgetPosition = ZWidgetPosition(self)
@@ -137,25 +138,26 @@ class ZWidget(QWidget, Generic[StyleT]):
             if not hasattr(self.__class__, name): setattr(self.__class__, name, property(make_getter(name)))
             if isinstance(controller, ZColorController): controller.styleChanged.connect(self._color_data_change_handler_)
 
-    def _init_color_data_(self) -> None:
-        '''初始化颜色数据样式,子类选择实现'''
-        ...
+    def _init_color_data_(self) -> None: ...
 
-    def _color_data_change_handler_(self) -> None:
-        '''颜色数据变化槽函数,子类选择实现'''
-        ...
+    def _color_data_change_handler_(self) -> None: ...
 
-    def _show_tooltip_(self) -> None:
-        '''显示提示框,子类选择实现'''
-        ...
+    def _show_tooltip_(self) -> None: ...
 
-    def _hide_tooltip_(self) -> None:
-        '''隐藏提示框,子类选择实现'''
-        ...
+    def _hide_tooltip_(self) -> None: ...
+
+    def _init_style_(self) -> None: ...
+
+    def _update_style_(self) -> None: ...
+
+    def _mouse_enter_(self) -> None: ...
+
+    def _mouse_leave_(self) -> None: ...
 
     # region public method
     def state(self) -> ZState: return self._state
 
+    @override
     def style(self) -> Optional[StyleT]: return self._style
 
     def moveAnchor(self): return self._move_anchor
@@ -178,27 +180,28 @@ class ZWidget(QWidget, Generic[StyleT]):
 
     def isWindowFading(self) -> bool: return self.windowOpacityCtrl.animation.isRunning()
 
-    def setDraggable(self, d: bool) -> None:
-        if d == self._draggable: return
-        self._draggable = d
+    @override
+    def hasHeightForWidth(self): return self._height_for_width
 
+    def setHeightForWidth(self, h: bool) -> None:
+        if h != self._height_for_width: self._height_for_width = h
+
+    def heightHint(self) -> int: return self.sizeHint().height()
+
+    def widthHint(self) -> int: return self.sizeHint().width()
+
+    def setDraggable(self, d: bool) -> None:
+        if d != self._draggable: self._draggable = d
+
+    @override
     def setStyle(self, style: StyleT) -> None:
         if self._style is None: raise NotImplementedError('this class is not supported style property')
         if self._style != style:
             self._style = style
             self._update_style_()
 
-    def _init_style_(self) -> None:
-        """样式初始化,子类选择实现"""
-        ...
-
-    def _update_style_(self) -> None:
-        """样式变更,子类选择实现"""
-        ...
-
     @overload
     def setMoveAnchor(self, x: int, y: int) -> None: ...
-
     @overload
     def setMoveAnchor(self, pos: QPoint) -> None: ...
 
@@ -206,7 +209,6 @@ class ZWidget(QWidget, Generic[StyleT]):
 
     @overload
     def moveTo(self, x: int, y: int) -> None: ...
-
     @overload
     def moveTo(self, pos: QPoint) -> None: ...
 
@@ -214,7 +216,6 @@ class ZWidget(QWidget, Generic[StyleT]):
 
     @overload
     def resizeTo(self, w: int, h: int) -> None: ...
-
     @overload
     def resizeTo(self, size: QSize) -> None: ...
 
@@ -222,10 +223,10 @@ class ZWidget(QWidget, Generic[StyleT]):
 
     @overload
     def move(self, x: int, y: int) -> None: ...
-
     @overload
     def move(self, pos: QPoint) -> None: ...
 
+    @override
     def move(self, *args): point = QPoint(*args); super().move(point - self._move_anchor)
 
     def fadeIn(self) -> None: self.opacityCtrl.fadeIn()
@@ -236,45 +237,63 @@ class ZWidget(QWidget, Generic[StyleT]):
 
     def windowFadeOut(self) -> None: self.windowOpacityCtrl.fadeOut()
 
+    @override
     def setEnabled(self, e: bool) -> None:
         if e == self.isEnabled(): return
         if e: self.opacityCtrl.fadeTo(1.0)
         else: self.opacityCtrl.fadeTo(0.3)
         super().setEnabled(e)
 
+    @override
     def parentWidget(self) -> Optional['ZWidget']: return super().parentWidget()
 
+    @override
     def layout(self) -> Optional['ZBoxLayout']: return super().layout()
 
-    def heightHint(self) -> int: return self.sizeHint().height()
-
-    def widthHint(self) -> int: return self.sizeHint().width()
-
     # region event
+    @override
     def event(self, event: QEvent) -> bool:
         if event.type() == QEvent.Type.ToolTip: return True
         return super().event(event)
 
-    def moveEvent(self, event):
+    @override
+    def moveEvent(self, event: QMoveEvent):
         super().moveEvent(event)
         self.moved.emit(self.pos())
 
-    def resizeEvent(self, event):
+    @override
+    def resizeEvent(self, event: QResizeEvent):
         super().resizeEvent(event)
         self.resized.emit(self.size())
 
+    @override
+    def enterEvent(self, event: QEnterEvent):
+        super().enterEvent(event)
+        self._state = ZState.Hover
+        self._mouse_enter_()
+        self.entered.emit()
+
+    @override
+    def leaveEvent(self, event: QEvent):
+        super().leaveEvent(event)
+        self._state = ZState.Idle
+        self._mouse_leave_()
+        self.leaved.emit()
+
+    @override
     def mousePressEvent(self, event: QMouseEvent):
         super().mousePressEvent(event)
         if self._draggable and event.button() == Qt.MouseButton.LeftButton:
             self._drag_pos = event.pos()
 
+
+    @override
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         super().mouseMoveEvent(event)
         if self._draggable and event.buttons() & Qt.MouseButton.LeftButton:
             delta = event.pos() - self._drag_pos
             if delta.manhattanLength() >= 5:
                 self.dragged.emit(delta)
-
 
 
 # region ZPlaceHolderWidget

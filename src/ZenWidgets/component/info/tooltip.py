@@ -38,7 +38,8 @@ class ZToolTip(ZWidget):
             Qt.WindowType.Tool,
             maximumWidth=316,
             minimumHeight=44,
-            font=QFont("Microsoft YaHei", 9)
+            font=QFont("Microsoft YaHei", 9),
+            height_for_width=True
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
@@ -286,8 +287,6 @@ class ZToolTip(ZWidget):
         self._hide_timer.start(delay)
 
     def adjustSize(self): self.resize(self.sizeHint())
-
-    def hasHeightForWidth(self): return True
 
     def heightForWidth(self, width: int) -> int:
         p = self._padding

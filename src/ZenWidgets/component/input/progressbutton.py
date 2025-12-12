@@ -1,6 +1,6 @@
 from PySide6.QtGui import QPainter,QFont,QPen,QIcon,QPixmap
 from PySide6.QtCore import Qt,QRect,QSize,QRectF,QPoint
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QSizePolicy
 from ZenWidgets.component.base import (
     ZAnimatedColor,
     ZAnimatedFloat,
@@ -40,11 +40,13 @@ class ZProgressButton(ABCProgressButton):
                  reset_on_finish: bool = True,
                  objectName: str | None = None,
                  toolTip: str | None = None,
+                 sizePolicy: QSizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
                  ):
         super().__init__(parent=parent,
                          objectName=objectName,
                          toolTip=toolTip,
                          font=font,
+                         sizePolicy=sizePolicy
                          )
         self._text: str | None = text
         self._icon: QIcon | None = icon
