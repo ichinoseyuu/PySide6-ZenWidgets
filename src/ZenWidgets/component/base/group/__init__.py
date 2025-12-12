@@ -1,1 +1,1 @@
-from .buttongroup import ZButtonGroup
+from .group import ZExclusiveToggleGroup

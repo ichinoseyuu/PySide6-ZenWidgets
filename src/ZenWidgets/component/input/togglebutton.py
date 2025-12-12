@@ -7,7 +7,7 @@ from ZenWidgets.component.base import (
     ZColorController,
     ZOpacityEffect,
     ZWidget,
-    ABCToggleButton
+    ToggleInteractiveWidget
 )
 from ZenWidgets.core import (
     ZDebug,
@@ -16,7 +16,7 @@ from ZenWidgets.core import (
 )
 from ZenWidgets.gui import ZToggleButtonColorData,ZButtonStyle
 
-class ZToggleButton(ABCToggleButton[ZButtonStyle]):
+class ZToggleButton(ToggleInteractiveWidget[ZButtonStyle]):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat

@@ -7,7 +7,7 @@ from ZenWidgets.component.base import (
     ZAnimatedFloat,
     ZColorController,
     ZWidget,
-    ABCToggleButton
+    ToggleInteractiveWidget
 )
 from ZenWidgets.core import ZDebug
 from ZenWidgets.gui import ZSwitchColorData,ZSwitchStyle
@@ -34,7 +34,7 @@ class SwitchHandle(ZWidget):
         event.accept()
 
 # region ZSwitch
-class ZSwitch(ABCToggleButton[ZSwitchStyle]):
+class ZSwitch(ToggleInteractiveWidget[ZSwitchStyle]):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     opacityCtrl: ZAnimatedOpacity

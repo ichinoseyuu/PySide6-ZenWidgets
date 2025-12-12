@@ -11,11 +11,11 @@ from ZenWidgets.component.base import (
     ZAnimatedFloat,
     ZAnimatedPointF,
     ZColorController,
-    ABCButton,
+    ClickInteractiveWidget,
     ZWidget,
     ZContentWidget,
-    ZButtonGroup,
-    ABCToggleButton
+    ZExclusiveToggleGroup,
+    ToggleInteractiveWidget
 )
 from ZenWidgets.core import (
     ZDebug,
@@ -32,7 +32,7 @@ from ZenWidgets.gui import (
 
 
 # region ZComboBoxItem
-class ZComboBoxItem(ABCToggleButton):
+class ZComboBoxItem(ToggleInteractiveWidget):
     indicatorWidth = 3
     opacityEffectCtrl: ZOpacityEffect
     radiusCtrl: ZAnimatedFloat
@@ -234,7 +234,7 @@ class ZComboBoxView(ZWidget):
         self._content.setLayout(ZVBoxLayout(self, margins=QMargins(4, 4, 4, 4), spacing=2))
         self._content.move(self._margin.left, self._margin.top)
         self._items: list[str] = items
-        self._item_group = ZButtonGroup(self)
+        self._item_group = ZExclusiveToggleGroup(self)
         self._item_group.toggled.connect(self._item_toggle_handler_)
         self.windowOpacityCtrl.completelyHide.connect(self.hide)
         self._init_color_data_()
@@ -258,17 +258,17 @@ class ZComboBoxView(ZWidget):
         for text in self._items:
             item = ZComboBoxItem(self, text=text)
             self._content.addWidget(item)
-            self._item_group.addButton(item)
+            self._item_group.addWidget(item)
         self.resize(self.sizeHint())
 
     def _item_toggle_handler_(self):
-        checked_item = cast(ZComboBoxItem, self._item_group.checkedButton())
+        checked_item = cast(ZComboBoxItem, self._item_group.checkedWidget())
         self.selected.emit(checked_item._text)
         self.windowOpacityCtrl.fadeOut()
 
     def _get_top_left_position_(self) -> QPoint:
         target = self.parentWidget()
-        checked_item = self._item_group.checkedButton()
+        checked_item = self._item_group.checkedWidget()
         offset = self._margin.topLeft() + QPoint(ZComboBoxItem.indicatorWidth, 0)
         if not checked_item: return target.mapToGlobal(target.rect().bottomLeft()) - offset
         offset += QPoint(0, (target.height() + checked_item.height())//2-target.height())
@@ -279,7 +279,7 @@ class ZComboBoxView(ZWidget):
     def addItem(self, text: str):
         item = ZComboBoxItem(self, text=text)
         self._content.layout().addWidget(item)
-        self._item_group.addButton(item, set_first_checked=False)
+        self._item_group.addWidget(item, set_first_checked=False)
         self._items.append(text)
         self.resize(self.sizeHint())
 
@@ -287,27 +287,27 @@ class ZComboBoxView(ZWidget):
         for text in texts:
             item = ZComboBoxItem(self, text=text)
             self._content.layout().addWidget(item)
-            self._item_group.addButton(item, set_first_checked=False)
+            self._item_group.addWidget(item, set_first_checked=False)
             self._items.append(text)
         self.resize(self.sizeHint())
 
     def removeItem(self, text: str):
-        for item in self._item_group.buttons():
+        for item in self._item_group.widgets():
             item = cast(ZComboBoxItem, item)
             if item.text() == text:
                 self._items.remove(text)
                 item.clicked.disconnect()
                 item.deleteLater()
-                self._item_group.removeButton(item)
+                self._item_group.removeWidget(item)
                 self._content.layout().removeWidget(item)
                 break
         self.resize(self.sizeHint())
 
     def toggleTo(self, text: str):
-        for item in self._item_group.buttons():
+        for item in self._item_group.widgets():
             item = cast(ZComboBoxItem, item)
             if item.text() == text:
-                try:self._item_group.checkedButton().setChecked(False)
+                try:self._item_group.checkedWidget().setChecked(False)
                 except:pass
                 item.setChecked(True)
                 break
@@ -369,7 +369,7 @@ class ZComboBoxView(ZWidget):
 
 
 # region ZComboBox
-class ZComboBox(ABCButton):
+class ZComboBox(ClickInteractiveWidget):
     optionChanged = Signal(str, object)
     '''选项改变信号'''
 

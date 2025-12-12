@@ -9,10 +9,10 @@ from ZenWidgets.component.base import (
     ZAnimatedOpacity,
     ZAnimatedFloat,
     ZColorController,
-    ZButtonGroup,
+    ZExclusiveToggleGroup,
     ZWidget,
-    ABCButton,
-    ABCToggleButton
+    ClickInteractiveWidget,
+    ToggleInteractiveWidget
 )
 from ZenWidgets.core import (
     ZDebug,
@@ -27,7 +27,7 @@ from ZenWidgets.gui import (
 )
 
 # region ZNavBarButton
-class ZNavBarButton(ABCButton):
+class ZNavBarButton(ClickInteractiveWidget):
     opacityEffectCtrl: ZOpacityEffect
     iconColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
@@ -133,7 +133,7 @@ class ZNavBarButton(ABCButton):
         event.accept()
 
 # region ZNavBarToggleButton
-class ZNavBarToggleButton(ABCToggleButton):
+class ZNavBarToggleButton(ToggleInteractiveWidget):
     opacityEffectCtrl: ZOpacityEffect
     iconColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
@@ -359,7 +359,7 @@ class ZNavigationBar(ZWidget):
         self.setLayout(ZVBoxLayout(self, margins=QMargins(0, 0, 0, 0), spacing=0))
         self.layout().addWidget(self._panel, stretch=1)
         self.layout().addWidget(self._footer_panel, stretch=0)
-        self._btn_manager = ZButtonGroup()
+        self._btn_manager = ZExclusiveToggleGroup()
         self._btn_manager.toggled.connect(self._update_indicator_)
         self._panel.wheeled.connect(self._sync_indicator_)
         self._init_color_data_()
@@ -417,7 +417,7 @@ class ZNavigationBar(ZWidget):
     def addToggleButton(self, name: str, icon: QIcon, panel: Panel|FooterPanel, tooltip: str = None):
         btn = ZNavBarToggleButton(panel, objectName=name, icon=icon, fixed_size=self._btn_size, toolTip=tooltip)
         panel.layout().addWidget(btn)
-        self._btn_manager.addButton(btn)
+        self._btn_manager.addWidget(btn)
         self._buttons.append(btn)
         self._button_map[name] = btn
 
@@ -430,10 +430,10 @@ class ZNavigationBar(ZWidget):
         self._buttons.insert(index, btn)
 
     def toggleToNextButton(self):
-        self._btn_manager.toggleToNextButton()
+        self._btn_manager.toggleToNext()
 
     def toggleToLastButton(self):
-        self._btn_manager.toggleToLastButton()
+        self._btn_manager.toggleToLast()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -451,7 +451,7 @@ class ZNavigationBar(ZWidget):
 
     @Slot()
     def _update_indicator_(self):
-        btn = self._btn_manager.checkedButton()
+        btn = self._btn_manager.checkedWidget()
         current_pos = self._indicator.pos()
         target_pos = self._get_btn_global_pos_(btn)
         distance = abs(target_pos.y() - current_pos.y())
@@ -464,7 +464,7 @@ class ZNavigationBar(ZWidget):
 
     @Slot()
     def _sync_indicator_(self):
-        btn = self._btn_manager.checkedButton()
+        btn = self._btn_manager.checkedWidget()
         if btn.parentWidget() is self._panel:
             self._indicator.stackUnder(self._footer_panel)
         else:

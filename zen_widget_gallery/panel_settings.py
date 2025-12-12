@@ -41,10 +41,10 @@ class PanelSettings(ZPanel):
         self.btn_theme_set_3.setButtonGroup(True)
         self.btn_theme_set_3.clicked.connect(lambda: ZGlobal.themeManager.setThemeMode(ZThemeMode.FollowSystem))
         self.hcontainer.addWidget(self.btn_theme_set_3)
-        self.theme_btn_group = ZButtonGroup(self.hcontainer)
-        self.theme_btn_group.addButton(self.btn_theme_set_1)
-        self.theme_btn_group.addButton(self.btn_theme_set_2)
-        self.theme_btn_group.addButton(self.btn_theme_set_3)
+        self.theme_btn_group = ZExclusiveToggleGroup(self.hcontainer)
+        self.theme_btn_group.addWidget(self.btn_theme_set_1)
+        self.theme_btn_group.addWidget(self.btn_theme_set_2)
+        self.theme_btn_group.addWidget(self.btn_theme_set_3)
 
 
 

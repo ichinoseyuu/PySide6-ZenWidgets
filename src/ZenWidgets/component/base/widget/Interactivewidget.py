@@ -5,26 +5,23 @@ from ZenWidgets.core import ZState
 from ZenWidgets.component.base.widget import ZWidget
 from ZenWidgets.component.base.controller import ZAnimatedFloat
 from ZenWidgets.gui import StyleT
-from typing import TYPE_CHECKING,Optional
+from typing import TYPE_CHECKING,Optional,override
 if TYPE_CHECKING:
-    from ZenWidgets.component.base.group import ZButtonGroup
+    from ZenWidgets.component.base.group import ZExclusiveToggleGroup
 
 __All__ = [
-    'ABCButton',
-    'ABCToggleButton',
-    'ABCRepeatButton',
-    'ABCLongPressButton',
-    'ABCProgressButton'
+    'ClickInteractiveWidget',
+    'ToggleInteractiveWidget',
+    'RepeatTriggerWidget',
+    'LongPressTriggerWidget',
+    'ProgressIndicatorWidget'
 ]
 
-# region ABCButton
-class ABCButton(ZWidget[StyleT]):
+# region ClickInteractiveWidget
+class ClickInteractiveWidget(ZWidget[StyleT]):
     pressed = Signal()
-    '''鼠标按下信号'''
     released = Signal()
-    '''鼠标释放信号'''
     clicked = Signal()
-    '''鼠标点击信号'''
     def __init__(self,
                  parent: QWidget | ZWidget | None = None,
                  *args,
@@ -42,13 +39,14 @@ class ABCButton(ZWidget[StyleT]):
                          )
 
     # private method
-    def _mouse_press_(self): ...
+    def _mouse_click_(self) -> None: ...
 
-    def _mouse_release_(self): ...
+    def _mouse_press_(self) -> None: ...
 
-    def _mouse_click_(self): ...
+    def _mouse_release_(self) -> None: ...
 
     # event
+    @override
     def mousePressEvent(self, event: QMouseEvent):
         super().mousePressEvent(event)
         if event.button() == Qt.MouseButton.LeftButton:
@@ -56,6 +54,7 @@ class ABCButton(ZWidget[StyleT]):
             self._mouse_press_()
             self.pressed.emit()
 
+    @override
     def mouseMoveEvent(self, event: QMouseEvent):
         super().mouseMoveEvent(event)
         is_inside = self.rect().contains(event.position().toPoint())
@@ -76,6 +75,7 @@ class ABCButton(ZWidget[StyleT]):
         else:
             self._state = ZState.Pressed
 
+    @override
     def mouseReleaseEvent(self, event: QMouseEvent):
         super().mouseReleaseEvent(event)
         if event.button() == Qt.MouseButton.LeftButton:
@@ -89,9 +89,8 @@ class ABCButton(ZWidget[StyleT]):
                 self._state = ZState.Idle
 
 
-
-# region ABCToggleButton
-class ABCToggleButton(ABCButton[StyleT]):
+# region ToggleInteractiveWidget
+class ToggleInteractiveWidget(ClickInteractiveWidget[StyleT]):
     toggled = Signal(bool)
     def __init__(self,
                  parent: QWidget | ZWidget | None = None,
@@ -114,7 +113,7 @@ class ABCToggleButton(ABCButton[StyleT]):
         self._checkable: bool = checkable
         self._checked: bool = checked
         self._is_group_member: bool = is_group_member
-        self._button_group: Optional['ZButtonGroup']= None
+        self._button_group: Optional['ZExclusiveToggleGroup']= None
 
     # private method
     def _button_toggle_(self): ...
@@ -134,7 +133,7 @@ class ABCToggleButton(ABCButton[StyleT]):
 
     def isGroupMember(self) -> bool: return self._is_group_member
 
-    def setButtonGroup(self, group: 'ZButtonGroup'):
+    def setButtonGroup(self, group: 'ZExclusiveToggleGroup'):
         self._button_group = group
         self._is_group_member = True
 
@@ -143,6 +142,7 @@ class ABCToggleButton(ABCButton[StyleT]):
         self._is_group_member = False
 
     # event
+    @override
     def mouseReleaseEvent(self, event: QMouseEvent):
         super().mouseReleaseEvent(event)
         if event.button() == Qt.MouseButton.LeftButton and self._checkable:
@@ -151,8 +151,8 @@ class ABCToggleButton(ABCButton[StyleT]):
                 self._button_toggle_()
                 self.toggled.emit(self._checked)
 
-# region ABCRepeatButton
-class ABCRepeatButton(ABCButton[StyleT]):
+# region RepeatTriggerWidget
+class RepeatTriggerWidget(ClickInteractiveWidget[StyleT]):
     def __init__(self,
                  parent: QWidget | ZWidget | None = None,
                  *args,
@@ -208,11 +208,13 @@ class ABCRepeatButton(ABCButton[StyleT]):
     def setTriggerDelay(self, d: int): self._trigger_delay.setInterval(d)
 
     # event
+    @override
     def mousePressEvent(self, event: QMouseEvent):
         super().mousePressEvent(event)
         if event.button() == Qt.MouseButton.LeftButton and self._repeatable:
             self._trigger_delay.start()
 
+    @override
     def mouseMoveEvent(self, event: QMouseEvent):
         super().mouseMoveEvent(event)
         if not self.rect().contains(event.position().toPoint()) and self._repeatable:
@@ -220,6 +222,7 @@ class ABCRepeatButton(ABCButton[StyleT]):
             self._trigger_interval.stop()
             self._repeat_count = 0
 
+    @override
     def mouseReleaseEvent(self, event: QMouseEvent):
         super().mouseReleaseEvent(event)
         if event.button() == Qt.MouseButton.LeftButton and self._repeatable:
@@ -227,8 +230,8 @@ class ABCRepeatButton(ABCButton[StyleT]):
             self._trigger_interval.stop()
             self._repeat_count = 0
 
-# region ABCLongPressButton
-class ABCLongPressButton(ABCButton[StyleT]):
+# region LongPressTriggerWidget
+class LongPressTriggerWidget(ClickInteractiveWidget[StyleT]):
     longPressClicked = Signal()
     '''长按信号'''
 
@@ -281,8 +284,8 @@ class ABCLongPressButton(ABCButton[StyleT]):
         else:
             self.progressCtrl.setValue(progress)
 
-# region ABCProgressButton
-class ABCProgressButton(ABCButton[StyleT]):
+# region ProgressIndicatorWidget
+class ProgressIndicatorWidget(ClickInteractiveWidget[StyleT]):
     progressChanged = Signal(float)
     '''进度改变信号'''
     progressFinished = Signal()

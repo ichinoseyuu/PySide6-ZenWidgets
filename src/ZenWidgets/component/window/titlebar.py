@@ -2,7 +2,7 @@ from PySide6.QtCore import QEvent,Qt,QLineF,QPoint,QPointF,QSize
 from PySide6.QtGui import QPainter,QPen,QColor,QPainterPath,QIcon,QPixmap
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QWidget
 from ZenWidgets.component.window.win32utils import startSystemMove,toggleWindowState
-from ZenWidgets.component.base.abstract import ABCButton
+from ZenWidgets.component.base.widget import ClickInteractiveWidget
 from ZenWidgets.component.base.controller import ZAnimatedColor,ZColorController
 from ZenWidgets.component.text import ZHeadLine
 from ZenWidgets.core import ZDebug,ZGlobal,ZPosition
@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 # region ZTitleBarButton
-class ZTitleBarButton(ABCButton):
+class ZTitleBarButton(ClickInteractiveWidget):
     bodyColorCtrl: ZAnimatedColor
     iconColorCtrl: ZAnimatedColor
     colorDataCtrl: ZColorController[ZTitleBarButtonColorData]
