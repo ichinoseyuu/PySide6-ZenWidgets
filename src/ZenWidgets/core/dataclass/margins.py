@@ -1,14 +1,14 @@
 from typing import overload, Any
 from PySide6.QtCore import QSize, QSizeF, QPoint, QPointF, QRect, QRectF
 
-# region ZMargin
-class ZMargin(object):
+# region ZMargins
+class ZMargins(object):
 
     @overload
     def __init__(self, /) -> None: ...
 
     @overload
-    def __init__(self, padding: 'ZMargin', /) -> None: ...
+    def __init__(self, padding: 'ZMargins', /) -> None: ...
 
     @overload
     def __init__(self, left: int, top: int, right: int, bottom: int, /) -> None: ...
@@ -16,7 +16,7 @@ class ZMargin(object):
     def __init__(self, *args) -> None:
         if not args:
             self._left = self._top = self._right = self._bottom = 0
-        elif len(args) == 1 and isinstance(args[0], ZMargin):
+        elif len(args) == 1 and isinstance(args[0], ZMargins):
             other = args[0]
             self._left = other._left
             self._top = other._top
@@ -28,21 +28,21 @@ class ZMargin(object):
             raise TypeError("Invalid arguments for ZMargin constructor")
 
     @overload
-    def __add__(self, other: 'ZMargin', /) -> 'ZMargin': ...
+    def __add__(self, other: 'ZMargins', /) -> 'ZMargins': ...
 
     @overload
-    def __add__(self, value: int, /) -> 'ZMargin': ...
+    def __add__(self, value: int, /) -> 'ZMargins': ...
 
-    def __add__(self, other, /) -> 'ZMargin':
-        if isinstance(other, ZMargin):
-            return ZMargin(
+    def __add__(self, other, /) -> 'ZMargins':
+        if isinstance(other, ZMargins):
+            return ZMargins(
                 self._left + other._left,
                 self._top + other._top,
                 self._right + other._right,
                 self._bottom + other._bottom
             )
         elif isinstance(other, int):
-            return ZMargin(
+            return ZMargins(
                 self._left + other,
                 self._top + other,
                 self._right + other,
@@ -52,21 +52,21 @@ class ZMargin(object):
             raise TypeError(f"Unsupported operand type(s) for +: 'ZMargin' and '{type(other).__name__}'")
 
     @overload
-    def __sub__(self, other: 'ZMargin', /) -> 'ZMargin': ...
+    def __sub__(self, other: 'ZMargins', /) -> 'ZMargins': ...
 
     @overload
-    def __sub__(self, value: int, /) -> 'ZMargin': ...
+    def __sub__(self, value: int, /) -> 'ZMargins': ...
 
-    def __sub__(self, other, /) -> 'ZMargin':
-        if isinstance(other, ZMargin):
-            return ZMargin(
+    def __sub__(self, other, /) -> 'ZMargins':
+        if isinstance(other, ZMargins):
+            return ZMargins(
                 self._left - other._left,
                 self._top - other._top,
                 self._right - other._right,
                 self._bottom - other._bottom
             )
         elif isinstance(other, int):
-            return ZMargin(
+            return ZMargins(
                 self._left - other,
                 self._top - other,
                 self._right - other,
@@ -76,12 +76,12 @@ class ZMargin(object):
             raise TypeError(f"Unsupported operand type(s) for -: 'ZMargin' and '{type(other).__name__}'")
 
     @overload
-    def __mul__(self, factor: int, /) -> 'ZMargin': ...
+    def __mul__(self, factor: int, /) -> 'ZMargins': ...
 
     @overload
-    def __mul__(self, factor: float, /) -> 'ZMarginF': ...
+    def __mul__(self, factor: float, /) -> 'ZMarginsF': ...
 
-    def __mul__(self, factor: int | float, /) -> 'ZMargin | ZMarginF':
+    def __mul__(self, factor: int | float, /) -> 'ZMargins | ZMarginsF':
         if isinstance(factor, (int, float)):
             left = self._left * factor
             top = self._top * factor
@@ -89,19 +89,19 @@ class ZMargin(object):
             bottom = self._bottom * factor
 
             if isinstance(factor, int):
-                return ZMargin(int(left), int(top), int(right), int(bottom))
+                return ZMargins(int(left), int(top), int(right), int(bottom))
             else:
-                return ZMarginF(left, top, right, bottom)
+                return ZMarginsF(left, top, right, bottom)
         else:
             raise TypeError(f"Unsupported operand type(s) for *: 'ZMargin' and '{type(factor).__name__}'")
 
     def __eq__(self, other: Any, /) -> bool:
-        if isinstance(other, ZMargin):
+        if isinstance(other, ZMargins):
             return (self._left == other._left and
                     self._top == other._top and
                     self._right == other._right and
                     self._bottom == other._bottom)
-        elif isinstance(other, ZMarginF):
+        elif isinstance(other, ZMarginsF):
             return (self._left == other.left() and
                     self._top == other.top() and
                     self._right == other.right() and
@@ -110,12 +110,12 @@ class ZMargin(object):
 
     def __ne__(self, other: Any, /) -> bool: return not self.__eq__(other)
 
-    def __neg__(self, /) -> 'ZMargin': return ZMargin(-self._left, -self._top, -self._right, -self._bottom)
+    def __neg__(self, /) -> 'ZMargins': return ZMargins(-self._left, -self._top, -self._right, -self._bottom)
 
-    def __pos__(self, /) -> 'ZMargin': return ZMargin(self)
+    def __pos__(self, /) -> 'ZMargins': return ZMargins(self)
 
-    def __or__(self, other: 'ZMargin', /) -> 'ZMargin':
-        return ZMargin(
+    def __or__(self, other: 'ZMargins', /) -> 'ZMargins':
+        return ZMargins(
             max(self._left, other._left),
             max(self._top, other._top),
             max(self._right, other._right),
@@ -194,22 +194,22 @@ class ZMargin(object):
 
     def isNull(self, /) -> bool: return self._left == 0 and self._top == 0 and self._right == 0 and self._bottom == 0
 
-    def toMarginF(self, /) -> 'ZMarginF': return ZMarginF(self._left, self._top, self._right, self._bottom)
+    def toMarginF(self, /) -> 'ZMarginsF': return ZMarginsF(self._left, self._top, self._right, self._bottom)
 
-    def __copy__(self, /) -> 'ZMargin': return ZMargin(self)
+    def __copy__(self, /) -> 'ZMargins': return ZMargins(self)
 
 
-# region ZMarginF
-class ZMarginF(object):
+# region ZMarginsF
+class ZMarginsF(object):
 
     @overload
     def __init__(self, /) -> None: ...
 
     @overload
-    def __init__(self, padding: 'ZMargin', /) -> None: ...
+    def __init__(self, padding: 'ZMargins', /) -> None: ...
 
     @overload
-    def __init__(self, padding: 'ZMarginF', /) -> None: ...
+    def __init__(self, padding: 'ZMarginsF', /) -> None: ...
 
     @overload
     def __init__(self, left: float, top: float, right: float, bottom: float, /) -> None: ...
@@ -217,13 +217,13 @@ class ZMarginF(object):
     def __init__(self, *args) -> None:
         if not args:
             self._left = self._top = self._right = self._bottom = 0.0
-        elif len(args) == 1 and isinstance(args[0], ZMargin):
+        elif len(args) == 1 and isinstance(args[0], ZMargins):
             other = args[0]
             self._left = float(other.left())
             self._top = float(other.top())
             self._right = float(other.right())
             self._bottom = float(other.bottom())
-        elif len(args) == 1 and isinstance(args[0], ZMarginF):
+        elif len(args) == 1 and isinstance(args[0], ZMarginsF):
             other = args[0]
             self._left = other._left
             self._top = other._top
@@ -235,21 +235,21 @@ class ZMarginF(object):
             raise TypeError("Invalid arguments for ZMarginF constructor")
 
     @overload
-    def __add__(self, other: 'ZMargin | ZMarginF', /) -> 'ZMarginF': ...
+    def __add__(self, other: 'ZMargins | ZMarginsF', /) -> 'ZMarginsF': ...
 
     @overload
-    def __add__(self, value: float, /) -> 'ZMarginF': ...
+    def __add__(self, value: float, /) -> 'ZMarginsF': ...
 
-    def __add__(self, other, /) -> 'ZMarginF':
-        if isinstance(other, (ZMargin, ZMarginF)):
-            return ZMarginF(
+    def __add__(self, other, /) -> 'ZMarginsF':
+        if isinstance(other, (ZMargins, ZMarginsF)):
+            return ZMarginsF(
                 self._left + other.left(),
                 self._top + other.top(),
                 self._right + other.right(),
                 self._bottom + other.bottom()
             )
         elif isinstance(other, (int, float)):
-            return ZMarginF(
+            return ZMarginsF(
                 self._left + other,
                 self._top + other,
                 self._right + other,
@@ -259,21 +259,21 @@ class ZMarginF(object):
             raise TypeError(f"Unsupported operand type(s) for +: 'ZMarginF' and '{type(other).__name__}'")
 
     @overload
-    def __sub__(self, other: 'ZMargin | ZMarginF', /) -> 'ZMarginF': ...
+    def __sub__(self, other: 'ZMargins | ZMarginsF', /) -> 'ZMarginsF': ...
 
     @overload
-    def __sub__(self, value: float, /) -> 'ZMarginF': ...
+    def __sub__(self, value: float, /) -> 'ZMarginsF': ...
 
-    def __sub__(self, other, /) -> 'ZMarginF':
-        if isinstance(other, (ZMargin, ZMarginF)):
-            return ZMarginF(
+    def __sub__(self, other, /) -> 'ZMarginsF':
+        if isinstance(other, (ZMargins, ZMarginsF)):
+            return ZMarginsF(
                 self._left - other.left(),
                 self._top - other.top(),
                 self._right - other.right(),
                 self._bottom - other.bottom()
             )
         elif isinstance(other, (int, float)):
-            return ZMarginF(
+            return ZMarginsF(
                 self._left - other,
                 self._top - other,
                 self._right - other,
@@ -282,9 +282,9 @@ class ZMarginF(object):
         else:
             raise TypeError(f"Unsupported operand type(s) for -: 'ZMarginF' and '{type(other).__name__}'")
 
-    def __mul__(self, factor: float, /) -> 'ZMarginF':
+    def __mul__(self, factor: float, /) -> 'ZMarginsF':
         if isinstance(factor, (int, float)):
-            return ZMarginF(
+            return ZMarginsF(
                 self._left * factor,
                 self._top * factor,
                 self._right * factor,
@@ -294,12 +294,12 @@ class ZMarginF(object):
             raise TypeError(f"Unsupported operand type(s) for *: 'ZMarginF' and '{type(factor).__name__}'")
 
     def __eq__(self, other: Any, /) -> bool:
-        if isinstance(other, ZMarginF):
+        if isinstance(other, ZMarginsF):
             return (self._left == other._left and
                     self._top == other._top and
                     self._right == other._right and
                     self._bottom == other._bottom)
-        elif isinstance(other, ZMargin):
+        elif isinstance(other, ZMargins):
             return (self._left == other.left() and
                     self._top == other.top() and
                     self._right == other.right() and
@@ -308,12 +308,12 @@ class ZMarginF(object):
 
     def __ne__(self, other: Any, /) -> bool: return not self.__eq__(other)
 
-    def __neg__(self, /) -> 'ZMarginF': return ZMarginF(-self._left, -self._top, -self._right, -self._bottom)
+    def __neg__(self, /) -> 'ZMarginsF': return ZMarginsF(-self._left, -self._top, -self._right, -self._bottom)
 
-    def __pos__(self, /) -> 'ZMarginF': return ZMarginF(self)
+    def __pos__(self, /) -> 'ZMarginsF': return ZMarginsF(self)
 
-    def __or__(self, other: 'ZMargin | ZMarginF', /) -> 'ZMarginF':
-        return ZMarginF(
+    def __or__(self, other: 'ZMargins | ZMarginsF', /) -> 'ZMarginsF':
+        return ZMarginsF(
             max(self._left, other.left()),
             max(self._top, other.top()),
             max(self._right, other.right()),
@@ -392,12 +392,12 @@ class ZMarginF(object):
 
     def isNull(self, /) -> bool: return self._left == 0.0 and self._top == 0.0 and self._right == 0.0 and self._bottom == 0.0
 
-    def toMargin(self, /) -> 'ZMargin':
-        return ZMargin(
+    def toMargin(self, /) -> 'ZMargins':
+        return ZMargins(
             int(round(self._left)),
             int(round(self._top)),
             int(round(self._right)),
             int(round(self._bottom))
         )
 
-    def __copy__(self, /) -> 'ZMarginF': return ZMarginF(self)
+    def __copy__(self, /) -> 'ZMarginsF': return ZMarginsF(self)

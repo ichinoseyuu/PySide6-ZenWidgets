@@ -2,7 +2,7 @@ from PySide6.QtCore import QObject, Signal
 from typing import Dict, List, Optional, Any, overload
 from functools import partial
 from itertools import count
-from ZenWidgets.component.base.widget import ToggleInteractiveWidget,ZWidget
+from ZenWidgets.component.base.widget import ZToggleWidget,ZWidget
 
 # region ZExclusiveToggleGroup
 class ZExclusiveToggleGroup(QObject):
@@ -11,7 +11,7 @@ class ZExclusiveToggleGroup(QObject):
 
     def __init__(self, parent: ZWidget | None = None):
         super().__init__(parent)
-        self._widgets: Dict[int, ToggleInteractiveWidget] = {}
+        self._widgets: Dict[int, ZToggleWidget] = {}
         self._last_checked_key: Optional[int] = None
         self._checked_key: Optional[int] = None
         self._enabled = True
@@ -43,29 +43,29 @@ class ZExclusiveToggleGroup(QObject):
         for button in self._widgets.values():
             button.setEnabled(self._enabled)
 
-    def widgets(self) -> List[ToggleInteractiveWidget]:
+    def widgets(self) -> List[ZToggleWidget]:
         return list(self._widgets.values())
 
     def checkedKey(self) -> Optional[int]:
         return self._checked_key
 
-    def checkedWidget(self) -> Optional[ToggleInteractiveWidget]:
+    def checkedWidget(self) -> Optional[ZToggleWidget]:
         return self._widgets.get(self._checked_key)
 
     def lastCheckedKey(self) -> Optional[int]:
         return self._last_checked_key
 
-    def lastCheckedWidget(self) -> Optional[ToggleInteractiveWidget]:
+    def lastCheckedWidget(self) -> Optional[ZToggleWidget]:
         return self._widgets.get(self._last_checked_key)
 
     def count(self) -> int:
         return len(self._widgets)
 
-    def getWidget(self, key: int) -> Optional[ToggleInteractiveWidget]:
+    def getWidget(self, key: int) -> Optional[ZToggleWidget]:
         return self._widgets.get(key)
 
     def addWidget(self,
-                  widget: ToggleInteractiveWidget,
+                  widget: ZToggleWidget,
                   key: Optional[int] = None,
                   is_checked: bool = False,
                   set_first_checked: bool = True) -> int:
@@ -82,7 +82,7 @@ class ZExclusiveToggleGroup(QObject):
             used_key = key
 
         self._widgets[used_key] = widget
-        widget.setButtonGroup(self)
+        widget.setGroup(self)
 
         # 创建并保存回调以便将来断开
         cb_toggled = partial(self._widget_toggle_handler_, used_key)
@@ -99,7 +99,7 @@ class ZExclusiveToggleGroup(QObject):
     def removeWidget(self, key: int) -> None: ...
 
     @overload
-    def removeWidget(self, widget: ToggleInteractiveWidget) -> None: ...
+    def removeWidget(self, widget: ZToggleWidget) -> None: ...
 
     def removeWidget(self, arg):
         key_to_remove: Optional[int] = None

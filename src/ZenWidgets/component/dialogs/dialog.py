@@ -11,7 +11,7 @@ from ZenWidgets.component.base import(
     ZColorController
 )
 from ZenWidgets.component.text import ZHeadLine,ZTextBlock
-from ZenWidgets.core import ZMargin,ZDebug
+from ZenWidgets.core import ZMargins,ZDebug
 from ZenWidgets.gui import ZWidgetEffect,ZDialogColorData
 
 #region ZDialog
@@ -42,7 +42,7 @@ class ZDialog(ZWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowModal)
         self.windowOpacityCtrl.completelyHide.connect(self.hide)
-        self._margin = ZMargin(8, 8, 8, 8)
+        self._margin = ZMargins(8, 8, 8, 8)
 
         self._result = self.Rejected
 
@@ -54,7 +54,7 @@ class ZDialog(ZWidget):
         self._title = ZHeadLine(self._content, text=title, display_indicator=True, font=QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
         self._content.layout().addWidget(self._title, stretch=0)
 
-        self._message = ZTextBlock(self._content, text=message)
+        self._message = ZTextBlock(self._content, text=message,height_for_width=False)
         self._message.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._content.layout().addWidget(self._message, stretch=1)
 

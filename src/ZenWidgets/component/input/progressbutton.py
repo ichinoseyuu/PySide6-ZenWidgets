@@ -6,7 +6,7 @@ from ZenWidgets.component.base import (
     ZAnimatedFloat,
     ZColorController,
     ZOpacityEffect,
-    ProgressIndicatorWidget,
+    ZProgressWidget,
     ZWidget
     )
 from ZenWidgets.core import (
@@ -16,7 +16,7 @@ from ZenWidgets.core import (
 )
 from ZenWidgets.gui import ZProgressButtonColorData
 
-class ZProgressButton(ProgressIndicatorWidget):
+class ZProgressButton(ZProgressWidget):
     bodyColorCtrl: ZAnimatedColor
     progressColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor

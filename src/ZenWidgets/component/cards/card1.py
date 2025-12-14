@@ -1,12 +1,12 @@
 from PySide6.QtWidgets import QWidget,QSizePolicy
-from PySide6.QtCore import Qt,QRectF,QMargins
+from PySide6.QtCore import Qt,QRectF,QMargins,QSize
 from PySide6.QtGui import QPainter,QPen,QPainterPath
 from ZenWidgets.component.base import ZAnimatedColor,ZAnimatedFloat,ZColorController,ZWidget
-from ZenWidgets.component.layouts import ZVBoxLayout,ZHBoxLayout
-from ZenWidgets.core import ZDebug
+from ZenWidgets.component.layouts import ZVBoxLayout,ZHBoxLayout,ZVContainer
+from ZenWidgets.core import ZDebug,ZMargins
 from ZenWidgets.gui import ZCardColorData,ZWidgetEffect
 
-class ZCard(ZWidget):
+class ZNewCard(ZWidget):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
@@ -34,8 +34,11 @@ class ZCard(ZWidget):
         self._display_underline = display_underline
         self._display_shadow = display_shadow
         self._init_color_data_()
-        self.setLayout(ZVBoxLayout(self,margins=QMargins(16,16,16,16),spacing=16))
+        self._container = ZVContainer(self,margins=ZMargins(16,16,16,16),spacing=16)
+
         if self._display_shadow: ZWidgetEffect.applyGraphicsShadow(self)
+
+    def container(self): return self._container
 
     def setShadowDisplay(self, display: bool,/):
         self._display_shadow = display
@@ -45,7 +48,7 @@ class ZCard(ZWidget):
         self._display_border = display
         self.update()
 
-    def sizeHint(self): return self.layout().sizeHint()
+    def sizeHint(self): return self._container.sizeHint()
 
     # region private
     def _init_color_data_(self):

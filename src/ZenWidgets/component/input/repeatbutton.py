@@ -8,7 +8,7 @@ from ZenWidgets.component.base import (
     ZOpacityEffect,
     ZFlashEffect,
     ZWidget,
-    RepeatTriggerWidget
+    ZRepeatClickWidget
 )
 from ZenWidgets.core import (
     ZDebug,
@@ -17,7 +17,7 @@ from ZenWidgets.core import (
 )
 from ZenWidgets.gui import ZRepeatButtonColorData,ZButtonStyle
 
-class ZRepeatButton(RepeatTriggerWidget[ZButtonStyle]):
+class ZRepeatButton(ZRepeatClickWidget[ZButtonStyle]):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat

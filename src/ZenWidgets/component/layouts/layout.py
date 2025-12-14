@@ -1,5 +1,6 @@
-from PySide6.QtWidgets import QWidget,QGridLayout,QBoxLayout,QLayoutItem
+from PySide6.QtWidgets import QGridLayout,QBoxLayout,QLayoutItem
 from PySide6.QtCore import Qt,QMargins,QSize,QPoint
+from ZenWidgets.component.base import ZWidget
 
 __all__ = [
     'ZBoxLayout',
@@ -12,10 +13,10 @@ __all__ = [
 class ZBoxLayout(QBoxLayout):
     def __init__(self,
                  direction: QBoxLayout.Direction,
-                 parent: QWidget | None = None):
+                 parent: ZWidget | None = None):
         super().__init__(direction, parent)
 
-    def allWidgets(self) -> list[QWidget]:
+    def allWidgets(self) -> list[ZWidget]:
         widgets = []
         for i in range(self.count()):
             item: QLayoutItem = self.itemAt(i)
@@ -73,7 +74,7 @@ class ZBoxLayout(QBoxLayout):
 # region ZHBoxLayout
 class ZHBoxLayout(ZBoxLayout):
     def __init__(self,
-                 parent: QWidget | None = None,
+                 parent: ZWidget | None = None,
                  margins: QMargins = QMargins(6, 6, 6, 6),
                  spacing: int = 6,
                  alignment: Qt.AlignmentFlag | None = None
@@ -87,7 +88,7 @@ class ZHBoxLayout(ZBoxLayout):
 # region ZVBoxLayout
 class ZVBoxLayout(ZBoxLayout):
     def __init__(self,
-                 parent: QWidget | None = None,
+                 parent: ZWidget | None = None,
                  margins: QMargins = QMargins(6, 6, 6, 6),
                  spacing: int = 6,
                  alignment: Qt.AlignmentFlag | None = None
@@ -100,7 +101,7 @@ class ZVBoxLayout(ZBoxLayout):
 
 class ZGridLayout(QGridLayout):
     def __init__(self,
-                 parent: QWidget | None = None,
+                 parent: ZWidget | None = None,
                  margins: QMargins = QMargins(6, 6, 6, 6),
                  spacing: int = 6,
                  alignment: Qt.AlignmentFlag | None = None

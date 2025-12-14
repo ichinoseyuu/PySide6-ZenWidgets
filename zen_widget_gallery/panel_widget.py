@@ -267,7 +267,7 @@ class PanelWidget(ZScrollPanel):
 
         container1 = ZVContainer(card)
         container1.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        container1.setDefaultSpacing(16)
+        container1.setSpacing(16)
         hlayout.layout().addWidget(container1)
 
         self.hslider_1 = ZSlider(
@@ -309,7 +309,7 @@ class PanelWidget(ZScrollPanel):
 
         container2 = ZHContainer(card)
         container2.setAlignment(Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
-        container2.setDefaultSpacing(16)
+        container2.setSpacing(16)
         hlayout.layout().addWidget(container2)
 
         self.vslider_1 = ZSlider(

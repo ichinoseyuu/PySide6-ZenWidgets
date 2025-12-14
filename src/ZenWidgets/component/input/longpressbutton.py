@@ -6,7 +6,7 @@ from ZenWidgets.component.base import (
     ZAnimatedFloat,
     ZColorController,
     ZOpacityEffect,
-    LongPressTriggerWidget,
+    ZLongPressWidget,
     ZWidget
     )
 from ZenWidgets.core import (
@@ -16,7 +16,7 @@ from ZenWidgets.core import (
 )
 from ZenWidgets.gui import ZLongPressButtonColorData
 
-class ZLongPressButton(LongPressTriggerWidget):
+class ZLongPressButton(ZLongPressWidget):
     bodyColorCtrl: ZAnimatedColor
     progressColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor

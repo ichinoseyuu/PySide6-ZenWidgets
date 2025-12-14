@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget,QSizePolicy
-from PySide6.QtCore import Qt,QSize,QRectF
+from PySide6.QtCore import Qt,QSize,QRectF,QEvent
 from PySide6.QtGui import QPainter,QFont,QFontMetrics,QPen
 from ZenWidgets.component.base import (
     ZFlashEffect,
@@ -26,7 +26,7 @@ class ZHeadLine(ZWidget):
     }
 
     def __init__(self,
-                 parent: QWidget = None,
+                 parent: QWidget | None = None,
                  text: str = "",
                  font: QFont = QFont('Microsoft YaHei', 9),
                  display_indicator: bool = False,

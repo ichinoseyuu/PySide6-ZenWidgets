@@ -1,3 +1,3 @@
 from .padding import ZPadding,ZPaddingF
-from .margin import ZMargin,ZMarginF
+from .margins import ZMargins,ZMarginsF
 from .textcommand import ZTextSnapshot

@@ -23,7 +23,7 @@ class ZTextBlock(ZWidget):
     }
 
     def __init__(self,
-                 parent: QWidget = None,
+                 parent: QWidget | None = None,
                  text: str = "",
                  font: QFont = QFont('Microsoft YaHei', 9),
                  wrap_mode: ZWrapMode = ZWrapMode.WordWrap,

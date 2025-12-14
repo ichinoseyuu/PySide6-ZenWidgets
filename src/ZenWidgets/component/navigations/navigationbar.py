@@ -11,8 +11,8 @@ from ZenWidgets.component.base import (
     ZColorController,
     ZExclusiveToggleGroup,
     ZWidget,
-    ClickInteractiveWidget,
-    ToggleInteractiveWidget
+    ZClickWidget,
+    ZToggleWidget
 )
 from ZenWidgets.core import (
     ZDebug,
@@ -27,7 +27,7 @@ from ZenWidgets.gui import (
 )
 
 # region ZNavBarButton
-class ZNavBarButton(ClickInteractiveWidget):
+class ZNavBarButton(ZClickWidget):
     opacityEffectCtrl: ZOpacityEffect
     iconColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
@@ -39,7 +39,7 @@ class ZNavBarButton(ClickInteractiveWidget):
     }
 
     def __init__(self,
-                 parent: ZWidget | QWidget | None = None,
+                 parent: ZWidget | None = None,
                  icon: QIcon | None = None,
                  fixed_size: QSize = QSize(40, 40),
                  objectName: str | None = None,
@@ -133,7 +133,7 @@ class ZNavBarButton(ClickInteractiveWidget):
         event.accept()
 
 # region ZNavBarToggleButton
-class ZNavBarToggleButton(ToggleInteractiveWidget):
+class ZNavBarToggleButton(ZToggleWidget):
     opacityEffectCtrl: ZOpacityEffect
     iconColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
@@ -144,7 +144,7 @@ class ZNavBarToggleButton(ToggleInteractiveWidget):
         'radiusCtrl': {'value': 5.0},
     }
     def __init__(self,
-                 parent: ZWidget | QWidget | None = None,
+                 parent: ZWidget | None = None,
                  icon: QIcon | None = None,
                  fixed_size: QSize = QSize(40, 40),
                  objectName: str | None = None,
@@ -154,7 +154,7 @@ class ZNavBarToggleButton(ToggleInteractiveWidget):
                          objectName=objectName,
                          toolTip=toolTip,
                          )
-        self.setButtonGroup(True)
+        self.setGroup(True)
         self._icon = icon
         self._icon_size = QSize(20, 20)
         self._init_color_data_()
@@ -197,7 +197,7 @@ class ZNavBarToggleButton(ToggleInteractiveWidget):
 
     def _mouse_release_(self): self.opacityEffectCtrl.setAlphaFTo(0.08)
 
-    def _button_toggle_(self):
+    def _toggle_(self):
         data = self.colorDataCtrl.data
         if self._checked:
             self.opacityEffectCtrl.setAlphaFTo(0.12)
@@ -340,7 +340,7 @@ class ZNavigationBar(ZWidget):
     __controllers_kwargs__ = {'colorDataCtrl':{'key': 'ZNavigationBar'}}
 
     def __init__(self,
-                 parent: QWidget | ZWidget | None = None,
+                 parent: ZWidget | None = None,
                  btn_size: QSize = QSize(40, 40),
                  btn_icon_size: QSize = QSize(20, 20),
                  objectName: str | None = None

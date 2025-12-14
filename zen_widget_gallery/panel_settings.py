@@ -19,7 +19,7 @@ class PanelSettings(ZPanel):
         self.layout().addWidget(self.text)
 
         self.hcontainer = ZHContainer(self)
-        self.hcontainer.margin = QMargins(10, 10, 10, 10)
+        self.hcontainer.margins = QMargins(10, 10, 10, 10)
         self.hcontainer.alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         self.layout().addWidget(self.hcontainer)
 
@@ -28,17 +28,17 @@ class PanelSettings(ZPanel):
         self.hcontainer.addWidget(self.text_theme_set)
 
         self.btn_theme_set_1 = ZToggleButton(self.hcontainer, text='浅色')
-        self.btn_theme_set_1.setButtonGroup(True)
+        self.btn_theme_set_1.setGroup(True)
         self.btn_theme_set_1.clicked.connect(lambda: ZGlobal.themeManager.setTheme(ZTheme.Light))
         self.hcontainer.addWidget(self.btn_theme_set_1)
 
         self.btn_theme_set_2 = ZToggleButton(self.hcontainer, text='深色')
-        self.btn_theme_set_2.setButtonGroup(True)
+        self.btn_theme_set_2.setGroup(True)
         self.btn_theme_set_2.clicked.connect(lambda: ZGlobal.themeManager.setTheme(ZTheme.Dark))
         self.hcontainer.addWidget(self.btn_theme_set_2)
 
         self.btn_theme_set_3 = ZToggleButton(self.hcontainer, text='跟随系统')
-        self.btn_theme_set_3.setButtonGroup(True)
+        self.btn_theme_set_3.setGroup(True)
         self.btn_theme_set_3.clicked.connect(lambda: ZGlobal.themeManager.setThemeMode(ZThemeMode.FollowSystem))
         self.hcontainer.addWidget(self.btn_theme_set_3)
         self.theme_btn_group = ZExclusiveToggleGroup(self.hcontainer)

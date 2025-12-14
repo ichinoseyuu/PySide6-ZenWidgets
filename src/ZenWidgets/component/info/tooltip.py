@@ -10,7 +10,7 @@ from ZenWidgets.component.base import (
     ZColorController,
     ZWidget
 )
-from ZenWidgets.core import ZDebug,ZPosition,ZPadding,ZMargin
+from ZenWidgets.core import ZDebug,ZPosition,ZPadding,ZMargins
 from ZenWidgets.gui import ZToolTipColorData,ZWidgetEffect
 
 # region ZToolTip
@@ -46,12 +46,12 @@ class ZToolTip(ZWidget):
 
         self._full_text: str = ""
         self._display_text: str = ""
-        self._margin = ZMargin(8, 8, 8, 8)
+        self._margin = ZMargins(8, 8, 8, 8)
         self._padding = ZPadding(10, 8, 10, 8)
         self._alignment = Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter
 
 
-        self._target: QWidget = None
+        self._target: QWidget | None = None
         self._mode = self.Mode.TrackMouse
         self._position = ZPosition.Top
         self._offset = QPoint(0, 0)

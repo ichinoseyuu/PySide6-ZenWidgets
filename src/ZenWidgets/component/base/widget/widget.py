@@ -1,12 +1,25 @@
 import inspect
 from typing import TypeVar,get_origin,overload,override,Any,Union,Dict,List,Tuple,Optional,Generic,TYPE_CHECKING
 from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import Qt,QEvent,QPoint,QSize,Signal
+from PySide6.QtCore import Qt,QEvent,QPoint,QSize,Slot,Signal,QTimer
 from PySide6.QtGui import QMouseEvent,QEnterEvent,QResizeEvent,QMoveEvent
 from ZenWidgets.component.base.controller import *
 from ZenWidgets.core import make_getter,ZState
 from ZenWidgets.gui import StyleT
-if TYPE_CHECKING: from ZenWidgets.component.layouts.layout import ZBoxLayout
+if TYPE_CHECKING:
+    from ZenWidgets.component.layouts.layout import ZBoxLayout
+    from ZenWidgets.component.base.group import ZExclusiveToggleGroup
+
+__All__ = [
+    'ZWidget',
+    'ZPlaceHolderWidget',
+    'ZContentWidget',
+    'ZClickWidget',
+    'ZToggleWidget',
+    'ZRepeatClickWidget',
+    'ZLongPressWidget',
+    'ZProgressWidget'
+]
 
 ControllerUnion = Union[
     ZAnimatedColor,
@@ -48,11 +61,9 @@ class ZWidget(QWidget, Generic[StyleT]):
     __controllers_kwargs__: dict[str, Any] = {}
     '''传递到支持注解的控制器的参数'''
 
-    dragged = Signal(QPoint)
-    moved = Signal(QPoint)
-    resized = Signal(QSize)
-    entered = Signal()
-    leaved = Signal()
+    dragged = Signal(QPoint) #拖拽信号
+    moved = Signal(QPoint)  #移动信号
+    resized = Signal(QSize) #大小每次改变信号
 
     def __init__(self,
                  parent: Optional['ZWidget'] = None,
@@ -150,9 +161,6 @@ class ZWidget(QWidget, Generic[StyleT]):
 
     def _update_style_(self) -> None: ...
 
-    def _mouse_enter_(self) -> None: ...
-
-    def _mouse_leave_(self) -> None: ...
 
     # region public method
     def state(self) -> ZState: return self._state
@@ -267,25 +275,10 @@ class ZWidget(QWidget, Generic[StyleT]):
         self.resized.emit(self.size())
 
     @override
-    def enterEvent(self, event: QEnterEvent):
-        super().enterEvent(event)
-        self._state = ZState.Hover
-        self._mouse_enter_()
-        self.entered.emit()
-
-    @override
-    def leaveEvent(self, event: QEvent):
-        super().leaveEvent(event)
-        self._state = ZState.Idle
-        self._mouse_leave_()
-        self.leaved.emit()
-
-    @override
     def mousePressEvent(self, event: QMouseEvent):
         super().mousePressEvent(event)
         if self._draggable and event.button() == Qt.MouseButton.LeftButton:
             self._drag_pos = event.pos()
-
 
     @override
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
@@ -302,8 +295,354 @@ class ZPlaceHolderWidget(ZWidget):
     pass
 
 
-
 # region ZContentWidget
 class ZContentWidget(ZWidget):
     '''内容组件'''
     pass
+
+
+class ZHoverWidget(ZWidget[StyleT]):
+    entered = Signal()
+    leaved = Signal()
+    def __init__(self,
+                 parent: Optional[ZWidget] = None,
+                 *args,
+                 style: Optional[StyleT] = None,
+                 objectName: str | None = None,
+                 toolTip: str | None = None,
+                 **kwargs
+                 ):
+        super().__init__(parent,
+                         *args,
+                         style=style,
+                         objectName=objectName,
+                         toolTip=toolTip,
+                         **kwargs
+                         )
+
+    def _mouse_enter_(self) -> None: ...
+
+    def _mouse_leave_(self) -> None: ...
+
+    @override
+    def enterEvent(self, event: QEnterEvent):
+        super().enterEvent(event)
+        self._state = ZState.Hover
+        self._mouse_enter_()
+        self.entered.emit()
+
+    @override
+    def leaveEvent(self, event: QEvent):
+        super().leaveEvent(event)
+        self._state = ZState.Idle
+        self._mouse_leave_()
+        self.leaved.emit()
+
+# region ZClickWidget
+class ZClickWidget(ZHoverWidget[StyleT]):
+    pressed = Signal()
+    released = Signal()
+    clicked = Signal()
+    def __init__(self,
+                 parent: Optional[ZWidget] = None,
+                 *args,
+                 style: Optional[StyleT] = None,
+                 objectName: str | None = None,
+                 toolTip: str | None = None,
+                 **kwargs
+                 ):
+        super().__init__(parent,
+                         *args,
+                         style=style,
+                         objectName=objectName,
+                         toolTip=toolTip,
+                         **kwargs
+                         )
+
+    # private method
+    def _mouse_click_(self) -> None: ...
+
+    def _mouse_press_(self) -> None: ...
+
+    def _mouse_release_(self) -> None: ...
+
+    # event
+    @override
+    def mousePressEvent(self, event: QMouseEvent):
+        super().mousePressEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._state = ZState.Pressed
+            self._mouse_press_()
+            self.pressed.emit()
+
+    @override
+    def mouseMoveEvent(self, event: QMouseEvent):
+        super().mouseMoveEvent(event)
+        is_inside = self.rect().contains(event.position().toPoint())
+        if self._state != ZState.Pressed and is_inside:
+            self._state = ZState.Hover
+            self._mouse_enter_()
+            self.entered.emit()
+        elif self._state != ZState.Pressed and not is_inside:
+            self._state = ZState.Idle
+            self._mouse_leave_()
+            self.leaved.emit()
+        elif self._state == ZState.Pressed and not is_inside:
+            self._state = ZState.Idle
+            self._mouse_release_()
+            self.released.emit()
+            self._mouse_leave_()
+            self.leaved.emit()
+        else:
+            self._state = ZState.Pressed
+
+    @override
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._mouse_release_()
+            self.released.emit()
+            if self.rect().contains(event.position().toPoint()):
+                self._state = ZState.Hover
+                self._mouse_click_()
+                self.clicked.emit()
+            else:
+                self._state = ZState.Idle
+
+
+# region ZToggleWidget
+class ZToggleWidget(ZClickWidget[StyleT]):
+    toggled = Signal(bool)
+    def __init__(self,
+                 parent: Optional[ZWidget] = None,
+                 *args,
+                 checked: bool = False,
+                 checkable: bool = True,
+                 is_group_member: bool = False,
+                 style: Optional[StyleT] = None,
+                 objectName: str | None = None,
+                 toolTip: str | None = None,
+                 **kwargs
+                 ):
+        super().__init__(parent,
+                         *args,
+                         style=style,
+                         objectName=objectName,
+                         toolTip=toolTip,
+                         **kwargs
+                         )
+        self._checkable: bool = checkable
+        self._checked: bool = checked
+        self._is_group_member: bool = is_group_member
+        self._group: Optional['ZExclusiveToggleGroup']= None
+
+    # private method
+    def _toggle_(self): ...
+
+    # public method
+    def isChecked(self) -> bool: return self._checked
+
+    def setChecked(self, c: bool):
+        if c == self._checked: return
+        self._checked = c
+        self._toggle_()
+        self.toggled.emit(self._checked)
+
+    def isCheckable(self) -> bool: return self._checkable
+
+    def setCheckable(self, c: bool): self._checkable = c
+
+    def isGroupMember(self) -> bool: return self._is_group_member
+
+    def setGroup(self, group: 'ZExclusiveToggleGroup'):
+        self._group = group
+        self._is_group_member = True
+
+    def unsetGroup(self):
+        self._group = None
+        self._is_group_member = False
+
+    # event
+    @override
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton and self._checkable:
+            if self.rect().contains(event.position().toPoint()):
+                self._checked = True if self._is_group_member else not self._checked
+                self._toggle_()
+                self.toggled.emit(self._checked)
+
+# region ZRepeatClickWidget
+class ZRepeatClickWidget(ZClickWidget[StyleT]):
+    def __init__(self,
+                 parent: Optional[ZWidget] = None,
+                 *args,
+                 repeatable: bool = True,
+                 interval: int = 50,
+                 delay: int = 500,
+                 style: Optional[StyleT] = None,
+                 objectName: str | None = None,
+                 toolTip: str | None = None,
+                 **kwargs
+                 ):
+        super().__init__(parent,
+                         *args,
+                         style=style,
+                         objectName=objectName,
+                         toolTip=toolTip,
+                         **kwargs
+                         )
+        self._repeatable = repeatable
+        self._repeat_count = 0
+
+        self._trigger_interval = QTimer(self) # 触发间隔
+        self._trigger_interval.setInterval(interval)
+        self._trigger_interval.timeout.connect(self._mouse_repeat_click_handler_)
+
+        self._trigger_delay = QTimer(self) # 触发延迟
+        self._trigger_delay.setSingleShot(True)
+        self._trigger_delay.setInterval(delay)
+        self._trigger_delay.timeout.connect(self._trigger_interval.start)
+
+
+    # slot
+    @Slot()
+    def _mouse_repeat_click_handler_(self):
+        '''重复点击时的槽函数'''
+        self._repeat_count += 1
+        self._mouse_click_()
+        self.clicked.emit()
+
+    # public method
+    def isRepeatable(self) -> bool: return bool(self._repeatable)
+
+    def setRepeatable(self, r: bool): self._repeatable = r
+
+    def repeatCount(self) -> int: return int(self._repeat_count)
+
+    def triggerInterval(self) -> int: return self._trigger_interval.interval()
+
+    def setTriggerInterval(self, t: int): self._trigger_interval.setInterval(t)
+
+    def triggerDelay(self) -> int: return self._trigger_delay.interval()
+
+    def setTriggerDelay(self, d: int): self._trigger_delay.setInterval(d)
+
+    # event
+    @override
+    def mousePressEvent(self, event: QMouseEvent):
+        super().mousePressEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton and self._repeatable:
+            self._trigger_delay.start()
+
+    @override
+    def mouseMoveEvent(self, event: QMouseEvent):
+        super().mouseMoveEvent(event)
+        if not self.rect().contains(event.position().toPoint()) and self._repeatable:
+            self._trigger_delay.stop()
+            self._trigger_interval.stop()
+            self._repeat_count = 0
+
+    @override
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton and self._repeatable:
+            self._trigger_delay.stop()
+            self._trigger_interval.stop()
+            self._repeat_count = 0
+
+# region ZLongPressWidget
+class ZLongPressWidget(ZClickWidget[StyleT]):
+    longPressClicked = Signal()
+    '''长按信号'''
+
+    progressCtrl: ZAnimatedFloat
+    def __init__(self,
+                 parent: Optional[ZWidget] = None,
+                 *args,
+                 style: Optional[StyleT] = None,
+                 objectName: str | None = None,
+                 toolTip: str | None = None,
+                 **kwargs
+                 ):
+        super().__init__(parent,
+                         *args,
+                         style=style,
+                         objectName=objectName,
+                         toolTip=toolTip,
+                         **kwargs
+                         )
+        self._pressed_timer = QTimer(self)
+        self._pressed_timer.setInterval(1000 // 60)
+        self._pressed_timer.timeout.connect(self._long_press_handler_)
+
+    # private method
+    def _mouse_press_(self):
+        self._pressed_timer.start()
+
+    def _mouse_release_(self):
+        self._reset_progress_()
+
+    def _step_length_(self) -> float:
+        '''计算进度条每次增加的步长'''
+        remaining = 1.0 - self.progressCtrl.value
+        return min(remaining, max(0.01, remaining / 16 + 0.005))
+
+    def _reset_progress_(self):
+        '''重置进度条'''
+        self._pressed_timer.stop()
+        QTimer.singleShot(150, lambda: self.progressCtrl.setValueTo(0.0))
+
+    def _long_press_handler_(self):
+        '''鼠标按压时的进度更新逻辑'''
+        if not self.isPressed(): return
+        progress = self.progressCtrl.value + self._step_length_()
+        if progress >= 1.0:
+            progress = 1.0
+            self.progressCtrl.setValue(progress)
+            self._reset_progress_()
+            self.longPressClicked.emit()
+        else:
+            self.progressCtrl.setValue(progress)
+
+# region ZProgressWidget
+class ZProgressWidget(ZClickWidget[StyleT]):
+    progressChanged = Signal(float)
+    '''进度改变信号'''
+    progressFinished = Signal()
+    '''进度完成信号'''
+
+    progressCtrl: ZAnimatedFloat
+    def __init__(self,
+                 parent: Optional[ZWidget] = None,
+                 *args,
+                 reset_on_finish: bool = True,
+                 objectName: str | None = None,
+                 toolTip: str | None = None,
+                 **kwargs
+                 ):
+        super().__init__(parent,
+                         *args,
+                         objectName=objectName,
+                         toolTip=toolTip,
+                         **kwargs
+                         )
+        self._reset_on_finish = reset_on_finish
+
+
+    # public method
+    def isResetOnFinish(self) -> bool: return self._reset_on_finish
+
+    def setResetOnFinish(self, r: bool) -> None: self._reset_on_finish = r
+
+    def setProgress(self, value: float,/, animate: bool = True) -> None:
+        value = max(0.0, min(1.0, value))
+        if value == 1.0:
+            self.progressCtrl.setValueTo(1.0) if animate else self.progressCtrl.setValue(1.0)
+            self.progressChanged.emit(1.0)
+            self.progressFinished.emit()
+            if self._reset_on_finish:
+                QTimer.singleShot(150, lambda: self.progressCtrl.setValueTo(.0))
+        else:
+            self.progressCtrl.setValueTo(value) if animate else self.progressCtrl.setValue(value)
+            self.progressChanged.emit(value)

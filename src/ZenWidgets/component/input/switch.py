@@ -7,7 +7,7 @@ from ZenWidgets.component.base import (
     ZAnimatedFloat,
     ZColorController,
     ZWidget,
-    ToggleInteractiveWidget
+    ZToggleWidget
 )
 from ZenWidgets.core import ZDebug
 from ZenWidgets.gui import ZSwitchColorData,ZSwitchStyle
@@ -34,7 +34,7 @@ class SwitchHandle(ZWidget):
         event.accept()
 
 # region ZSwitch
-class ZSwitch(ToggleInteractiveWidget[ZSwitchStyle]):
+class ZSwitch(ZToggleWidget[ZSwitchStyle]):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     opacityCtrl: ZAnimatedOpacity
@@ -95,7 +95,7 @@ class ZSwitch(ToggleInteractiveWidget[ZSwitchStyle]):
 
     def _mouse_leave_(self): self._handle.scaleCtrl.setValueTo(self._handle.scale_nomal)
 
-    def _button_toggle_(self):
+    def _toggle_(self):
         data = self.colorDataCtrl.data
         if self._checked:
             self.bodyColorCtrl.toOpaque()

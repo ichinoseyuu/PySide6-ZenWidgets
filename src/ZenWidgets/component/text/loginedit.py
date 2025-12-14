@@ -32,7 +32,7 @@ class ZLoginEdit(ZWidget):
         'underlineWeightCtrl': {'value': 1.3},
     }
     def __init__(self,
-                 parent: QWidget | ZWidget | None = None,
+                 parent: ZWidget | None = None,
                  text: str = '',
                  font: QFont = QFont('Microsoft YaHei', 9),
                  digits: int = 0,

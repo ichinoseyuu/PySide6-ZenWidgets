@@ -6,8 +6,9 @@ from ZenWidgets import *
 from navigation_bar import NavigationBar
 from panel_home import PanelHome
 from panel_widget import PanelWidget
-from panel_test import PanelTest
 from panel_info import PanelInfo
+from panel_window import PanelWindow
+from panel_test import PanelTest
 from panel_debug import PanelDebug
 from panel_about import PanelAbout
 from panel_settings import PanelSettings
@@ -38,11 +39,14 @@ class ZenUIGallery(ZStandardFramelessWindow):
         self.panelWidget = PanelWidget(self.stackContainer)
         self.stackContainer.addWidget(self.panelWidget)
 
-        self.panelTest = PanelTest(self.stackContainer)
-        self.stackContainer.addWidget(self.panelTest)
-
         self.panelInfo = PanelInfo(self.stackContainer)
         self.stackContainer.addWidget(self.panelInfo)
+
+        self.panelWindow = PanelWindow(self.stackContainer)
+        self.stackContainer.addWidget(self.panelWindow)
+
+        self.panelTest = PanelTest(self.stackContainer)
+        self.stackContainer.addWidget(self.panelTest)
 
         self.panelDebug = PanelDebug(self.stackContainer)
         self.stackContainer.addWidget(self.panelDebug)
@@ -60,18 +64,21 @@ class ZenUIGallery(ZStandardFramelessWindow):
             lambda: self.stackContainer.setCurrentWidget(self.panelWidget)
             )
         self.navigationBar.getButton(2).clicked.connect(
-            lambda: self.stackContainer.setCurrentWidget(self.panelTest)
-            )
-        self.navigationBar.getButton(3).clicked.connect(
             lambda: self.stackContainer.setCurrentWidget(self.panelInfo)
             )
+        self.navigationBar.getButton(3).clicked.connect(
+            lambda: self.stackContainer.setCurrentWidget(self.panelWindow)
+            )
         self.navigationBar.getButton(4).clicked.connect(
-            lambda: self.stackContainer.setCurrentWidget(self.panelDebug)
+            lambda: self.stackContainer.setCurrentWidget(self.panelTest)
             )
         self.navigationBar.getButton(5).clicked.connect(
-            lambda: self.stackContainer.setCurrentWidget(self.panelAbout)
+            lambda: self.stackContainer.setCurrentWidget(self.panelDebug)
             )
         self.navigationBar.getButton(6).clicked.connect(
+            lambda: self.stackContainer.setCurrentWidget(self.panelAbout)
+            )
+        self.navigationBar.getButton(7).clicked.connect(
             lambda: self.stackContainer.setCurrentWidget(self.pagelSettings)
             )
 

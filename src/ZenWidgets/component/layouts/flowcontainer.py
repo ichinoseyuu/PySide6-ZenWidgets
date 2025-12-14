@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QWidget,QSizePolicy
 from PySide6.QtCore import QTimer,QPoint,QRectF,QSize
 from PySide6.QtGui import QPainter
 from ZenWidgets.component.base import ZWidget
-from ZenWidgets.core import ZDebug,ZMargin
+from ZenWidgets.core import ZDebug,ZMargins
 
 __all__ = [
     "ABCFlowContainer",
@@ -17,7 +17,7 @@ class ABCFlowContainer(QWidget):
         super().__init__(parent,sizePolicy=QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding))
         self._widgets:list[ZWidget] = []
         self._dragging_widget:ZWidget = None
-        self._margin = ZMargin(8, 8, 8, 8)
+        self._margin = ZMargins(8, 8, 8, 8)
         self._spacing = [8, 8]
 
     def setSpacing(self, horizontal=None, vertical=None):

@@ -35,7 +35,7 @@ class ZNumberEdit(ZWidget):
     }
 
     def __init__(self,
-                 parent: QWidget | ZWidget | None = None,
+                 parent: ZWidget | None = None,
                  text: str = '0',
                  font: QFont = QFont('Microsoft YaHei', 9),
                  integer_digits: int = 10,

@@ -24,31 +24,31 @@ class PanelTest(ZScrollPanel):
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
         card.layout().addWidget(title)
 
-        container = ZFlowContainer(card)
-        card.layout().addWidget(container)
-        # container.setColumns(3)
-        # container.setColumnWidth(100)
-        # container.setAutoAdjustColumnAmount(True)
-        container.setLineHeight(64)
-        i = 0
-        for icon_name, pixmap in ZGlobal.iconPack.icons(size=QSize(64, 64)):
-            if i > 10: break
-            #print(f"图标名称: {icon_name}")
-            m = ZImage(container)
-            m.resize(pixmap.size())
-            m.setPixmap(pixmap)
-            container.addWidget(m)
-            container.regDraggableWidget(m)
-            i += 1
+        # container = ZFlowContainer(card)
+        # card.layout().addWidget(container)
+        # # container.setColumns(3)
+        # # container.setColumnWidth(100)
+        # # container.setAutoAdjustColumnAmount(True)
+        # container.setLineHeight(64)
+        # i = 0
+        # for icon_name, pixmap in ZGlobal.iconPack.icons(size=QSize(64, 64)):
+        #     if i > 10: break
+        #     #print(f"图标名称: {icon_name}")
+        #     m = ZImage(container)
+        #     m.resize(pixmap.size())
+        #     m.setPixmap(pixmap)
+        #     container.addWidget(m)
+        #     container.regDraggableWidget(m)
+        #     i += 1
 
-        container = ZHContainer(card)
-        card.layout().addWidget(container)
-
-        self.test_btn = ZButton(card, text="打开对话框")
-        self.test_btn.clicked.connect(self.open_dialog)
-        container.addWidget(self.test_btn)
-
-
-    def open_dialog(self):
-        dialog = ZDialog(self.test_btn, title="基尼钛煤！", message='再多看一眼就会爆炸！')
-        print(dialog.exec())
+        card1 = ZNewCard(self)
+        card1.container().setObjectName('par')
+        self.content().layout().addWidget(card1)
+        card1.container().addWidget(ZHeadLine(card1, text='尺寸变化测试'))
+        container1 = ZHContainer(card1,objectName='sub')
+        card1.container().addWidget(container1)
+        text = ZHeadLine(container1, text='测试文本')
+        container1.addWidget(text)
+        btn = ZButton(container1, text='按钮')
+        container1.addWidget(btn)
+        btn.clicked.connect(lambda: text.setText('按钮被点击按钮被点击按钮被点击'))

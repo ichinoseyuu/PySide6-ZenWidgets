@@ -11,16 +11,16 @@ from ZenWidgets.component.base import (
     ZAnimatedFloat,
     ZAnimatedPointF,
     ZColorController,
-    ClickInteractiveWidget,
+    ZClickWidget,
     ZWidget,
     ZContentWidget,
     ZExclusiveToggleGroup,
-    ToggleInteractiveWidget
+    ZToggleWidget
 )
 from ZenWidgets.core import (
     ZDebug,
     ZGlobal,
-    ZMargin,
+    ZMargins,
     ZPadding
 )
 from ZenWidgets.gui import (
@@ -32,7 +32,7 @@ from ZenWidgets.gui import (
 
 
 # region ZComboBoxItem
-class ZComboBoxItem(ToggleInteractiveWidget):
+class ZComboBoxItem(ZToggleWidget):
     indicatorWidth = 3
     opacityEffectCtrl: ZOpacityEffect
     radiusCtrl: ZAnimatedFloat
@@ -92,7 +92,7 @@ class ZComboBoxItem(ToggleInteractiveWidget):
 
     def _mouse_release_(self): self.opacityEffectCtrl.setAlphaFTo(0.11)
 
-    def _button_toggle_(self):
+    def _toggle_(self):
         self.opacityEffectCtrl.toTransparent()
         self.indicatorColorCtrl.toOpaque() if self._checked else self.indicatorColorCtrl.toTransparent()
 
@@ -229,7 +229,7 @@ class ZComboBoxView(ZWidget):
     def __init__(self, parent: ZWidget | None = None, items: list[str] = None):
         super().__init__(parent=parent,f=Qt.WindowType.FramelessWindowHint|Qt.WindowType.WindowStaysOnTopHint|Qt.WindowType.Tool)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self._margin = ZMargin(8, 8, 8, 8)
+        self._margin = ZMargins(8, 8, 8, 8)
         self._content = ZContentWidget(self)
         self._content.setLayout(ZVBoxLayout(self, margins=QMargins(4, 4, 4, 4), spacing=2))
         self._content.move(self._margin.left, self._margin.top)
@@ -369,7 +369,7 @@ class ZComboBoxView(ZWidget):
 
 
 # region ZComboBox
-class ZComboBox(ClickInteractiveWidget):
+class ZComboBox(ZClickWidget):
     optionChanged = Signal(str, object)
     '''选项改变信号'''
 

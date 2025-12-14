@@ -7,7 +7,7 @@ from ZenWidgets.component.base import (
     ZColorController,
     ZOpacityEffect,
     ZWidget,
-    ToggleInteractiveWidget
+    ZToggleWidget
 )
 from ZenWidgets.core import (
     ZDebug,
@@ -16,7 +16,7 @@ from ZenWidgets.core import (
 )
 from ZenWidgets.gui import ZToggleButtonColorData,ZButtonStyle
 
-class ZToggleButton(ToggleInteractiveWidget[ZButtonStyle]):
+class ZToggleButton(ZToggleWidget[ZButtonStyle]):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
@@ -105,7 +105,7 @@ class ZToggleButton(ToggleInteractiveWidget[ZButtonStyle]):
 
     def _mouse_release_(self): self.opacityLayerCtrl.setAlphaFTo(0.11 if self.isFlat() else 0.06)
 
-    def _button_toggle_(self):
+    def _toggle_(self):
         data = self.colorDataCtrl.data
         if self._checked:
             self.bodyColorCtrl.setColorTo(data.BodyToggled)

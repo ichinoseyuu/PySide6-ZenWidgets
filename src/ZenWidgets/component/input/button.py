@@ -7,7 +7,7 @@ from ZenWidgets.component.base import (
     ZColorController,
     ZOpacityEffect,
     ZFlashEffect,
-    ClickInteractiveWidget,
+    ZClickWidget,
     ZWidget
     )
 from ZenWidgets.core import (
@@ -17,7 +17,7 @@ from ZenWidgets.core import (
 )
 from ZenWidgets.gui import ZButtonColorData,ZButtonStyle
 
-class ZButton(ClickInteractiveWidget[ZButtonStyle]):
+class ZButton(ZClickWidget[ZButtonStyle]):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
