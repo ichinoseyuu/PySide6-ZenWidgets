@@ -48,6 +48,13 @@ class ACCENT_STATE(Enum):
     ACCENT_INVALID_STATE = 6
 
 
+class DWM_WINDOW_CORNER_PREFERENCE(Enum):
+    """window corner preference enumeration class (only for Windows 11)"""
+    DWMWCP_DEFAULT = 0
+    DWMWCP_DONOTROUND = 1
+    DWMWCP_ROUND = 2
+    DWMWCP_ROUNDSMALL = 3
+
 class DWMNCRENDERINGPOLICY(Enum):
     DWMNCRP_USEWINDOWSTYLE = 0
     DWMNCRP_DISABLED = 1

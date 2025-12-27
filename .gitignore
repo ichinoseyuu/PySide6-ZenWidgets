@@ -3,6 +3,7 @@ __pycache__/
 .vscode/
 test/
 src/ZenWidgets.egg-info
+src/pyside6_zenwidgets_master.egg-info
 src/_legacy/
 MouseClickSimulator/
 zen_bieganmao/bieganmao.jpg

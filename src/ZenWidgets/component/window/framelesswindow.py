@@ -20,7 +20,8 @@ from ZenWidgets.component.window.win32utils import (
     getSystemAccentColor,
     isMaximized,
     isFullScreen,
-    getResizeBorderThickness
+    getResizeBorderThickness,
+    isGreaterEqualWin11
 )
 from ZenWidgets.core.globals import ZGlobal
 from ZenWidgets.gui import ZFramelessWindowColorData
@@ -59,6 +60,8 @@ class ZFramelessWindow(QWidget):
     # region private
     def _init_style_(self):
         self._windowBodyColorCtrl.color = self._colorDataCtrl.data.Body
+        if isGreaterEqualWin11(): self._windowEffect.removeBorderAccentColor(self.winId())
+
 
     def _style_change_handler_(self):
         self._windowBodyColorCtrl.setColorTo(self._colorDataCtrl.data.Body)

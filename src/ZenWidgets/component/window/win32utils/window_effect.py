@@ -6,11 +6,19 @@ import win32gui
 from ctypes import POINTER, byref, c_bool, c_int, pointer, sizeof, WinDLL, windll, c_long,c_void_p
 from ctypes.wintypes import DWORD, LONG, LPCVOID, HRGN, UINT
 from PySide6.QtGui import QColor
-from .c_structures import (ACCENT_STATE, DWMNCRENDERINGPOLICY,WINDOWCOMPOSITIONATTRIB,DWMWINDOWATTRIBUTE,
-                           MARGINS,ACCENT_POLICY,WINDOWCOMPOSITIONATTRIBDATA, DWM_BLURBEHIND)
-from .win32_func import isGreaterEqualWin10, isGreaterEqualWin11, isCompositionEnabled
+from .c_structures import (
+    ACCENT_STATE,
+    DWMNCRENDERINGPOLICY,
+    WINDOWCOMPOSITIONATTRIB,
+    DWMWINDOWATTRIBUTE,
+    DWM_WINDOW_CORNER_PREFERENCE,
+    MARGINS,ACCENT_POLICY,
+    WINDOWCOMPOSITIONATTRIBDATA,
+    DWM_BLURBEHIND
+    )
 from ctypes import POINTER, c_int, WINFUNCTYPE
 from ctypes.wintypes import DWORD, HWND, RECT, BOOL
+from .win32_func import isGreaterEqualWin10, isGreaterEqualWin11, isCompositionEnabled
 
 class WindowsWindowEffect:
     """ windows窗口特效类 """
@@ -55,17 +63,21 @@ class WindowsWindowEffect:
     def setBackgroundColor(self, hWnd, color: QColor):
         """设置窗口背景颜色"""
         hWnd = int(hWnd)
-        # 构造 COLORREF (包含 alpha 通道)
-        #colorref = DWORD((color.alpha() << 24) | (color.red() | (color.green() << 8) | (color.blue() << 16)))
-        colorref = DWORD((color.red() | (color.green() << 8) | (color.blue() << 16)))
+        colorref = DWORD((color.blue() << 16) | (color.green() << 8) | color.red())
+        if isGreaterEqualWin11():
+            self.DwmSetWindowAttribute(hWnd,
+                                    DWMWINDOWATTRIBUTE.DWMWA_CAPTION_COLOR.value,
+                                    byref(colorref),
+                                    4)
+            return
 
         self.accentPolicy.AccentState = ACCENT_STATE.ACCENT_ENABLE_GRADIENT.value
         self.accentPolicy.GradientColor = colorref
         self.accentPolicy.AccentFlags = DWORD(0)
         self.accentPolicy.AnimationId = DWORD(0)
-
         self.winCompAttrData.Attribute = WINDOWCOMPOSITIONATTRIB.WCA_ACCENT_POLICY.value
         self.SetWindowCompositionAttribute(hWnd, pointer(self.winCompAttrData))
+
 
     def RepaintWindow(self, hWnd):
         """触发窗口重绘"""
@@ -112,8 +124,17 @@ class WindowsWindowEffect:
         self.winCompAttrData.Attribute = WINDOWCOMPOSITIONATTRIB.WCA_ACCENT_POLICY.value
         self.SetWindowCompositionAttribute(hWnd, pointer(self.winCompAttrData))
 
+    def setCornerPreference(self, hWnd, preference: DWM_WINDOW_CORNER_PREFERENCE):
+        """设置窗口圆角偏好"""
+        hWnd = int(hWnd)
+        corner_preference = c_int(preference.value)
+        self.DwmSetWindowAttribute(hWnd,
+                                   DWMWINDOWATTRIBUTE.DWMWA_WINDOW_CORNER_PREFERENCE.value,
+                                   byref(corner_preference),
+                                   4)
+
     def setBorderAccentColor(self, hWnd, color: QColor):
-        """ 设置窗口边框颜色
+        """ 设置窗口边框颜色(win11)
 
         Args:
             hWnd: 窗口句柄
@@ -130,7 +151,7 @@ class WindowsWindowEffect:
                                    4)
 
     def removeBorderAccentColor(self, hWnd):
-        """ 移除窗口边框颜色
+        """ 移除窗口边框颜色(win11)
 
         Args:
             hWnd: 窗口句柄
