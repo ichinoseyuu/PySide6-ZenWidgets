@@ -1,4 +1,4 @@
-from PySide6.QtGui import QPainter,QFont,QPen,QIcon,QPixmap
+from PySide6.QtGui import QPainter,QFont,QPen,QIcon,QPixmap,QColor
 from PySide6.QtCore import Qt,QRect,QSize,QRectF,QPoint
 from PySide6.QtWidgets import QSizePolicy
 from ZenWidgets.component.base import (
@@ -15,8 +15,36 @@ from ZenWidgets.core import (
     ZGlobal,
     ZPosition,
 )
-from ZenWidgets.gui import ZButtonColorData,ZButtonStyle
+from ZenWidgets.gui import (
+    ZButtonStyle,
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
 
+class ZButtonColorData(ZColorData):
+    Body: QColor
+    Border: QColor
+    Text: QColor
+    Icon: QColor
+
+colordata = {
+    'Light':  {
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.Icon: lambda: ZPalette.Icon
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.Icon: lambda: ZPalette.Icon
+    }
+}
+
+@colordata_provider(datamap=colordata, classtype=ZButtonColorData)
 class ZButton(ZClickWidget[ZButtonStyle]):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor

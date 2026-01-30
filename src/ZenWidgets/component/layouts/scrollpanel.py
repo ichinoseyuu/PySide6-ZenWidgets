@@ -15,7 +15,12 @@ from ZenWidgets.core import (
     ZDirection,
     ZState
 )
-from ZenWidgets.gui import ZScrollPanelColorData
+from ZenWidgets.gui import (
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
 
 # region ScrollHandle
 class ScrollHandle(ZWidget):
@@ -157,7 +162,29 @@ class ScrollHandle(ZWidget):
         self.setHandleWidthTo(self._handle_width_min)
         self._trans_timer.start(1200)
 
+class ZScrollPanelColorData(ZColorData):
+    Body: QColor
+    Border: QColor
+    Handle: QColor
+    HandleBorder: QColor
+
+colordata = {
+    'Light':  {
+        ZColorDataKey.Body: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Handle: lambda: ZPalette.ScrollHandle,
+        ZColorDataKey.HandleBorder: lambda: ZPalette.ScrollHandle
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Handle: lambda: ZPalette.ScrollHandle,
+        ZColorDataKey.HandleBorder: lambda: ZPalette.ScrollHandle
+    }
+}
+
 # region ZScrollPanel
+@colordata_provider(datamap=colordata, classtype=ZScrollPanelColorData)
 class ZScrollPanel(ZWidget):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor

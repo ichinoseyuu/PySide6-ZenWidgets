@@ -5,7 +5,7 @@ from ctypes import cast
 from ctypes.wintypes import LPRECT, MSG
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QResizeEvent
+from PySide6.QtGui import QResizeEvent,QColor
 from ZenWidgets.component.info import ZToolTip
 from ZenWidgets.component.base import (
     ZColorController,
@@ -24,9 +24,23 @@ from ZenWidgets.component.window.win32utils import (
     isGreaterEqualWin11
 )
 from ZenWidgets.core.globals import ZGlobal
-from ZenWidgets.gui import ZFramelessWindowColorData
+from ZenWidgets.gui import (
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
+
+class ZFramelessWindowColorData(ZColorData):
+    Body: QColor
+
+colordata = {
+    'Light': {ZColorDataKey.Body: lambda: ZPalette.WindowBackground},
+    'Dark': {ZColorDataKey.Body: lambda: ZPalette.WindowBackground}
+}
 
 # region ZFramelessWindow
+@colordata_provider(datamap=colordata, classtype=ZFramelessWindowColorData)
 class ZFramelessWindow(QWidget):
     BORDER_WIDTH = 6
     def __init__(self, parent=None):

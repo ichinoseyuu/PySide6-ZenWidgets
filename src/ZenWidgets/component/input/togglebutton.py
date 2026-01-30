@@ -1,4 +1,4 @@
-from PySide6.QtGui import QPainter, QFont, QPen, QIcon, QPixmap
+from PySide6.QtGui import QPainter, QFont, QPen, QIcon, QPixmap,QColor
 from PySide6.QtCore import Qt, QRect, QSize, QRectF, QPoint
 from PySide6.QtWidgets import QSizePolicy
 from ZenWidgets.component.base import (
@@ -14,8 +14,45 @@ from ZenWidgets.core import (
     ZGlobal,
     ZPosition
 )
-from ZenWidgets.gui import ZToggleButtonColorData,ZButtonStyle
+from ZenWidgets.gui import (
+    ZButtonStyle,
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
 
+class ZToggleButtonColorData(ZColorData):
+    Body: QColor
+    BodyToggled: QColor
+    Border: QColor
+    Text: QColor
+    TextToggled: QColor
+    Icon: QColor
+    IconToggled: QColor
+
+colordata = {
+    'Light': {
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.BodyToggled: lambda: ZPalette.Primary,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.TextToggled: lambda: ZPalette.Text,
+        ZColorDataKey.Icon: lambda: ZPalette.Icon,
+        ZColorDataKey.IconToggled: lambda: ZPalette.Icon
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.BodyToggled: lambda: ZPalette.Primary,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.TextToggled: lambda: ZPalette.Text,
+        ZColorDataKey.Icon: lambda: ZPalette.Icon,
+        ZColorDataKey.IconToggled: lambda: ZPalette.Icon
+    }
+}
+
+@colordata_provider(datamap=colordata, classtype=ZToggleButtonColorData)
 class ZToggleButton(ZToggleWidget[ZButtonStyle]):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor

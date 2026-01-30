@@ -1,7 +1,7 @@
 import logging
 from PySide6.QtWidgets import QApplication,QWidget,QVBoxLayout
 from PySide6.QtCore import Signal,QSize,QTimer,QPoint,QPointF,QRectF,Qt
-from PySide6.QtGui import QFontMetrics,QFont,QMouseEvent,QPainterPath,QPainter,QKeyEvent,QPen
+from PySide6.QtGui import QFontMetrics,QFont,QMouseEvent,QPainterPath,QPainter,QKeyEvent,QPen,QColor
 from ZenWidgets.component.base import (
     ZOpacityEffect,
     ZAnimatedColor,
@@ -10,8 +10,47 @@ from ZenWidgets.component.base import (
     ZWidget
 )
 from ZenWidgets.core import ZDebug,ZPadding,ZTextSnapshot
-from ZenWidgets.gui import ZLoginEditColorData
+from ZenWidgets.gui import (
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
 
+class ZLoginEditColorData(ZColorData):
+    Body: QColor
+    BodyFocused: QColor
+    Border: QColor
+    Text: QColor
+    TextBackSectcted: QColor
+    Cursor: QColor
+    Underline: QColor
+    UnderlineFocused: QColor
+
+colordata = {
+    'Light':  {
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.BodyFocused: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.TextBackSectcted: lambda: ZPalette.Secondary,
+        ZColorDataKey.Cursor: lambda: ZPalette.Primary,
+        ZColorDataKey.Underline: lambda: ZPalette.Underline,
+        ZColorDataKey.UnderlineFocused: lambda: ZPalette.Primary
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.BodyDarker,
+        ZColorDataKey.BodyFocused: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.TextBackSectcted: lambda: ZPalette.Primary,
+        ZColorDataKey.Cursor: lambda: ZPalette.Primary,
+        ZColorDataKey.Underline: lambda: ZPalette.Underline,
+        ZColorDataKey.UnderlineFocused: lambda: ZPalette.Primary
+    }
+}
+
+@colordata_provider(datamap=colordata, classtype=ZLoginEditColorData)
 class ZLoginEdit(ZWidget):
     editingFinished = Signal()
     valueChanged = Signal(str)

@@ -11,9 +11,32 @@ from ZenWidgets.component.base import (
     ZWidget
 )
 from ZenWidgets.core import ZDebug,ZPosition,ZPadding,ZMargins
-from ZenWidgets.gui import ZToolTipColorData,ZWidgetEffect
+from ZenWidgets.gui import (
+    ZWidgetEffect,
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
+class ZToolTipColorData(ZColorData):
+    Body: QColor
+    Border: QColor
+    Text: QColor
 
+colordata = {
+    'Light':  {
+        ZColorDataKey.Body: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text
+    }
+}
 # region ZToolTip
+@colordata_provider(datamap=colordata, classtype=ZToolTipColorData)
 class ZToolTip(ZWidget):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor

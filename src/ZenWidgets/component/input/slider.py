@@ -1,7 +1,7 @@
 from typing import overload
 from PySide6.QtWidgets import QSizePolicy
 from PySide6.QtCore import QPoint,QPointF,QRect,QRectF,QSize,Qt,Signal
-from PySide6.QtGui import QPainter,QPen,QLinearGradient,QKeyEvent,QMouseEvent,QWheelEvent
+from PySide6.QtGui import QPainter,QPen,QLinearGradient,QKeyEvent,QMouseEvent,QWheelEvent,QColor
 from ZenWidgets.component.base import (
     ZAnimatedColor,
     ZAnimatedLinearGradient,
@@ -15,7 +15,15 @@ from ZenWidgets.core import (
     ZPosition,
     ZDirection
 )
-from ZenWidgets.gui import ZSliderColorData,ZSliderStyle
+from ZenWidgets.gui import (
+    ZSliderStyle,
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
+
+
 # region SliderFill
 class SliderFill(ZWidget):
     bodyColorCtrl: ZAnimatedLinearGradient
@@ -145,7 +153,41 @@ class SliderHandle(ZWidget):
         ZGlobal.tooltip.hideTipDelayed(500)
         self.clearFocus()
 
+class ZSliderColorData(ZColorData):
+    Track: QColor
+    TrackBorder: QColor
+    FillAreaStart: QColor
+    FillAreaEnd: QColor
+    FillAreaBorder: QColor
+    HandleInner: QColor
+    HandleOuter: QColor
+    HandleBorder: QColor
+
+colordata = {
+    'Light':  {
+        ZColorDataKey.Track: lambda: ZPalette.BodyDarker,
+        ZColorDataKey.TrackBorder: lambda: ZPalette.Border,
+        ZColorDataKey.FillAreaStart: lambda: ZPalette.Primary,
+        ZColorDataKey.FillAreaEnd: lambda: ZPalette.Secondary,
+        ZColorDataKey.FillAreaBorder: lambda: ZPalette.Primary,
+        ZColorDataKey.HandleInner: lambda: ZPalette.Secondary,
+        ZColorDataKey.HandleOuter:lambda: ZPalette.SliderHandle,
+        ZColorDataKey.HandleBorder: lambda: ZPalette.BorderEmphasized
+    },
+    'Dark': {
+        ZColorDataKey.Track: lambda: ZPalette.BodyLighter,
+        ZColorDataKey.TrackBorder: lambda: ZPalette.Border,
+        ZColorDataKey.FillAreaStart: lambda: ZPalette.Primary,
+        ZColorDataKey.FillAreaEnd: lambda: ZPalette.Secondary,
+        ZColorDataKey.FillAreaBorder: lambda: ZPalette.Primary,
+        ZColorDataKey.HandleInner: lambda: ZPalette.Secondary,
+        ZColorDataKey.HandleOuter:lambda: ZPalette.SliderHandle,
+        ZColorDataKey.HandleBorder: lambda: ZPalette.BorderEmphasized
+    }
+}
+
 # region ZSlider
+@colordata_provider(datamap=colordata, classtype=ZSliderColorData)
 class ZSlider(ZWidget[ZSliderStyle]):
     valueChanged = Signal(object)
     displayValueChanged = Signal(str)

@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QApplication,QWidget,QVBoxLayout,QSizePolicy
 from PySide6.QtCore import Signal,QSize,QTimer,QPoint,QPointF,QRectF,Qt,QRect
-from PySide6.QtGui import QFontMetrics,QFont,QMouseEvent,QPainterPath,QPainter,QKeyEvent,QPen,QInputMethodEvent
+from PySide6.QtGui import QFontMetrics,QFont,QMouseEvent,QPainterPath,QPainter,QKeyEvent,QPen,QInputMethodEvent,QColor
 from ZenWidgets.component.base import (
     ZOpacityEffect,
     ZAnimatedColor,
@@ -10,8 +10,50 @@ from ZenWidgets.component.base import (
 )
 from ZenWidgets.core import ZDebug,ZPadding,ZTextSnapshot
 
-from ZenWidgets.gui import ZLineEditColorData,ZPalette
+from ZenWidgets.gui import (
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
 
+class ZLineEditColorData(ZColorData):
+    Body: QColor
+    BodyFocused: QColor
+    Border: QColor
+    Text: QColor
+    PlaceHolder: QColor
+    TextBackSectcted: QColor
+    Cursor: QColor
+    Underline: QColor
+    UnderlineFocused: QColor
+
+colordata = {
+    'Light':  {
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.BodyFocused: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.PlaceHolder: lambda: ZPalette.TextMuted,
+        ZColorDataKey.TextBackSectcted: lambda: ZPalette.Secondary,
+        ZColorDataKey.Cursor: lambda: ZPalette.Primary,
+        ZColorDataKey.Underline: lambda: ZPalette.Underline,
+        ZColorDataKey.UnderlineFocused: lambda: ZPalette.Primary
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.BodyDarker,
+        ZColorDataKey.BodyFocused: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.PlaceHolder: lambda: ZPalette.TextMuted,
+        ZColorDataKey.TextBackSectcted: lambda: ZPalette.Primary,
+        ZColorDataKey.Cursor: lambda: ZPalette.Primary,
+        ZColorDataKey.Underline: lambda: ZPalette.Underline,
+        ZColorDataKey.UnderlineFocused: lambda: ZPalette.Primary
+    }
+}
+
+@colordata_provider(datamap=colordata, classtype=ZLineEditColorData)
 class ZLineEdit(ZWidget):
     editingFinished = Signal()
 

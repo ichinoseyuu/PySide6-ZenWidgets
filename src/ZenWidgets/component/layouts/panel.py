@@ -1,9 +1,30 @@
 from PySide6.QtCore import Qt,QRectF
-from PySide6.QtGui import QPainter,QPen
+from PySide6.QtGui import QPainter,QPen,QColor
 from ZenWidgets.component.base import ZAnimatedColor,ZAnimatedFloat,ZColorController,ZWidget
 from ZenWidgets.core import ZDebug
-from ZenWidgets.gui import ZPanelColorData
+from ZenWidgets.gui import (
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
 
+class ZPanelColorData(ZColorData):
+    Body: QColor
+    Border: QColor
+
+colordata = {
+    'Light':  {
+        ZColorDataKey.Body: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border
+    }
+}
+
+@colordata_provider(datamap=colordata, classtype=ZPanelColorData)
 class ZPanel(ZWidget):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor

@@ -1,11 +1,36 @@
 from PySide6.QtWidgets import QWidget,QSizePolicy
 from PySide6.QtCore import Qt,QRectF,QMargins
-from PySide6.QtGui import QPainter,QPen,QPainterPath
+from PySide6.QtGui import QPainter,QPen,QPainterPath,QColor
 from ZenWidgets.component.base import ZAnimatedColor,ZAnimatedFloat,ZColorController,ZWidget
 from ZenWidgets.component.layouts import ZVBoxLayout,ZHBoxLayout
 from ZenWidgets.core import ZDebug
-from ZenWidgets.gui import ZCardColorData,ZWidgetEffect
+from ZenWidgets.gui import (
+    ZWidgetEffect,
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
 
+class ZCardColorData(ZColorData):
+    Body: QColor
+    Border: QColor
+    Underline: QColor
+
+colordata = {
+    'Light':  {
+        ZColorDataKey.Body: lambda: ZPalette.CardBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Underline: lambda: ZPalette.Underline
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.CardBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Underline: lambda: ZPalette.Underline
+    }
+}
+
+@colordata_provider(datamap=colordata, classtype=ZCardColorData)
 class ZCard(ZWidget):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor

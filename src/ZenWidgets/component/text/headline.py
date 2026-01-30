@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget,QSizePolicy
 from PySide6.QtCore import Qt,QSize,QRectF,QEvent
-from PySide6.QtGui import QPainter,QFont,QFontMetrics,QPen
+from PySide6.QtGui import QPainter,QFont,QFontMetrics,QPen,QColor
 from ZenWidgets.component.base import (
     ZFlashEffect,
     ZAnimatedColor,
@@ -9,8 +9,38 @@ from ZenWidgets.component.base import (
     ZWidget
 )
 from ZenWidgets.core import ZDebug,ZPadding
-from ZenWidgets.gui import ZHeadLineColorData
+from ZenWidgets.gui import (
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
 
+class ZHeadLineColorData(ZColorData):
+    Body: QColor
+    Border: QColor
+    Text: QColor
+    TextBackSectcted: QColor
+    Indicator: QColor
+
+colordata = {
+    'Light':  {
+        ZColorDataKey.Body: ZPalette.Transparent_000,
+        ZColorDataKey.Border: ZPalette.Transparent_000,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.TextBackSectcted: lambda: ZPalette.Primary,
+        ZColorDataKey.Indicator: lambda: ZPalette.Primary
+    },
+    'Dark': {
+        ZColorDataKey.Body: ZPalette.Transparent_000,
+        ZColorDataKey.Border: ZPalette.Transparent_000,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.TextBackSectcted: lambda: ZPalette.Primary,
+        ZColorDataKey.Indicator: lambda: ZPalette.Primary
+    }
+}
+
+@colordata_provider(datamap=colordata, classtype=ZHeadLineColorData)
 class ZHeadLine(ZWidget):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor

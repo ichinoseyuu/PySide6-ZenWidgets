@@ -12,9 +12,34 @@ from ZenWidgets.component.base import(
 )
 from ZenWidgets.component.text import ZHeadLine,ZTextBlock
 from ZenWidgets.core import ZMargins,ZDebug
-from ZenWidgets.gui import ZWidgetEffect,ZDialogColorData
+from ZenWidgets.gui import (
+    ZWidgetEffect,
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
+
+class ZDialogColorData(ZColorData):
+    Body: QColor
+    RegionFooter: QColor
+    Border: QColor
+
+colordata = {
+    'Light':  {
+        ZColorDataKey.Body: lambda: ZPalette.PanelBody,
+        ZColorDataKey.RegionFooter: lambda: ZPalette.Body,
+        ZColorDataKey.Border: lambda: ZPalette.Border
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.PanelBody,
+        ZColorDataKey.RegionFooter: lambda: ZPalette.Body,
+        ZColorDataKey.Border: lambda: ZPalette.Border
+    }
+}
 
 #region ZDialog
+@colordata_provider(datamap=colordata, classtype=ZDialogColorData)
 class ZDialog(ZWidget):
     Accepted = 1
     Rejected = 0

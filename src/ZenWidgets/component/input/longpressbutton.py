@@ -1,4 +1,4 @@
-from PySide6.QtGui import QPainter,QFont,QPen,QIcon,QPixmap
+from PySide6.QtGui import QPainter,QFont,QPen,QIcon,QPixmap,QColor
 from PySide6.QtCore import Qt,QRect,QSize,QRectF,QPoint
 from PySide6.QtWidgets import QSizePolicy
 from ZenWidgets.component.base import (
@@ -14,8 +14,40 @@ from ZenWidgets.core import (
     ZGlobal,
     ZPosition
 )
-from ZenWidgets.gui import ZLongPressButtonColorData
+from ZenWidgets.gui import (
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
 
+class ZLongPressButtonColorData(ZColorData):
+    Body: QColor
+    Border: QColor
+    Text: QColor
+    Icon: QColor
+    Progress: QColor
+
+colordata = {
+    'Light': {
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.Icon: lambda: ZPalette.Icon,
+        ZColorDataKey.Indicator: lambda: ZPalette.Primary,
+        ZColorDataKey.Progress: lambda: ZPalette.Danger,
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.Icon: lambda: ZPalette.Icon,
+        ZColorDataKey.Indicator: lambda: ZPalette.Primary,
+        ZColorDataKey.Progress: lambda: ZPalette.Danger,
+    }
+}
+
+@colordata_provider(datamap=colordata, classtype=ZLongPressButtonColorData)
 class ZLongPressButton(ZLongPressWidget):
     bodyColorCtrl: ZAnimatedColor
     progressColorCtrl: ZAnimatedColor

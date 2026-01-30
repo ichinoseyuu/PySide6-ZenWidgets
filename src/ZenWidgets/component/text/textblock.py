@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget
 from PySide6.QtCore import Qt,QSize,QRectF,QPoint
-from PySide6.QtGui import QPainter,QFont,QFontMetrics,QPen,QTextLayout,QTextOption
+from PySide6.QtGui import QPainter,QFont,QFontMetrics,QPen,QTextLayout,QTextOption,QColor
 from ZenWidgets.component.base import (
     ZAnimatedColor,
     ZAnimatedFloat,
@@ -8,8 +8,35 @@ from ZenWidgets.component.base import (
     ZWidget
 )
 from ZenWidgets.core import ZDebug,ZPadding,ZWrapMode
-from ZenWidgets.gui import ZTextBlockColorData
+from ZenWidgets.gui import (
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
 
+class ZTextBlockColorData(ZColorData):
+    Body: QColor
+    Border: QColor
+    Text: QColor
+    TextBackSectcted: QColor
+
+colordata = {
+    'Light':  {
+        ZColorDataKey.Body: ZPalette.Transparent_000,
+        ZColorDataKey.Border: ZPalette.Transparent_000,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.TextBackSectcted: lambda: ZPalette.Primary
+    },
+    'Dark': {
+        ZColorDataKey.Body: ZPalette.Transparent_000,
+        ZColorDataKey.Border: ZPalette.Transparent_000,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.TextBackSectcted: lambda: ZPalette.Primary
+    }
+}
+
+@colordata_provider(datamap=colordata, classtype=ZTextBlockColorData)
 class ZTextBlock(ZWidget):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor

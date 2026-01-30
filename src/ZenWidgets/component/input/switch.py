@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QSizePolicy
-from PySide6.QtGui import QPainter, QPen
+from PySide6.QtGui import QPainter, QPen, QColor
 from PySide6.QtCore import Qt, QRectF, QPointF
 from ZenWidgets.component.base import (
     ZAnimatedColor,
@@ -10,7 +10,13 @@ from ZenWidgets.component.base import (
     ZToggleWidget
 )
 from ZenWidgets.core import ZDebug
-from ZenWidgets.gui import ZSwitchColorData,ZSwitchStyle
+from ZenWidgets.gui import (
+    ZSwitchStyle,
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
 
 # region SwitchHandle
 class SwitchHandle(ZWidget):
@@ -33,7 +39,28 @@ class SwitchHandle(ZWidget):
         painter.drawEllipse(center, scaled_radius, scaled_radius)
         event.accept()
 
+class ZSwitchColorData(ZColorData):
+    Body: QColor
+    Border: QColor
+    Handle: QColor
+    HandleToggled: QColor
+
+colordata = {
+    'Light': {
+        ZColorDataKey.Body: lambda: ZPalette.Primary,
+        ZColorDataKey.Border: lambda: ZPalette.BorderNeutral,
+        ZColorDataKey.Handle: lambda: ZPalette.SwitchHandle,
+        ZColorDataKey.HandleToggled: ZPalette.White
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.Primary,
+        ZColorDataKey.Border: lambda: ZPalette.BorderNeutral,
+        ZColorDataKey.Handle: lambda: ZPalette.SwitchHandle,
+        ZColorDataKey.HandleToggled: ZPalette.Black_78
+    }
+}
 # region ZSwitch
+@colordata_provider(datamap=colordata, classtype=ZSwitchColorData)
 class ZSwitch(ZToggleWidget[ZSwitchStyle]):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor

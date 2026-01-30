@@ -2,7 +2,7 @@ from ast import arg
 import logging
 from PySide6.QtWidgets import QApplication,QWidget
 from PySide6.QtCore import Signal,QSize,QTimer,QPoint,QPointF,QRectF,Qt
-from PySide6.QtGui import QFontMetrics,QFont,QWheelEvent,QMouseEvent,QPainterPath,QPainter,QKeyEvent,QPen
+from PySide6.QtGui import QFontMetrics,QFont,QWheelEvent,QMouseEvent,QPainterPath,QPainter,QKeyEvent,QPen,QColor
 from ZenWidgets.component.base import (
     ZOpacityEffect,
     ZAnimatedColor,
@@ -12,7 +12,47 @@ from ZenWidgets.component.base import (
 )
 from ZenWidgets.core import ZDebug,ZPadding,ZTextSnapshot
 
-from ZenWidgets.gui import ZNumberEditColorData
+from ZenWidgets.gui import (
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
+
+class ZNumberEditColorData(ZColorData):
+    Body: QColor
+    BodyFocused: QColor
+    Border: QColor
+    Text: QColor
+    TextBackSectcted: QColor
+    Cursor: QColor
+    Underline: QColor
+    UnderlineFocused: QColor
+
+colordata = {
+    'Light':  {
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.BodyFocused: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.TextBackSectcted: lambda: ZPalette.Secondary,
+        ZColorDataKey.Cursor: lambda: ZPalette.Primary,
+        ZColorDataKey.Underline: lambda: ZPalette.Underline,
+        ZColorDataKey.UnderlineFocused: lambda: ZPalette.Primary
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.BodyDarker,
+        ZColorDataKey.BodyFocused: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.TextBackSectcted: lambda: ZPalette.Primary,
+        ZColorDataKey.Cursor: lambda: ZPalette.Primary,
+        ZColorDataKey.Underline: lambda: ZPalette.Underline,
+        ZColorDataKey.UnderlineFocused: lambda: ZPalette.Primary
+    }
+}
+
+@colordata_provider(datamap=colordata, classtype=ZNumberEditColorData)
 
 class ZNumberEdit(ZWidget):
     editingFinished = Signal()

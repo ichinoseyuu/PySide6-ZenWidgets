@@ -21,12 +21,26 @@ from ZenWidgets.core import (
     ZPosition
 )
 from ZenWidgets.gui import (
-    ZNavigationBarColorData,
-    ZNavBarButtonColorData,
-    ZNavBarToggleButtonColorData,
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
 )
 
+class ZNavBarButtonColorData(ZColorData):
+    Icon: QColor
+
+colordata_1 = {
+    'Light':  {
+        ZColorDataKey.Icon: lambda: ZPalette.Icon
+    },
+    'Dark': {
+        ZColorDataKey.Icon: lambda: ZPalette.Icon
+    }
+}
+
 # region ZNavBarButton
+@colordata_provider(datamap=colordata_1, classtype=ZNavBarButtonColorData)
 class ZNavBarButton(ZClickWidget):
     opacityEffectCtrl: ZOpacityEffect
     iconColorCtrl: ZAnimatedColor
@@ -132,7 +146,23 @@ class ZNavBarButton(ZClickWidget):
         if ZDebug.draw_rect: ZDebug.drawRect(painter, rect)
         event.accept()
 
+class ZNavBarToggleButtonColorData(ZColorData):
+    Icon: QColor
+    IconToggled: QColor
+
+colordata_2 = {
+    'Light':  {
+        ZColorDataKey.Icon: lambda: ZPalette.Icon,
+        ZColorDataKey.IconToggled: lambda: ZPalette.Primary
+    },
+    'Dark': {
+        ZColorDataKey.Icon: lambda: ZPalette.Icon,
+        ZColorDataKey.IconToggled: lambda: ZPalette.Primary
+    }
+}
+
 # region ZNavBarToggleButton
+@colordata_provider(datamap=colordata_2, classtype=ZNavBarToggleButtonColorData)
 class ZNavBarToggleButton(ZToggleWidget):
     opacityEffectCtrl: ZOpacityEffect
     iconColorCtrl: ZAnimatedColor
@@ -334,7 +364,20 @@ class Indicator(ZWidget):
             painter.drawRoundedRect(rect, radius, radius)
         event.accept()
 
+class ZNavigationBarColorData(ZColorData):
+    Indicator: QColor
+
+colordata_3 = {
+    'Light':  {
+        ZColorDataKey.Indicator: lambda: ZPalette.Primary
+    },
+    'Dark': {
+        ZColorDataKey.Indicator: lambda: ZPalette.Primary
+    }
+}
+
 # region ZNavigationBar
+@colordata_provider(datamap=colordata_3, classtype=ZNavigationBarColorData)
 class ZNavigationBar(ZWidget):
     colorDataCtrl: ZColorController[ZNavigationBarColorData]
     __controllers_kwargs__ = {'colorDataCtrl':{'key': 'ZNavigationBar'}}

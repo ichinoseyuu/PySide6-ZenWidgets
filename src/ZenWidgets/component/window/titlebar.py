@@ -6,8 +6,13 @@ from ZenWidgets.component.base.widget import ZClickWidget
 from ZenWidgets.component.base.controller import ZAnimatedColor,ZColorController
 from ZenWidgets.component.text import ZHeadLine
 from ZenWidgets.core import ZDebug,ZGlobal,ZPosition
-from ZenWidgets.gui import ZTitleBarButtonColorData,ZTheme
-
+from ZenWidgets.gui import (
+    ZTheme,
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
+)
 __all__ = [
     'ZTitleBarButton',
     'CloseButton',
@@ -18,7 +23,16 @@ __all__ = [
     'ZTitleBar'
 ]
 
+class ZTitleBarButtonColorData(ZColorData):
+    Icon: QColor
+
+colordata = {
+    'Light': {ZColorDataKey.Icon: '#333333'},
+    'Dark': {ZColorDataKey.Icon: '#DCDCDC'}
+}
+
 # region ZTitleBarButton
+@colordata_provider(datamap=colordata, classtype=ZTitleBarButtonColorData)
 class ZTitleBarButton(ZClickWidget):
     bodyColorCtrl: ZAnimatedColor
     iconColorCtrl: ZAnimatedColor

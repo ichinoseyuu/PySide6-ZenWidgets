@@ -1,5 +1,5 @@
 from typing import Any,Dict,cast
-from PySide6.QtGui import QPainter,QFont,QPen,QIcon,QPixmap
+from PySide6.QtGui import QPainter,QFont,QPen,QIcon,QPixmap,QColor
 from PySide6.QtCore import Qt,QSize,QRect,QRectF,QPointF,Signal,Slot,QMargins,QPoint,QEvent
 from PySide6.QtWidgets import QApplication,QSizePolicy
 from ZenWidgets.component.layouts import ZVBoxLayout
@@ -24,14 +24,32 @@ from ZenWidgets.core import (
     ZPadding
 )
 from ZenWidgets.gui import (
-    ZComboBoxColorData,
-    ZComboBoxItemColorData,
-    ZComboBoxViewColorData,
-    ZWidgetEffect
+    ZWidgetEffect,
+    ZColorData,
+    ZColorDataKey,
+    ZPalette,
+    colordata_provider
 )
+class ZComboBoxItemColorData(ZColorData):
+    Text: QColor
+    Icon: QColor
+    Indicator: QColor
 
+colordata = {
+    'Light': {
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.Icon: lambda: ZPalette.Icon,
+        ZColorDataKey.Indicator: lambda: ZPalette.Primary
+    },
+    'Dark': {
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.Icon: lambda: ZPalette.Icon,
+        ZColorDataKey.Indicator: lambda: ZPalette.Primary
+    }
+}
 
 # region ZComboBoxItem
+@colordata_provider(datamap=colordata, classtype=ZComboBoxItemColorData)
 class ZComboBoxItem(ZToggleWidget):
     indicatorWidth = 3
     opacityEffectCtrl: ZOpacityEffect
@@ -213,8 +231,23 @@ class ZComboBoxItem(ZToggleWidget):
         event.accept()
 
 
+class ZComboBoxViewColorData(ZColorData):
+    Body: QColor
+    Border: QColor
+
+colordata_2 = {
+    'Light': {
+        ZColorDataKey.Body: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.PanelBody,
+        ZColorDataKey.Border: lambda: ZPalette.Border
+    }
+}
 
 # region ZComboBoxView
+@colordata_provider(datamap=colordata_2, classtype=ZComboBoxViewColorData)
 class ZComboBoxView(ZWidget):
     selected = Signal(str)
 
@@ -367,8 +400,29 @@ class ZComboBoxView(ZWidget):
         super().focusOutEvent(event)
         self.windowOpacityCtrl.fadeOut()
 
+class ZComboBoxColorData(ZColorData):
+    Body: QColor
+    Border: QColor
+    Text: QColor
+    Icon: QColor
+
+colordata_3 = {
+    'Light': {
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.Icon: lambda: ZPalette.Icon
+    },
+    'Dark': {
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.Border: lambda: ZPalette.Border,
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.Icon: lambda: ZPalette.Icon
+    }
+}
 
 # region ZComboBox
+@colordata_provider(datamap=colordata_3, classtype=ZComboBoxColorData)
 class ZComboBox(ZClickWidget):
     optionChanged = Signal(str, object)
     '''选项改变信号'''
