@@ -8,7 +8,6 @@ from appitem import AppIconItem
 class PortableBox(ZStandardFramelessWindow):
     def __init__(self):
         super().__init__()
-        print(ZStyleDataManager()._cache)
         self.setupUi()
 
     def setupUi(self):

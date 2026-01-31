@@ -7,10 +7,37 @@ import subprocess
 import sys
 
 
+class AppIconItemColorData(ZColorData):
+    Text: QColor
+    Body: QColor
+    Border: QColor
+
+colordata = {
+    'Light': {
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.Border: lambda: ZPalette.BorderNeutral
+    },
+    'Dark': {
+        ZColorDataKey.Text: lambda: ZPalette.Text,
+        ZColorDataKey.Body: lambda: ZPalette.Body,
+        ZColorDataKey.Border: lambda: ZPalette.BorderNeutral
+    }
+}
+
+@colordata_provider(datamap=colordata, classtype=AppIconItemColorData)
 class AppIconItem(ZWidget):
     # 自定义信号，可选：向外暴露选中状态变化
     selectedChanged = Signal(bool)
-
+    textColorCtrl: ZAnimatedColor
+    bodyColorCtrl: ZAnimatedColor
+    borderColorCtrl: ZAnimatedColor
+    radiusCtrl: ZAnimatedFloat
+    colorDataCtrl: ZColorController[AppIconItemColorData]
+    __controllers_kwargs__ = {
+        'colorDataCtrl':{'key': 'AppIconItem'},
+        'radiusCtrl': {'value': 8.0}
+    }
     def __init__(self, exe_path: str = "", parent=None):
         super().__init__(parent)
         # 基础属性
@@ -31,6 +58,21 @@ class AppIconItem(ZWidget):
 
         # 初始化右键菜单
         self._init_context_menu()
+
+    def _init_color_data_(self):
+        data = self.colorDataCtrl.data
+        self.borderColorCtrl = data.Border
+        self.textColorCtrl = data.Text
+        self.bodyColorCtrl = data.Body
+
+    def _color_data_change_handler_(self):
+        data = self.colorDataCtrl.data
+        self.borderColorCtrl.setColorTo(data.Border)
+        self.textColorCtrl.setColorTo(data.Text)
+        self.bodyColorCtrl.setColorTo(data.Body)
+
+    def _init_style_(self):
+        pass
 
     def _parse_exe_icon(self):
         """解析exe文件的图标并转换为QPixmap"""
@@ -79,13 +121,14 @@ class AppIconItem(ZWidget):
         """手动绘制图标和选中框"""
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)  # 抗锯齿
-
+        radius = self.radiusCtrl.value
         # 1. 绘制选中框（外部框）
         if self.is_selected:
-            painter.setPen(QPen(QColor(0, 160, 255), 1, Qt.PenStyle.SolidLine))
-            painter.setBrush(Qt.NoBrush)
+            painter.setPen(QPen(self.borderColorCtrl.color, 1, Qt.PenStyle.SolidLine))
+            painter.setBrush(self.bodyColorCtrl.color)
             # 绘制外框，预留1px边距
-            painter.drawRect(self.rect().adjusted(0.5, 0.5, -0.5, -0.5))
+            #painter.drawRect(self.rect().adjusted(0.5, 0.5, -0.5, -0.5))
+            painter.drawRoundedRect(self.rect().adjusted(0.5, 0.5, -0.5, -0.5), radius, radius)
 
         # 2. 绘制应用图标（居中）
         if not self.icon_pixmap.isNull():
@@ -97,7 +140,7 @@ class AppIconItem(ZWidget):
         # 3. 绘制exe文件名（可选）
         if self.exe_path:
             file_name = os.path.basename(self.exe_path)
-            painter.setPen(QColor(50, 50, 50))
+            painter.setPen(self.textColorCtrl.color)
             # 文字居中，在图标下方
             text_rect = QRect(0, self.height() - 20, self.width(), 20)
             painter.drawText(text_rect, Qt.AlignCenter, file_name[:8] + "..." if len(file_name) > 8 else file_name)
