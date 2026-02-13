@@ -32,18 +32,15 @@ from ZenWidgets.gui import (
 )
 class ZComboBoxItemColorData(ZColorData):
     Text: QColor
-    Icon: QColor
     Indicator: QColor
 
 colordata = {
     'Light': {
         ZColorDataKey.Text: lambda: ZPalette.Text,
-        ZColorDataKey.Icon: lambda: ZPalette.Icon,
         ZColorDataKey.Indicator: lambda: ZPalette.Primary
     },
     'Dark': {
         ZColorDataKey.Text: lambda: ZPalette.Text,
-        ZColorDataKey.Icon: lambda: ZPalette.Icon,
         ZColorDataKey.Indicator: lambda: ZPalette.Primary
     }
 }
@@ -55,7 +52,6 @@ class ZComboBoxItem(ZToggleWidget):
     opacityEffectCtrl: ZOpacityEffect
     radiusCtrl: ZAnimatedFloat
     textColorCtrl: ZAnimatedColor
-    iconColorCtrl: ZAnimatedColor
     indicatorColorCtrl: ZAnimatedColor
     opacityCtrl: ZAnimatedOpacity
     colorDataCtrl: ZColorController[ZComboBoxItemColorData]
@@ -80,8 +76,6 @@ class ZComboBoxItem(ZToggleWidget):
                          sizePolicy=sizePolicy
                          )
         self._text: str | None = text
-        self._icon: QIcon | None = icon
-        self._icon_size = QSize(16, 16)
         self._padding = ZPadding(4, 4, 16, 4)
         self._spacing = 4
         self._init_color_data_()
@@ -91,7 +85,6 @@ class ZComboBoxItem(ZToggleWidget):
     def _init_color_data_(self):
         data = self.colorDataCtrl.data
         self.textColorCtrl.color = data.Text
-        self.iconColorCtrl.color = data.Icon
         self.indicatorColorCtrl.color = data.Indicator
         self.indicatorColorCtrl.opaque() if self._checked else self.indicatorColorCtrl.transparent()
 
@@ -99,7 +92,6 @@ class ZComboBoxItem(ZToggleWidget):
         data = self.colorDataCtrl.data
         self.indicatorColorCtrl.color = data.Indicator
         self.textColorCtrl.setColorTo(data.Text)
-        self.iconColorCtrl.setColorTo(data.Icon)
         self.indicatorColorCtrl.toOpaque() if self._checked else self.indicatorColorCtrl.toTransparent()
 
     def _mouse_enter_(self): self.opacityEffectCtrl.setAlphaFTo(0.11)
@@ -117,10 +109,6 @@ class ZComboBoxItem(ZToggleWidget):
     # region public method
     def text(self) -> str: return self._text
 
-    def icon(self) -> QIcon: return QIcon(self._icon)
-
-    def iconSize(self) -> QSize: return QSize(self._icon_size)
-
     def spacing(self) -> int: return self._spacing
 
     def padding(self) -> ZPadding: return self._padding
@@ -128,13 +116,6 @@ class ZComboBoxItem(ZToggleWidget):
     def setText(self, t: str) -> None:
         if self._text == t: return
         self._text = t
-        self.update()
-
-    def setIcon(self, i: QIcon) -> None: self._icon = i; self.update()
-
-    def setIconSize(self, s: QSize) -> None:
-        if self._icon_size == s: return
-        self._icon_size = s
         self.update()
 
     def setSpacing(self, s: int) -> None:
@@ -150,8 +131,6 @@ class ZComboBoxItem(ZToggleWidget):
     def sizeHint(self):
         # 宽度由父控件决定，这里只计算高度
         content_height = 0
-        if self._icon:
-            content_height = max(content_height, self._icon_size.height())
         if self._text:
             text_height = self.fontMetrics().height()
             content_height = max(content_height, text_height)
@@ -194,39 +173,16 @@ class ZComboBoxItem(ZToggleWidget):
             painter.setBrush(self.indicatorColorCtrl.color)
             painter.drawRoundedRect(indicator_rect, indicator_w / 2, indicator_w / 2)
 
-        content_available_rect = QRect(
-            text_area_left,
-            content_rect.top(),
-            content_rect.width() - (text_area_left - content_rect.left()),
-            content_rect.height()
-        )
-
-        icon_draw = False
-        icon_right = content_available_rect.left()
-        if self._icon:
-            icon_y = (content_available_rect.height() - self._icon_size.height()) // 2 + content_available_rect.top()
-            pixmap = self._icon.pixmap(self._icon_size)
-            colored_pixmap = QPixmap(pixmap.size())
-            colored_pixmap.fill(Qt.transparent)
-            with QPainter(colored_pixmap) as p:
-                p.drawPixmap(0, 0, pixmap)
-                p.setCompositionMode(QPainter.CompositionMode_SourceIn)
-                p.fillRect(colored_pixmap.rect(), self.iconColorCtrl.color)
-            painter.drawPixmap(content_available_rect.left(), icon_y, colored_pixmap)
-            icon_draw = True
-            icon_right = content_available_rect.left() + self._icon_size.width() + spacing
-
         if self._text:
             text_rect = QRect(
-                icon_right if icon_draw else content_available_rect.left(),
-                content_available_rect.top(),
-                content_available_rect.width() - (icon_right - content_available_rect.left()),
-                content_available_rect.height()
+                text_area_left,
+                content_rect.top(),
+                content_rect.width() - (text_area_left - content_rect.left()),
+                content_rect.height()
             )
             painter.setFont(self.font())
             painter.setPen(self.textColorCtrl.color)
             painter.drawText(text_rect, Qt.AlignLeft | Qt.AlignVCenter, self._text)
-
         if ZDebug.draw_rect: ZDebug.drawRect(painter, rect)
         event.accept()
 

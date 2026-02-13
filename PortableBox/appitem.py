@@ -55,15 +55,15 @@ class AppIconItem(ZWidget):
         # 解析exe图标（如果路径有效）
         if exe_path and os.path.exists(exe_path):
             self._parse_exe_icon()
-
+        self._init_color_data_()
         # 初始化右键菜单
         self._init_context_menu()
 
     def _init_color_data_(self):
         data = self.colorDataCtrl.data
-        self.borderColorCtrl = data.Border
-        self.textColorCtrl = data.Text
-        self.bodyColorCtrl = data.Body
+        self.textColorCtrl.color = data.Text
+        self.borderColorCtrl.color = data.Border
+        self.bodyColorCtrl.color = data.Body
 
     def _color_data_change_handler_(self):
         data = self.colorDataCtrl.data
@@ -89,18 +89,28 @@ class AppIconItem(ZWidget):
             self.icon_pixmap = standard_icon.pixmap(48, 48)
 
     def _init_context_menu(self):
-        """初始化右键菜单"""
-        self.context_menu = QMenu(self)
-        # 打开文件菜单项
-        open_action = QAction("打开应用", self)
-        open_action.triggered.connect(self.open_exe)
-        # 查看路径菜单项
-        path_action = QAction("查看文件路径", self)
-        path_action.triggered.connect(lambda: QMessageBox.information(self, "路径", self.exe_path))
-        # 添加菜单项
-        self.context_menu.addAction(open_action)
+        self.context_menu = ZContextMenu(self)
+        sub_actions = [
+            ZAction("子项 1", callback=lambda: print("sub1")),
+            ZAction("子项 2", callback=lambda: print("sub2"))
+        ]
+        sub_sub_actions = [
+            ZAction("子子项 1", callback=lambda: self.show_exe_path()),
+            ZAction("子子项 2", callback=lambda: print("sub-sub-2")),
+        ]
+        sub_actions2 = [
+            ZAction("子项 带子菜单", submenu=sub_sub_actions,icon=ZGlobal.getBuiltinIcon(u':/icons/dark.svg')),
+            ZAction("子项 2", callback=lambda: print("sub2"))
+        ]
+        item_1 = ZAction("打开应用(&O)", callback=self.open_exe)
+        item_2 = ZAction("查看文件路径(&V)", callback=self.show_exe_path)
+        item_3 = ZAction("更多(&M)", submenu=sub_actions)
+        item_4 = ZAction("更多(&M)", submenu=sub_actions2)
+        self.context_menu.addAction(item_1)
+        self.context_menu.addAction(item_2)
         self.context_menu.addSeparator()
-        self.context_menu.addAction(path_action)
+        self.context_menu.addAction(item_3)
+        self.context_menu.addAction(item_4)
 
     def open_exe(self):
         """打开目标exe文件"""
@@ -110,12 +120,10 @@ class AppIconItem(ZWidget):
         except Exception as e:
             QMessageBox.critical(self, "错误", f"打开失败：{str(e)}")
 
-    def set_exe_path(self, exe_path: str):
-        """动态设置exe路径并更新图标"""
-        self.exe_path = exe_path
-        if os.path.exists(exe_path):
-            self._parse_exe_icon()
-        self.update()  # 重绘控件
+    def show_exe_path(self):
+        """显示exe文件路径的模态对话框"""
+        # 创建对话框并持有引用，调用exec()弹出（模态，阻塞直到关闭）
+        logging.info(f"显示路径对话框，当前exe路径：{self.exe_path}")
 
     def paintEvent(self, event: QPaintEvent):
         """手动绘制图标和选中框"""
@@ -127,7 +135,6 @@ class AppIconItem(ZWidget):
             painter.setPen(QPen(self.borderColorCtrl.color, 1, Qt.PenStyle.SolidLine))
             painter.setBrush(self.bodyColorCtrl.color)
             # 绘制外框，预留1px边距
-            #painter.drawRect(self.rect().adjusted(0.5, 0.5, -0.5, -0.5))
             painter.drawRoundedRect(self.rect().adjusted(0.5, 0.5, -0.5, -0.5), radius, radius)
 
         # 2. 绘制应用图标（居中）
@@ -160,8 +167,7 @@ class AppIconItem(ZWidget):
         super().mouseDoubleClickEvent(event)
 
     def contextMenuEvent(self, event: QContextMenuEvent):
-        """右键菜单事件"""
-        self.context_menu.exec(event.globalPos())
+        self.context_menu.showAt(event.globalPos())
         super().contextMenuEvent(event)
 
 

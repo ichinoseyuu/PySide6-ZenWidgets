@@ -6,5 +6,6 @@ from .input import *
 from .text import *
 from .navigations import *
 from .media import *
+from .menu import *
 from .dialogs import *
 from .window import *
