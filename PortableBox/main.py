@@ -8,6 +8,7 @@ from appitem import AppIconItem
 class PortableBox(ZStandardFramelessWindow):
     def __init__(self):
         super().__init__()
+        QApplication.setDoubleClickInterval(500)  # 设置双击间隔为500毫秒
         self.setupUi()
 
     def setupUi(self):
@@ -17,19 +18,34 @@ class PortableBox(ZStandardFramelessWindow):
         self.resize(size)
         self.moveCenter()
         self.setWindowTitle("PortableBox")
+        self._apps: ZExclusiveToggleGroup = ZExclusiveToggleGroup(self, allow_uncheck=True)  # 管理AppIconItem的选中状态
 
         self.boxContainer = ZFlowContainer(self.centerWidget())
         self.boxContainer.setLineHeight(72)
-        # 创建自定义控件（示例：传入记事本exe路径）
-        notepad_path = "C:/Windows/System32/notepad.exe"  # Windows记事本路径
-        app_icon = AppIconItem(notepad_path)
 
-        # 选中状态变化示例
-        app_icon.selectedChanged.connect(lambda is_selected: print(f"选中状态：{is_selected}"))
+        app_notepad = AppIconItem(parent=self, exe_path="C:/Windows/System32/notepad.exe", app_name="Notepad")
+        app_notepad.toggled.connect(self._select_Change_handler)
+        self._apps.addWidget(app_notepad,set_first_checked=False)
 
-        self.boxContainer.addWidget(app_icon)
-        self.boxContainer.regDraggableWidget(app_icon)
+        self.boxContainer.addWidget(app_notepad)
+        self.boxContainer.regDraggableWidget(app_notepad)
 
+        app_calculator = AppIconItem(parent=self, exe_path="C:/Windows/System32/calc.exe", app_name="Calculator")
+        app_calculator.toggled.connect(self._select_Change_handler)
+        self._apps.addWidget(app_calculator)
+        self.boxContainer.addWidget(app_calculator)
+        self.boxContainer.regDraggableWidget(app_calculator)
+
+
+        app_edge = AppIconItem(parent=self, exe_path="C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe", app_name="Edge")
+        app_edge.toggled.connect(self._select_Change_handler)
+        self._apps.addWidget(app_edge)
+        self.boxContainer.addWidget(app_edge)
+        self.boxContainer.regDraggableWidget(app_edge)
+
+
+    def _select_Change_handler(self, checked: bool):
+        pass
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

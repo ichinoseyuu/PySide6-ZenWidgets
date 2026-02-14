@@ -9,8 +9,12 @@ class ZExclusiveToggleGroup(QObject):
     """通用互斥切换控件组管理器,用于管理一组只能有一个被选中的切换控件"""
     toggled = Signal()
 
-    def __init__(self, parent: ZWidget | None = None):
+    def __init__(self,
+                 parent: ZWidget | None = None,
+                 allow_uncheck: bool = False
+                 ):
         super().__init__(parent)
+        self._allow_uncheck = allow_uncheck
         self._widgets: Dict[int, ZToggleWidget] = {}
         self._last_checked_key: Optional[int] = None
         self._checked_key: Optional[int] = None
@@ -35,34 +39,33 @@ class ZExclusiveToggleGroup(QObject):
         self.toggled.emit()
 
     # region public
-    def isEnabled(self) -> bool:
-        return self._enabled
+    def isEnabled(self) -> bool: return self._enabled
 
     def setEnabled(self, enabled: bool) -> None:
         self._enabled = bool(enabled)
         for button in self._widgets.values():
             button.setEnabled(self._enabled)
 
-    def widgets(self) -> List[ZToggleWidget]:
-        return list(self._widgets.values())
+    def widgets(self) -> List[ZToggleWidget]: return list(self._widgets.values())
 
-    def checkedKey(self) -> Optional[int]:
-        return self._checked_key
+    def checkedKey(self) -> Optional[int]: return self._checked_key
 
-    def checkedWidget(self) -> Optional[ZToggleWidget]:
-        return self._widgets.get(self._checked_key)
+    def checkedWidget(self) -> Optional[ZToggleWidget]: return self._widgets.get(self._checked_key)
 
-    def lastCheckedKey(self) -> Optional[int]:
-        return self._last_checked_key
+    def lastCheckedKey(self) -> Optional[int]: return self._last_checked_key
 
-    def lastCheckedWidget(self) -> Optional[ZToggleWidget]:
-        return self._widgets.get(self._last_checked_key)
+    def lastCheckedWidget(self) -> Optional[ZToggleWidget]: return self._widgets.get(self._last_checked_key)
 
-    def count(self) -> int:
-        return len(self._widgets)
+    def count(self) -> int: return len(self._widgets)
 
-    def getWidget(self, key: int) -> Optional[ZToggleWidget]:
-        return self._widgets.get(key)
+    def allowUncheck(self) -> bool: return self._allow_uncheck
+
+    def setAllowUncheck(self, allow: bool) -> None:
+        self._allow_uncheck = bool(allow)
+        for widget in self._widgets.values():
+            widget.setAllowUncheck(self._allow_uncheck)
+
+    def getWidget(self, key: int) -> Optional[ZToggleWidget]: return self._widgets.get(key)
 
     def addWidget(self,
                   widget: ZToggleWidget,
@@ -83,6 +86,7 @@ class ZExclusiveToggleGroup(QObject):
 
         self._widgets[used_key] = widget
         widget.setGroup(self)
+        widget.setAllowUncheck(self._allow_uncheck)
 
         # 创建并保存回调以便将来断开
         cb_toggled = partial(self._widget_toggle_handler_, used_key)

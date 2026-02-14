@@ -70,14 +70,12 @@ class ZSwitch(ZToggleWidget[ZSwitchStyle]):
     def __init__(self,
                  parent: ZWidget | None = None,
                  tun_on: bool = False,
-                 is_group_member: bool = False,
                  style: ZSwitchStyle = ZSwitchStyle.Standard,
                  objectName: str | None = None,
                  ):
         super().__init__(parent,
                          checked=tun_on,
                          style=style,
-                         is_group_member=is_group_member,
                          objectName=objectName,
                          sizePolicy=QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
                          )

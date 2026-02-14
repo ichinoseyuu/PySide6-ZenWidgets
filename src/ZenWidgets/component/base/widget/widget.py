@@ -418,7 +418,7 @@ class ZToggleWidget(ZClickWidget[StyleT]):
                  *args,
                  checked: bool = False,
                  checkable: bool = True,
-                 is_group_member: bool = False,
+                 allow_uncheck: bool = True,
                  style: Optional[StyleT] = None,
                  objectName: str | None = None,
                  toolTip: str | None = None,
@@ -432,8 +432,8 @@ class ZToggleWidget(ZClickWidget[StyleT]):
                          **kwargs
                          )
         self._checkable: bool = checkable
+        self._allowUncheck = allow_uncheck
         self._checked: bool = checked
-        self._is_group_member: bool = is_group_member
         self._group: Optional['ZExclusiveToggleGroup']= None
 
     # private method
@@ -452,15 +452,15 @@ class ZToggleWidget(ZClickWidget[StyleT]):
 
     def setCheckable(self, c: bool): self._checkable = c
 
-    def isGroupMember(self) -> bool: return self._is_group_member
+    def allowUncheck(self): return self._allowUncheck
+
+    def setAllowUncheck(self, allow): self._allowUncheck = allow
 
     def setGroup(self, group: 'ZExclusiveToggleGroup'):
         self._group = group
-        self._is_group_member = True
 
     def unsetGroup(self):
         self._group = None
-        self._is_group_member = False
 
     # event
     @override
@@ -468,7 +468,7 @@ class ZToggleWidget(ZClickWidget[StyleT]):
         super().mouseReleaseEvent(event)
         if event.button() == Qt.MouseButton.LeftButton and self._checkable:
             if self.rect().contains(event.position().toPoint()):
-                self._checked = True if self._is_group_member else not self._checked
+                self._checked = True if not self._allowUncheck else not self._checked
                 self._toggle_()
                 self.toggled.emit(self._checked)
 

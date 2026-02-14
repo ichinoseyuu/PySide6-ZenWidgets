@@ -1,8 +1,7 @@
 from typing import Any,Dict,Optional,List,Union,cast
-from enum import IntEnum
 from functools import partial
 from PySide6.QtGui import QPainter,QFont,QPen,QIcon,QPixmap,QColor
-from PySide6.QtCore import Qt,QSize,QRect,QRectF,QPointF,Signal,Slot,QMargins,QPoint,QEvent,QObject,QTimer
+from PySide6.QtCore import Qt,QSize,QRect,QRectF,Signal,Slot,QMargins,QPoint,QEvent,QObject,QTimer
 from PySide6.QtWidgets import QApplication,QSizePolicy
 from ZenWidgets.component.layouts import ZVBoxLayout
 from ZenWidgets.component.base import (
@@ -47,6 +46,8 @@ class ZAction(QObject):
         self._icon = icon
         self._submenu = submenu
         if callback: self.triggered.connect(callback)
+
+    def __repr__(self): return f"ZAction(text={self._text}, value={self._value}, shortcut={self._shortcut}, has_icon={self._icon}, has_submenu={self._submenu})"
 
     def text(self) -> str: return self._text
     def value(self) -> Any: return self._value
@@ -188,6 +189,12 @@ class ZContextItem(ZClickWidget):
     # public methods
     def text(self) -> str: return self._text
     def renderText(self) -> str: return self._text.replace("&", "")
+    def mnemonic(self) -> Optional[str]:
+        if self._text and '&' in self._text:
+            parts = self._text.split('&')
+            if len(parts) >= 2 and parts[1]:
+                return parts[1][0].upper()
+        return None
     def icon(self) -> QIcon: return QIcon(self._icon)
     def iconSize(self) -> QSize: return QSize(self._icon_size)
     def spacing(self) -> int: return self._spacing
@@ -357,7 +364,7 @@ class ZContextMenu(ZWidget):
         self._content.move(self._margin.left, self._margin.top)
         self._actions: list[ZAction] = []
         self._submenus: dict[str, 'ZContextMenu'] = {}
-        self._hover_timer: QTimer = QTimer(self, interval=100)
+        self._hover_timer: QTimer = QTimer(self, interval=200)
         self._active_submenu: Optional['ZContextMenu'] = None
         self._parent_menu: Optional['ZContextMenu'] = None
         self._parent_item: Optional['ZContextItem'] = None
@@ -379,30 +386,21 @@ class ZContextMenu(ZWidget):
         self.bodyColorCtrl.setColorTo(data.Body)
         self.borderColorCtrl.setColorTo(data.Border)
 
-    def _action_triggered_handler_(self, action: ZAction):
-        # called after action.trigger() -> action.triggered emitted -> we end up here
-        self.itemSelected.emit(action.text(), action.value())
-        self.windowOpacityCtrl.fadeOut()
-
     def _get_valid_pos(self, target_pos: QPoint) -> QPoint:
         menu_size = self.sizeHint()
         screen = QApplication.screenAt(target_pos) or QApplication.primaryScreen()
         screen_geo = screen.availableGeometry()
         x, y = target_pos.x(), target_pos.y()
-
         if self._parent_item:
             parent_item = self._parent_item
             parent_left = parent_item.mapToGlobal(parent_item.rect().topLeft()).x()
-            # 简化x轴修正：移除多余的h计算，仅保留基础左移
             if x + menu_size.width() > screen_geo.right():
                 m = self._content.layout().contentsMargins().left() + self._content.layout().contentsMargins().right()
                 x = parent_left - menu_size.width() + m - 1
-            # 高度修正不变
             if y + menu_size.height() > screen_geo.bottom():
                 y = screen_geo.bottom() - menu_size.height()
                 y = max(y, screen_geo.top())
         else:
-            # 根菜单逻辑不变
             if x + menu_size.width() > screen_geo.right():
                 x = screen_geo.right() - menu_size.width()
             x = max(x, screen_geo.left())
@@ -415,7 +413,6 @@ class ZContextMenu(ZWidget):
         return QPoint(x, y)
 
     def _open_submenu_for_item(self, item: ZContextItem, action: ZAction):
-        # 打开一个子菜单
         submenu = self._submenus.get(action)
         if not submenu: return
         if self._active_submenu and self._active_submenu is not self._submenus.get(action):
@@ -426,11 +423,9 @@ class ZContextMenu(ZWidget):
         submenu._parent_menu = self
         submenu._parent_item = item
         self._active_submenu = submenu
-        # when submenu emits optionChanged, bubble and close both menus
         submenu.itemSelected.connect(lambda t, v: (self.itemSelected.emit(t, v), self.windowOpacityCtrl.fadeOut()))
 
     def _hover_inside_menu_tree(self, menu: 'ZContextMenu', pos: QPoint) -> bool:
-        # 递归检查位置是否在菜单范围内（包括活跃子菜单）
         r = QRect(menu.mapToGlobal(menu.rect().topLeft()), menu.mapToGlobal(menu.rect().bottomRight()))
         if r.contains(pos):
             return True
@@ -441,11 +436,29 @@ class ZContextMenu(ZWidget):
     def _close_menu_and_descendants(self, menu: 'ZContextMenu') -> None:
         if hasattr(menu, '_active_submenu') and menu._active_submenu:
             self._close_menu_and_descendants(menu._active_submenu)
-        try: menu.windowOpacityCtrl.fadeOut()
+        try:
+            menu.windowOpacityCtrl.fadeOut()
         except: pass
 
+    def _fade_out(self):
+        try:
+            self.windowOpacityCtrl.fadeOut()
+            if self._active_submenu:
+                self._close_menu_and_descendants(self._active_submenu)
+                self._active_submenu = None
+        except Exception as e:
+            pass
+
+    def _close_menu_chain(self):
+        self._fade_out()
+        parent_menu = self._parent_menu
+        while parent_menu:
+            parent_menu._fade_out()
+            parent_menu._active_submenu = None
+            parent_menu = parent_menu._parent_menu
+
     def _item_entered_handler_(self):
-        item: ZContextItem = self.sender()
+        item = cast(ZContextItem, self.sender())
         self._hover_timer.timeout.connect(
             partial(self._open_submenu_for_item, item, item._bound_action)
         )
@@ -455,57 +468,29 @@ class ZContextMenu(ZWidget):
         self._hover_timer.stop()
         self._hover_timer.timeout.disconnect()
 
-    def getActionByText(self, text: str) -> Optional[ZAction]:
-        """通过文本获取ZAction实例，核心查询方法，为所有派生查询提供基础"""
-        return next((a for a in self._actions if a.text() == text), None)
-
-    def getActionValueByText(self, text: str) -> Any:
-        """通过文本获取ZAction绑定的value，替代原_options[text]"""
-        action = self.getActionByText(text)
-        return action.value() if action else None
-
-    def getActionShortcutByText(self, text: str) -> Optional[str]:
-        """通过文本获取ZAction的shortcut，替代原_shortcuts[text]"""
-        action = self.getActionByText(text)
-        return action.shortcut() if action else None
-
-    def getActionTexts(self) -> List[str]:
-        """获取所有Action的文本列表，替代原_items"""
-        return [a.text() for a in self._actions]
-
-    def getActionMap(self) -> Dict[str, ZAction]:
-        """获取 文本:ZAction 映射字典，按需生成，避免长期维护"""
-        return {a.text(): a for a in self._actions}
+    def _action_triggered_handler_(self, action: ZAction):
+        self.itemSelected.emit(action.text(), action.value())
+        self.windowOpacityCtrl.fadeOut()
 
     def addAction(self, action: ZAction):
         self._actions.append(action)
         item = ZContextItem(self, text=action.text(), icon=action.icon(), shortcut=action.shortcut())
         item._bound_action = action
         self._content.layout().addWidget(item)
-
-        # # submenu handling
         submenu_spec = action.submenu()
         if submenu_spec:
             item._has_submenu = True
-            # create submenu instance (if list provided)
             if isinstance(submenu_spec, ZContextMenu):
                 submenu = submenu_spec
             else:
                 submenu = ZContextMenu(parent=self, actions=submenu_spec)
             submenu._parent_menu = self
             submenu._parent_item = item
-            # store mapping
             self._submenus[action] = submenu
-
-            # open submenu on hover or click
-            #item.clicked.connect(lambda *_, it=item, a=action: self._open_submenu_for_item(it, a))
             item.entered.connect(self._item_entered_handler_)
             item.leaved.connect(self._item_leaved_handler_)
-        # normal action (no submenu)
         else:
             item.clicked.connect(lambda _=None, a=action: a.trigger())
-
-        # action.triggered -> close chain and emit
         action.triggered.connect(lambda _=None, a=action: self._action_triggered_handler_(a))
 
     def addSeparator(self):
@@ -536,7 +521,6 @@ class ZContextMenu(ZWidget):
         QApplication.instance().installEventFilter(self)
         super().show()
         self.move(self._get_valid_pos(pos - self._margin.topLeft()))
-        #self.move(pos - self._margin.topLeft())
         self.widgetSizeCtrl.resizeFromTo(QSize(self.widthHint(),0),self.sizeHint())
         self.setFocus(Qt.FocusReason.PopupFocusReason)
         self.windowOpacityCtrl.fadeIn()
@@ -547,86 +531,15 @@ class ZContextMenu(ZWidget):
         QApplication.instance().removeEventFilter(self)
         super().close()
 
-    def eventFilter(self, obj, event):
-        # intercept wheel events while menu is visible to avoid unwanted scrolling
-        if self.isVisible() and event.type() == QEvent.Type.Wheel:
-            return True
-
-        # auto-hide active submenu when mouse moves outside it (and outside its parent item)
-        if self.isVisible() and event.type() == QEvent.Type.MouseMove:
-            # get global mouse position (compat for Qt6/Qt5)
-            pos = None
-            if hasattr(event, 'globalPos'):
-                try: pos = event.globalPos()
-                except: pos = None
-            if pos is None and hasattr(event, 'globalPosition'):
-                try: pos = event.globalPosition().toPoint()
-                except: pos = None
-
-            if pos is not None and self._active_submenu:
-                sub = self._active_submenu
-                inside_sub = self._hover_inside_menu_tree(sub, pos)
-                inside_parent_item = False
-                try:
-                    pi = sub._parent_item
-                    if pi:
-                        pr = QRect(pi.mapToGlobal(pi.rect().topLeft()), pi.mapToGlobal(pi.rect().bottomRight()))
-                        inside_parent_item = pr.contains(pos)
-                except: pass
-                # if mouse is outside the submenu and outside the menu item that opened it -> close submenu only
-                if not (inside_sub or inside_parent_item):
-                    self._close_menu_and_descendants(sub)
-                    # clear references to the closed submenu from its owner
-                    if self._active_submenu is sub:
-                        self._active_submenu = None
-                    try:
-                        if sub._parent_menu and sub._parent_menu._active_submenu is sub:
-                            sub._parent_menu._active_submenu = None
-                    except: pass
-            # do not consume MouseMove; allow normal processing
-
-        # When menu(s) are visible, close the whole menu chain if user clicks outside
-        if self.isVisible() and event.type() in (QEvent.Type.MouseButtonPress, QEvent.Type.MouseButtonRelease):
-            # get global click position (compat for Qt6/Qt5)
-            pos = None
-            if hasattr(event, 'globalPos'):
-                try: pos = event.globalPos()
-                except: pos = None
-            if pos is None and hasattr(event, 'globalPosition'):
-                try: pos = event.globalPosition().toPoint()
-                except: pos = None
-
-            if pos is not None:
-                # check if the click is inside this menu or any of its visible submenus
-                inside = self._hover_inside_menu_tree(self, pos)
-                # also consider parent chain (this may be a submenu)
-                p = getattr(self, '_parent_menu', None)
-                while p and not inside:
-                    inside = self._hover_inside_menu_tree(p, pos)
-                    p = getattr(p, '_parent_menu', None)
-
-                if not inside:
-                    # close the top-most parent menu and all its descendant submenus
-                    root = self
-                    while getattr(root, '_parent_menu', None):
-                        root = root._parent_menu
-
-                    self._close_menu_and_descendants(root)
-                    return True
-
-        return super().eventFilter(obj, event)
-
     def sizeHint(self):
         fm = self.fontMetrics()
         options_max_width = 0
-        # reserve icon column and submenu arrow column for all items to keep alignment consistent
         reserved_icon_w = 0
         reserved_arrow_w = 0
         items = [c for c in self._content.findChildren(ZContextItem)]
         if items:
             reserved_icon_w = max((c.iconSize().width() for c in items))
             reserved_arrow_w = max((c._drop_icon_size.width() for c in items))
-        # iterate actual content children, ignoring separators for width calc
         for child in items:
             t = child.renderText()
             if t is None:
@@ -670,62 +583,83 @@ class ZContextMenu(ZWidget):
         super().resizeEvent(event)
         self._content.resize(self.width() - self._margin.horizontal(), self._content.heightHint())
 
+    def eventFilter(self, obj, event: QEvent):
+        if self.isVisible() and event.type() == QEvent.Type.Wheel:
+            return True
+        if self.isVisible() and event.type() == QEvent.Type.MouseMove:
+            pos = event.globalPos()
+            if pos is not None and self._active_submenu:
+                sub = self._active_submenu
+                inside_sub = self._hover_inside_menu_tree(sub, pos)
+                inside_parent_item = False
+                try:
+                    pi = sub._parent_item
+                    if pi:
+                        pr = QRect(pi.mapToGlobal(pi.rect().topLeft()), pi.mapToGlobal(pi.rect().bottomRight()))
+                        inside_parent_item = pr.contains(pos)
+                except: pass
+                if not (inside_sub or inside_parent_item):
+                    self._close_menu_and_descendants(sub)
+                    self._active_submenu = None
+        if self.isVisible() and event.type() in (QEvent.Type.MouseButtonPress, QEvent.Type.MouseButtonRelease):
+            pos = event.globalPos()
+            if pos is not None:
+                inside = self._hover_inside_menu_tree(self, pos)
+                p = self._parent_menu
+                while p and not inside:
+                    inside = self._hover_inside_menu_tree(p, pos)
+                    p = p._parent_menu
+                if not inside:
+                    root = self
+                    while getattr(root, '_parent_menu', None):
+                        root = root._parent_menu
+                    self._close_menu_and_descendants(root)
+                    return True
+        return super().eventFilter(obj, event)
+
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
-        # click outside to close
-        if not self.rect().contains(event.pos()):
+        if not self.rect().contains(event.pos()) and self._parent_menu is None:
             self.windowOpacityCtrl.fadeOut()
 
     def keyPressEvent(self, event):
         k = event.key()
         text = event.text().upper()
-        # Check for mnemonic key (e.g., Alt+M for "更多(&M)")
-        if text and not event.modifiers() & Qt.ControlModifier & Qt.ShiftModifier:
+        if text and not event.modifiers() & (Qt.ControlModifier | Qt.ShiftModifier):
             for item in self._content.findChildren(ZContextItem):
-                action_text = item.text()
-                if action_text and '&' in action_text:
-                    # Extract mnemonic character (e.g., 'M' from "更多(&M)")
-                    mnemonic = action_text.split('&')[-1][0].upper() if '&' in action_text else ''
-                    if mnemonic == text:
-                        if item._bound_action:
-                            item._bound_action.trigger()
-                        return
+                mnemonic = item.mnemonic()
+                if mnemonic == text and item._bound_action:
+                    widget = ZGlobal.getMouseTopWidget()
+                    if isinstance(widget, ZContextItem):
+                        widget.opacityEffectCtrl.toTransparent()
+                    if self._parent_menu:
+                        self._parent_menu._hover_timer.stop()
+                    item._bound_action.trigger()
+                    return
         if k in (Qt.Key_Down, Qt.Key_Up):
             items = self._content.findChildren(ZContextItem)
-            if not items:
-                return
+            if not items: return
             focused = self.focusWidget()
-            idx = -1
-            if isinstance(focused, ZContextItem):
-                try: idx = items.index(focused)
-                except: idx = -1
-            if k == Qt.Key_Down:
-                new = 0 if idx == -1 else (idx + 1) % len(items)
-            else:
-                new = len(items) - 1 if idx == -1 else (idx - 1) % len(items)
+            idx = items.index(focused) if isinstance(focused, ZContextItem) else -1
+            new = (idx + 1) % len(items) if k == Qt.Key_Down else (idx - 1) % len(items) if idx >=0 else len(items)-1
             items[new].setFocus()
             return
         if k == Qt.Key_Right:
             focused = self.focusWidget()
-            if isinstance(focused, ZContextItem) and focused._has_submenu:
-                if focused._bound_action is not None:
-                    act = focused._bound_action
-                    self._open_submenu_for_item(focused, act)
+            if isinstance(focused, ZContextItem) and focused._has_submenu and focused._bound_action:
+                self._open_submenu_for_item(focused, focused._bound_action)
             return
         if k == Qt.Key_Left and self._parent_menu:
             self.windowOpacityCtrl.fadeOut()
-            try:
-                self._parent_item.setFocus()
-                self._parent_menu._active_submenu = None
+            try: self._parent_item.setFocus()
             except: pass
             return
         if k in (Qt.Key_Return, Qt.Key_Enter):
             focused = self.focusWidget()
-            if isinstance(focused, ZContextItem):
-                if focused._bound_action is not None:
-                    focused._bound_action.trigger()
+            if isinstance(focused, ZContextItem) and focused._bound_action:
+                focused._bound_action.trigger()
             return
         if k == Qt.Key_Escape:
-            self.windowOpacityCtrl.fadeOut()
+            self._close_menu_chain()
             return
         super().keyPressEvent(event)

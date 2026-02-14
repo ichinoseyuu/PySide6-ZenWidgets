@@ -63,14 +63,12 @@ class ZComboBoxItem(ZToggleWidget):
                  parent: ZWidget | None = None,
                  text: str | None = None,
                  font=QFont("Microsoft YaHei", 9),
-                 icon: QIcon | None = None,
                  checked: bool = False,
                  objectName: str | None = None,
                  sizePolicy: QSizePolicy = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
                  ):
         super().__init__(parent=parent,
                          checked=checked,
-                         is_group_member=True,
                          objectName=objectName,
                          font=font,
                          sizePolicy=sizePolicy
