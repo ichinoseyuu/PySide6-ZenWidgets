@@ -11,6 +11,7 @@ class ZenBieGanMao(ZStandardFramelessWindow):
     def __init__(self):
         super().__init__()
         self.setupUi()
+        self.showMaximized()
 
     def setupUi(self):
         self.setWindowTitle("别感冒!")
@@ -64,6 +65,5 @@ class ZenBieGanMao(ZStandardFramelessWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = ZenBieGanMao()
-    window.showFullScreen()
     window.show()
     app.exec()

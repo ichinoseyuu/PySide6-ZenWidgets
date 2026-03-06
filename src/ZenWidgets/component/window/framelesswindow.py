@@ -4,7 +4,7 @@ import win32gui
 from ctypes import cast
 from ctypes.wintypes import LPRECT, MSG
 from PySide6.QtWidgets import QWidget
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt,QMargins
 from PySide6.QtGui import QResizeEvent,QColor
 from ZenWidgets.component.info import ZToolTip
 from ZenWidgets.component.base import (
@@ -23,6 +23,7 @@ from ZenWidgets.component.window.win32utils import (
     getResizeBorderThickness,
     isGreaterEqualWin11
 )
+from ZenWidgets.component.layouts import ZVBoxLayout
 from ZenWidgets.core.globals import ZGlobal
 from ZenWidgets.gui import (
     ZColorData,
@@ -145,7 +146,7 @@ class ZFramelessWindow(QWidget):
             # handle the situation that an auto-hide taskbar is enabled
             if (isMax or isFull) and WinTaskbar.isAutoHide():
                 position = WinTaskbar.getPosition(msg.hWnd)
-                if position == WinTaskbar.LEFT:
+                if position == WinTaskbar.TOP:
                     rect.top += WinTaskbar.AUTO_HIDE_THICKNESS
                 elif position == WinTaskbar.BOTTOM:
                     rect.bottom -= WinTaskbar.AUTO_HIDE_THICKNESS
@@ -172,21 +173,12 @@ class ZStandardFramelessWindow(ZFramelessWindow):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         ZGlobal.tooltip = ZToolTip()
+        self.setLayout(ZVBoxLayout(self, margins=QMargins(0, 0, 0, 0), spacing=0))
         self._titlebar = ZTitleBar(self)
+        self.layout().addWidget(self._titlebar)
         self._centerWidget = QWidget(self)
+        self.layout().addWidget(self._centerWidget)
 
-    def centerWidget(self):
-        return self._centerWidget
+    def centerWidget(self): return self._centerWidget
 
-    def titleBar(self):
-        return self._titlebar
-
-    def resizeEvent(self, event: QResizeEvent):
-        super().resizeEvent(event)
-        self._titlebar.setGeometry(0,0,event.size().width(), self._titlebar.height())
-        self._centerWidget.setGeometry(
-            0,
-            self._titlebar.height(),
-            event.size().width(),
-            event.size().height() - self._titlebar.height()
-            )
+    def titleBar(self): return self._titlebar

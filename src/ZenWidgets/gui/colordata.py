@@ -289,7 +289,7 @@ class ZStyleDataFactory:
             logging.warning(f"[DataFactory] {name}: already registered with {existing.__name__}; use overwrite=True to replace.")
             return
         cls._dataclass_registry[name] = dataclass_type
-        logging.info(f"[DataFactory] registered '{name}' -> {dataclass_type.__name__}")
+        #logging.info(f"[DataFactory] registered '{name}' -> {dataclass_type.__name__}")
 
     @classmethod
     def get_dataclass(cls, name: str):
@@ -458,11 +458,11 @@ class ZStyleDataManager(metaclass=SingletonMeta):
             logging.debug(f"[StyleMgr] {name}: unchanged, skip.")
             return
 
-        logging.info(f"[StyleMgr] register provider: {name}.")
+        #logging.info(f"[StyleMgr] register provider: {name}.")
         self._providers[name] = provider
         self.clearCache()
         if update:
-            logging.info(f"[StyleMgr] update for '{name}'.")
+            #logging.info(f"[StyleMgr] update for '{name}'.")
             self.notifyStyleChanged(name)
 
     def unregisterStyleProvider(self, name: str) -> None:
@@ -542,7 +542,7 @@ def colordata_provider(name: Optional[str] = None, datamap: Optional[Union[Calla
         else:
             # 使用 update=True 触发通知，确保热更新链路可工作
             sd_mgr.registerStyleProvider(comp, datamap, update=True)
-            logging.info(f"style_provider: provider for '{comp}' registered.")
+            #logging.info(f"style_provider: provider for '{comp}' registered.")
         return cls
     return deco
 

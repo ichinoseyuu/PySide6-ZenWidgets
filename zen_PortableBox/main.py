@@ -20,7 +20,27 @@ class PortableBox(ZStandardFramelessWindow):
         self.setWindowTitle("PortableBox")
         self._apps: ZExclusiveToggleGroup = ZExclusiveToggleGroup(self, allow_uncheck=True)  # 管理AppIconItem的选中状态
 
+        self.centerWidget().setLayout(ZVBoxLayout(self.centerWidget(), margins=QMargins(0, 0, 0, 0), spacing=0))
+        self.menubar = ZMenubar(self.centerWidget())
+        self.centerWidget().layout().addWidget(self.menubar)
+
+        # 创建菜单
+        file_menu = ZContextMenu()
+        file_menu.addAction(ZAction("添加应用(&A)"))
+        file_menu.addAction(ZAction("退出(&Q)", callback=self.close))
+
+        edit_menu = ZContextMenu()
+        edit_menu.addAction(ZAction("剪切"))
+        edit_menu.addAction(ZAction("复制"))
+        edit_menu.addAction(ZAction("粘贴"))
+
+        # 添加到菜单栏
+        self.menubar.addMenu("文件", file_menu)
+        self.menubar.addMenu("编辑", edit_menu)
+        self.menubar.menuTriggered.connect(lambda t, v: logging.info(f"菜单 {t} 触发，参数：{v}"))
+
         self.boxContainer = ZFlowContainer(self.centerWidget())
+        self.centerWidget().layout().addWidget(self.boxContainer)
         self.boxContainer.setLineHeight(72)
 
         app_notepad = AppIconItem(parent=self, exe_path="C:/Windows/System32/notepad.exe", app_name="Notepad")
@@ -35,7 +55,6 @@ class PortableBox(ZStandardFramelessWindow):
         self._apps.addWidget(app_calculator)
         self.boxContainer.addWidget(app_calculator)
         self.boxContainer.regDraggableWidget(app_calculator)
-
 
         app_edge = AppIconItem(parent=self, exe_path="C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe", app_name="Edge")
         app_edge.toggled.connect(self._select_Change_handler)

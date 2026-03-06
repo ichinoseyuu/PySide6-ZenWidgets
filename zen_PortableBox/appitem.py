@@ -47,13 +47,11 @@ class AppIconItem(ZToggleWidget):
         #self.setMouseTracking(True)
         self.setCursor(Qt.PointingHandCursor)
         self.setFocusPolicy(Qt.StrongFocus)  # 支持焦点绘制选中框
-        # 初始化大小（可根据需求调整）
-        self.setFixedSize(64, 80)
         # 基础属性
         self._exe_path = exe_path
         self._app_name = app_name if app_name else os.path.basename(exe_path) if exe_path else "Unknown App"
         self._icon_pixmap = QPixmap()
-        self._icon_size = QSize(24, 24)  # 图标显示大小（可调整）
+        self._icon_size = QSize(32, 32)  # 图标显示大小（可调整）
         # 解析exe图标（如果路径有效）
         if exe_path and os.path.exists(exe_path):
             self._parse_exe_icon()
@@ -114,16 +112,14 @@ class AppIconItem(ZToggleWidget):
 
     def _init_context_menu(self):
         self.context_menu = ZContextMenu(self)
-        sub_actions = [
-            ZAction("在资源管理器中打开(&O)", callback=lambda: print("Opening in Explorer")),
-            ZAction("在PortableBox中删除(&D)", callback=lambda: print("Deleting app"))
-        ]
         item_1 = ZAction("打开应用(&O)", callback=self.open_exe)
         item_2 = ZAction("查看文件路径(&V)", callback=lambda: print(f"File path: {self._exe_path}"))
-        item_3 = ZAction("更多(&M)", submenu=sub_actions)
+        item_3 = ZAction("在资源管理器中打开(&O)", callback=lambda: print("Opening in Explorer"))
+        item_4 = ZAction("在PortableBox中删除(&D)", callback=lambda: print("Deleting app"))
         self.context_menu.addAction(item_1)
         self.context_menu.addAction(item_2)
         self.context_menu.addAction(item_3)
+        self.context_menu.addAction(item_4)
 
     def open_exe(self):
         """打开目标exe文件"""
@@ -132,6 +128,12 @@ class AppIconItem(ZToggleWidget):
             subprocess.Popen([self._exe_path], shell=True)
         except Exception as e:
             QMessageBox.critical(self, "错误", f"打开失败：{str(e)}")
+
+    def sizeHint(self):
+        """建议大小：根据图标和文字预设一个合理的尺寸"""
+        width = self._icon_size.width() + 36 # 图标宽度+边距，最小80
+        height = self._icon_size.height() + 42 # 图标高度+文字空间
+        return QSize(width, height)
 
 
     def paintEvent(self, event: QPaintEvent):
@@ -150,20 +152,17 @@ class AppIconItem(ZToggleWidget):
         painter.setBrush(self.bodyColorCtrl.color)
         painter.drawRect(rect)
 
-        # 3. 绘制应用图标（居中，原有逻辑保留+平滑缩放）
         if not self._icon_pixmap.isNull():
-            x = (self.width() - self._icon_pixmap.width()) // 2
-            y = (self.height() - self._icon_pixmap.height()) // 2 - 5
-            painter.drawPixmap(x, y, self._icon_pixmap)
+            icon_pos = self.rect().center() - QPoint(self._icon_size.width()/2, self._icon_size.height()/2 + 4)
+            painter.drawPixmap(icon_pos, self._icon_pixmap)
 
-        # 4. 绘制exe文件名（原有逻辑保留）
         if self._exe_path:
             file_name = self._app_name
             painter.setPen(self.textColorCtrl.color)
             text_rect = QRect(0, self.height() - 20, self.width(), 20)
             # 文字也可开启平滑绘制
             painter.setRenderHint(QPainter.TextAntialiasing)
-            painter.drawText(text_rect, Qt.AlignCenter, file_name[:8] + "..." if len(file_name) > 8 else file_name)
+            painter.drawText(text_rect, Qt.AlignCenter, file_name[:10] + "..." if len(file_name) > 10 else file_name)
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
         """双击事件：打开exe文件"""
@@ -174,28 +173,3 @@ class AppIconItem(ZToggleWidget):
     def contextMenuEvent(self, event: QContextMenuEvent):
         self.context_menu.showAt(event.globalPos())
         super().contextMenuEvent(event)
-
-
-
-# 测试代码
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-
-    # 创建主窗口
-    main_win = QMainWindow()
-    central_widget = QWidget()
-    layout = QVBoxLayout(central_widget)
-    main_win.setCentralWidget(central_widget)
-
-    # 创建自定义控件（示例：传入记事本exe路径）
-    notepad_path = "C:/Windows/System32/notepad.exe"  # Windows记事本路径
-    app_icon = AppIconItem(notepad_path)
-
-    # 选中状态变化示例
-    app_icon.selectedChanged.connect(lambda is_selected: print(f"选中状态：{is_selected}"))
-
-    layout.addWidget(app_icon, alignment=Qt.AlignCenter)
-    main_win.resize(200, 200)
-    main_win.show()
-
-    sys.exit(app.exec())
