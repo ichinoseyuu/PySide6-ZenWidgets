@@ -173,3 +173,11 @@ class AppIconItem(ZToggleWidget):
     def contextMenuEvent(self, event: QContextMenuEvent):
         self.context_menu.showAt(event.globalPos())
         super().contextMenuEvent(event)
+
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        self._mouse_enter_()
+
+    def focusOutEvent(self, event):
+        super().focusOutEvent(event)
+        self._mouse_leave_()

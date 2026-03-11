@@ -35,8 +35,8 @@ class PortableBox(ZStandardFramelessWindow):
         edit_menu.addAction(ZAction("粘贴"))
 
         # 添加到菜单栏
-        self.menubar.addMenu("文件", file_menu)
-        self.menubar.addMenu("编辑", edit_menu)
+        self.menubar.addMenu("文件(&F)", file_menu)
+        self.menubar.addMenu("编辑(&E)", edit_menu)
         self.menubar.menuTriggered.connect(lambda t, v: logging.info(f"菜单 {t} 触发，参数：{v}"))
 
         self.boxContainer = ZFlowContainer(self.centerWidget())

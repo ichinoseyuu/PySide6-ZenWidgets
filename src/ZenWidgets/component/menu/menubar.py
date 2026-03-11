@@ -12,7 +12,7 @@ from ZenWidgets.component.base import (
     ZOpacityEffect,
 )
 from ZenWidgets.component.menu.menu import ZMenu
-from ZenWidgets.core import ZPadding,CoordConverter
+from ZenWidgets.core import ZPadding,CoordConverter,ZGlobal
 from ZenWidgets.gui import (
     ZColorData,
     ZColorDataKey,
@@ -81,6 +81,18 @@ class ZMenubarItem(ZClickWidget):
     def text(self) -> str:
         return self._text
 
+    def renderText(self) -> str:
+        """返回去除&后的显示文本"""
+        return self._text.replace("&", "") if self._text else ""
+
+    def mnemonic(self) -> str | None:
+        """返回助记符大写字母（如有）"""
+        if self._text and '&' in self._text:
+            parts = self._text.split('&')
+            if len(parts) >= 2 and parts[1]:
+                return parts[1][0].upper()
+        return None
+
     def setMenu(self, menu: ZMenu):
         self._menu = menu
 
@@ -108,46 +120,38 @@ class ZMenubarItem(ZClickWidget):
         painter.setPen(QPen(self.textColorCtrl.color))
         painter.setFont(self.font())
         text_rect = rect.adjusted(self._padding.left, self._padding.top, -self._padding.right, -self._padding.bottom)
-        painter.drawText(text_rect, Qt.AlignCenter, self._text)
+        painter.drawText(text_rect, Qt.AlignCenter, self.renderText())
         event.accept()
-
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
-        menubar = self.parentWidget()
-        #print('press-before:')
-        #print(f'_menu_enabled:{menubar._menu_enabled}, _actived_menu:{menubar._actived_menu}, _pressed_item:{menubar._pressed_item}')
-        menubar._item_mouse_pressed(self)
-        #print('press-after:')
-        #print(f'_menu_enabled:{menubar._menu_enabled}, _actived_menu:{menubar._actived_menu}, _pressed_item:{menubar._pressed_item}')
+        self.parentWidget()._item_mouse_pressed(self)
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
-        menubar = self.parentWidget()
-        #print('release-before:')
-        #print(f'_menu_enabled:{menubar._menu_enabled}, _actived_menu:{menubar._actived_menu}, _pressed_item:{menubar._pressed_item}')
-        menubar._item_mouse_released(self)
-        #print('release-after:')
-        #print(f'_menu_enabled:{menubar._menu_enabled}, _actived_menu:{menubar._actived_menu}, _pressed_item:{menubar._pressed_item}')
+        self.parentWidget()._item_mouse_released(self)
 
     def enterEvent(self, event):
         super().enterEvent(event)
-        menubar = self.parentWidget()
-        #print('enter-before:')
-        #print(f'_menu_enabled:{menubar._menu_enabled}, _actived_menu:{menubar._actived_menu}, _pressed_item:{menubar._pressed_item}')
-        menubar._item_mouse_enter(self)
-        #print('enter-after:')
-        #print(f'_menu_enabled:{menubar._menu_enabled}, _actived_menu:{menubar._actived_menu}, _pressed_item:{menubar._pressed_item}')
+        self.parentWidget()._item_mouse_enter(self)
 
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        self._mouse_enter_()
+
+    def focusOutEvent(self, event):
+        super().focusOutEvent(event)
+        self._mouse_leave_()
 
 class ZMenubar(ZWidget):
     menuTriggered = Signal(str, object)
     def __init__(self,
                  parent: ZWidget | None = None,
                  ):
-        super().__init__(parent=parent)
+        super().__init__(parent=parent,
+                         focusPolicy=Qt.FocusPolicy.StrongFocus)
         self.setLayout(ZHBoxLayout(self, margins=QMargins(6, 2, 6, 2), spacing=6, alignment=Qt.AlignLeft))
-        self._items = []
+        self._items:ZMenubarItem = []
         self._actived_menu: ZMenu | None = None
         self._pressed_item = None
         self._menu_enabled = False  # 控制菜单是否可打开
@@ -171,6 +175,7 @@ class ZMenubar(ZWidget):
                 self._menu_enabled = False
                 if self._actived_menu:
                     self._actived_menu._close_menu_chain()
+                    self._actived_menu = None
             self._trigger_flag = False
             self._pressed_item = None
 
@@ -197,10 +202,44 @@ class ZMenubar(ZWidget):
         self._items.append(item)
         if menu:
             item.setMenu(menu)
-            menu.itemSelected.connect(lambda *args: self._menu_closed_handler())
+            menu.itemSelected.connect(self._menu_closed_handler)
             menu.outClicked.connect(self._menu_closed_handler)
+            menu.escapePressed.connect(self._menu_closed_handler)
 
     def addSeparator(self, size=6, line_style=Qt.PenStyle.SolidLine):
         sep = ZVSeparator(self, size=size, line_style=line_style)
         self.layout().addWidget(sep)
         self.resize(self.sizeHint())
+
+    def keyPressEvent(self, event):
+        k = event.key()
+        text = event.text().upper()
+        if text and event.modifiers() == Qt.AltModifier:
+            for item in self._items:
+                mnemonic = item.mnemonic()
+                if mnemonic == text:
+                    widget = ZGlobal.getMouseTopWidget()
+                    if isinstance(widget, ZMenubarItem):
+                        widget.opacityEffectCtrl.toTransparent()
+                    if self._actived_menu is not None:
+                        self._actived_menu._close_menu_chain()
+                    item._menu.showAt(item.mapToGlobal(item.rect().bottomLeft()),CoordConverter.rectToGlobal(item))
+                    self._actived_menu = item._menu
+                    return
+        if k in (Qt.Key_Right, Qt.Key_Left):
+            items = self._items
+            if not items: return
+            focused = self.focusWidget()
+            idx = items.index(focused) if isinstance(focused, ZMenubarItem) else -1
+            new = (idx + 1) % len(items) if k == Qt.Key_Left else (idx - 1) % len(items) if idx >=0 else len(items)-1
+            items[new].setFocus()
+            return
+        if k in (Qt.Key_Return, Qt.Key_Enter):
+            focused = self.focusWidget()
+            if isinstance(focused, ZMenubarItem):
+                if self._actived_menu is not None:
+                    self._actived_menu._close_menu_chain()
+                focused._menu.showAt(focused.mapToGlobal(focused.rect().bottomLeft()),CoordConverter.rectToGlobal(focused))
+                self._actived_menu = focused._menu
+            return
+        super().keyPressEvent(event)

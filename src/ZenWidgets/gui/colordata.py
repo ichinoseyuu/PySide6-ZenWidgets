@@ -4,7 +4,7 @@ import logging
 from typing import TypeVar,Dict,Optional,Callable,Union,Any
 from PySide6.QtGui import QColor
 from PySide6.QtCore import QObject, Signal
-from ZenWidgets.core import SingletonMeta,NonInstantiableMeta,ColorConverter
+from ZenWidgets.core import SingletonMeta,NonInstantiableMeta
 from ZenWidgets.gui.theme import ZThemeManager
 
 __all__ = [

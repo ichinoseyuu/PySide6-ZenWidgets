@@ -309,6 +309,7 @@ colordata_2 = {
 class ZMenu(ZWidget):
     itemSelected = Signal(str, object)
     outClicked = Signal()
+    escapePressed = Signal()
 
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
@@ -500,6 +501,7 @@ class ZMenu(ZWidget):
         QApplication.instance().removeEventFilter(self)
         super().close()
 
+
     def sizeHint(self):
         fm = self.fontMetrics()
         options_max_width = 0
@@ -596,6 +598,7 @@ class ZMenu(ZWidget):
             return
         if k == Qt.Key_Escape:
             self._close_menu_chain()
+            self.escapePressed.emit()
             return
         super().keyPressEvent(event)
 
