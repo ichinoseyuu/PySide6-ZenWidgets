@@ -25,11 +25,11 @@ class PortableBox(ZStandardFramelessWindow):
         self.centerWidget().layout().addWidget(self.menubar)
 
         # 创建菜单
-        file_menu = ZContextMenu()
+        file_menu = ZMenu()
         file_menu.addAction(ZAction("添加应用(&A)"))
         file_menu.addAction(ZAction("退出(&Q)", callback=self.close))
 
-        edit_menu = ZContextMenu()
+        edit_menu = ZMenu()
         edit_menu.addAction(ZAction("剪切"))
         edit_menu.addAction(ZAction("复制"))
         edit_menu.addAction(ZAction("粘贴"))

@@ -5,6 +5,7 @@ __All__ = [
     'ZStyle',
     'ZState',
     'ZDirection',
+    'ZOrientation',
     'ZPosition',
     'ZWrapMode'
 ]
@@ -24,6 +25,10 @@ class ZDirection(IntEnum):
     Diagonal = auto()
     DiagonalReverse = auto()
     Custom = auto()
+
+class ZOrientation(IntEnum):
+    Vertical = auto()
+    Horizontal = auto()
 
 class ZPosition(IntEnum):
     Top = auto()

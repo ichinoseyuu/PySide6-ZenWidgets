@@ -12,7 +12,7 @@ class ZImage(ZWidget):
         Fill = 1  # 填满
         Stretch = 2  # 拉伸
     def __init__(self,
-                 parent: QWidget = None,
+                 parent: QWidget|None = None,
                  image_path: str = None,
                  scale_type: ScaleType = ScaleType.Fit,
                  corner_radius: int = 2,

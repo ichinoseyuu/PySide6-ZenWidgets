@@ -1,2 +1,2 @@
-from .contextmenu import ZAction,ZContextSeparator,ZContextMenu,ZContextItem
+from .menu import ZAction,ZMenuItem,ZMenu,ZContextMenu
 from .menubar import ZMenubar
