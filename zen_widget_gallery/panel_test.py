@@ -16,23 +16,29 @@ class PanelTest(ZScrollPanel):
         self.title.setPadding(ZPadding(6, 0, 6, 6))
         self.content().layout().addWidget(self.title)
 
-        card = ZCard(self)
-        card.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
-        self.content().layout().addWidget(card)
+        flowlayout = ZFlowLayout()
+        flowlayout.setLineHeight(64)
+        self.content().layout().addLayout(flowlayout)
 
-        title = ZHeadLine(card, text= '测试')
-        title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
-        card.layout().addWidget(title)
+        i = 0
+        for icon_name, pixmap in ZGlobal.iconPack.icons(size=QSize(64, 64)):
+            if i > 40: break
+            #print(f"图标名称: {icon_name}")
+            m = ZImage(self)
+            m.resize(pixmap.size())
+            m.setPixmap(pixmap)
+            flowlayout.addWidget(m)
+            i += 1
 
-        # container = ZFlowContainer(card)
-        # card.layout().addWidget(container)
+        # container = ZFlowContainer(self)
+        # self.content().layout().addWidget(container)
         # # container.setColumns(3)
         # # container.setColumnWidth(100)
         # # container.setAutoAdjustColumnAmount(True)
         # container.setLineHeight(64)
         # i = 0
         # for icon_name, pixmap in ZGlobal.iconPack.icons(size=QSize(64, 64)):
-        #     if i > 10: break
+        #     if i > 20: break
         #     #print(f"图标名称: {icon_name}")
         #     m = ZImage(container)
         #     m.resize(pixmap.size())

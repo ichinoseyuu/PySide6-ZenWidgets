@@ -373,7 +373,15 @@ class ZVContainer(ZWidget):
             max_child_width = max([widget.width() for widget in self._widgets], default=0)
 
         for i, obj in enumerate(self._widgets):
-            if self._expand:
+            # if self._expand:
+            #     if self._min_expand:
+            #         obj.resize(max_child_width, obj.height())
+            #     else:
+            #         obj.resize(available_width, obj.height())
+
+            is_container_like = callable(getattr(obj, "widgets", None))
+
+            if self._expand or is_container_like:
                 if self._min_expand:
                     obj.resize(max_child_width, obj.height())
                 else:
@@ -393,6 +401,7 @@ class ZVContainer(ZWidget):
             top_used += obj.height()
             if i < widget_count - 1:
                 top_used += self._spacings[i] if i < len(self._spacings) else self._spacing
+        self.adjustSize()
 
     def addWidget(self, widget: ZWidget, index: int = -1, spacing: int = None):
         if widget in self._widgets: return

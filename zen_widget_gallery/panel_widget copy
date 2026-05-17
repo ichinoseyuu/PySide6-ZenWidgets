@@ -11,23 +11,20 @@ class PanelWidget(ZScrollPanel):
         self._setup_ui()
 
     def _setup_ui(self):
-        maincontainer = ZVContainer(self)
-        # maincontainer.setExpand(True)
-        self.layout().addWidget(maincontainer)
-
         title = ZHeadLine(self, text='基础组件', display_indicator=True)
         title.setFont(QFont('Microsoft YaHei', 20, QFont.Weight.Bold))
         title.setPadding(ZPadding(6, 6, 6, 6))
-        maincontainer.addWidget(title)
+        self.layout().addWidget(title)
 
         title = ZHeadLine(self, text= '基本输入组件', display_indicator=True)
         title.setFont(QFont('Microsoft YaHei', 14, QFont.Weight.Bold))
         title.setPadding(ZPadding(6, 6, 6, 6))
-        maincontainer.addWidget(title)
+        self.layout().addWidget(title)
 
         flowcont = ZFlowContainer(self)
         flowcont.setLineHeight(100)
-        maincontainer.addWidget(flowcont)
+        flowcont.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        self.layout().addWidget(flowcont)
 
         # region ZButton
         card = ZCard(self)
@@ -257,13 +254,9 @@ class PanelWidget(ZScrollPanel):
         self.combo_box_1.addOptions(options)
         container.addWidget(self.combo_box_1)
 
-        flowcont.adjustSize()
-        flowcont.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        # 或更稳：flowcont.setFixedHeight(flowcont.height())
-
         # region ZSlider
         card = ZCard(self)
-        maincontainer.addWidget(card)
+        self.layout().addWidget(card)
 
         title = ZHeadLine(card, text= 'ZSlider')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -361,10 +354,10 @@ class PanelWidget(ZScrollPanel):
         title = ZHeadLine(self, text= '文本显示组件', display_indicator=True)
         title.setFont(QFont('Microsoft YaHei', 14, QFont.Weight.Bold))
         title.setPadding(ZPadding(6, 6, 6, 6))
-        maincontainer.addWidget(title)
+        self.layout().addWidget(title)
 
         card = ZCard(self)
-        maincontainer.addWidget(card)
+        self.layout().addWidget(card)
 
         title = ZHeadLine(card, text= 'ZHeadLine')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -387,7 +380,7 @@ class PanelWidget(ZScrollPanel):
 
         # region ZTextBlock
         card = ZCard(self)
-        maincontainer.addWidget(card)
+        self.layout().addWidget(card)
 
         title = ZHeadLine(card, text= 'ZTextBlock')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -411,7 +404,7 @@ class PanelWidget(ZScrollPanel):
 
         # region ZLineEdit
         card = ZCard(self)
-        maincontainer.addWidget(card)
+        self.layout().addWidget(card, stretch=0)
 
         card.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
 
@@ -454,8 +447,11 @@ class PanelWidget(ZScrollPanel):
         container.addWidget(self.lineedit_4)
 
         # region ZLoginEdit
+        layout = ZHBoxLayout(margins=QMargins(0, 0, 0, 0), spacing=30)
+        self.layout().addLayout(layout)
+
         card = ZCard(self)
-        maincontainer.addWidget(card)
+        layout.addWidget(card, stretch=0)
 
         title = ZHeadLine(card, text= 'ZLoginEdit')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -484,7 +480,7 @@ class PanelWidget(ZScrollPanel):
 
         # region ZNumberEdit
         card = ZCard(self)
-        maincontainer.addWidget(card)
+        layout.addWidget(card, stretch=0)
 
         title = ZHeadLine(card, text= 'ZNumberEdit')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))

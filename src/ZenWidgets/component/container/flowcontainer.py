@@ -183,6 +183,8 @@ class ZFlowContainer(ABCFlowContainer):
         self._preferred_height = used_height + self._line_height + self._margin.bottom
         self.adjustSize()
 
+    def sizeHint(self):
+        return QSize(self.width(), max(self._preferred_height, 0))
 
 # region ZMasonryContainer
 class ZMasonryContainer(ABCFlowContainer):

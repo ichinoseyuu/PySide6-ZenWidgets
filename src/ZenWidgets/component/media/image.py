@@ -133,6 +133,9 @@ class ZImage(ZWidget):
         super().resizeEvent(event)
         self._updateScaledImage()
 
+    def sizeHint(self):
+        """返回图片的原始大小"""
+        return self._image.size()
 
     def paintEvent(self, event):
         """绘制事件"""

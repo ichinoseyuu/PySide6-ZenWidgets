@@ -3,7 +3,8 @@ from functools import partial
 from PySide6.QtGui import QPainter,QFont,QPen,QIcon,QPixmap,QColor
 from PySide6.QtCore import Qt,QSize,QRect,QRectF,Signal,Slot,QMargins,QPoint,QEvent,QObject,QTimer
 from PySide6.QtWidgets import QApplication,QSizePolicy
-from ZenWidgets.component.layouts import ZVBoxLayout,ZHSeparator
+from ZenWidgets.component.layouts import ZVBoxLayout
+from ZenWidgets.component.container import ZHSeparator
 from ZenWidgets.component.base import (
     ZOpacityEffect,
     ZAnimatedColor,

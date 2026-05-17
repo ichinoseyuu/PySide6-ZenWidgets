@@ -1,8 +1,8 @@
-import logging
-from PySide6.QtCore import Qt,Signal,QMargins,QSize,QTimer
+from PySide6.QtCore import Qt,Signal,QMargins,QSize
 from PySide6.QtGui import QFont,QPainter,QPen,QColor
 from PySide6.QtWidgets import QSizePolicy
-from ZenWidgets.component.layouts import ZHBoxLayout,ZVSeparator
+from ZenWidgets.component.layouts import ZHBoxLayout
+from ZenWidgets.component.container import ZVSeparator
 from ZenWidgets.component.base import (
     ZClickWidget,
     ZWidget,

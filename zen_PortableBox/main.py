@@ -62,7 +62,6 @@ class PortableBox(ZStandardFramelessWindow):
         self.boxContainer.addWidget(app_edge)
         self.boxContainer.regDraggableWidget(app_edge)
 
-
     def _select_Change_handler(self, checked: bool):
         pass
 
