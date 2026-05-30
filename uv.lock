@@ -3,6 +3,15 @@ revision = 3
 requires-python = ">=3.12"
 
 [[package]]
+name = "blurwindow"
+version = "1.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/54/4f/8fb94f671b55560a462446d1cc6ea38052ba7db58ad9c7c8fbd7b5bddee4/BlurWindow-1.2.1.tar.gz", hash = "sha256:7c7ff59f7ccb8c519e3a8d2733c436fe6695f9c69e5a78c729263d5b17288c89", size = 4260, upload-time = "2021-08-05T20:29:46.874Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ba/c7/930f269a9a660f09e1fadaa2c9b08ce5127a4ae9c32c7e82ce00a9799ee1/BlurWindow-1.2.1-py3-none-any.whl", hash = "sha256:2d260100dc9646f630ca8eae8df89ff716af051d989004987f081b3d0cce3b61", size = 4444, upload-time = "2021-08-05T20:29:45.38Z" },
+]
+
+[[package]]
 name = "pyside6"
 version = "6.10.1"
 source = { registry = "https://pypi.org/simple" }
@@ -55,11 +64,15 @@ name = "pyside6-zenwidgets-master"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "blurwindow" },
     { name = "pyside6" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pyside6", specifier = ">=6.10.1" }]
+requires-dist = [
+    { name = "blurwindow", specifier = ">=1.2.1" },
+    { name = "pyside6", specifier = ">=6.10.1" },
+]
 
 [[package]]
 name = "shiboken6"

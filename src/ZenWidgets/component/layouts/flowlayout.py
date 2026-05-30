@@ -3,7 +3,7 @@ from PySide6.QtCore import QRect, QSize, QPoint, Qt, QPropertyAnimation, QEasing
 from typing import Optional
 
 class ZFlowLayout(QLayout):
-    def __init__(self, parent: Optional[QWidget]=None, margin=8, h_spacing=8, v_spacing=8, line_height=32, animate=True):
+    def __init__(self, parent: Optional[QWidget]=None, margin=8, h_spacing=8, v_spacing=8, line_height=32, animate=False):
         super().__init__(parent)
         self._items = []
         self.setContentsMargins(margin, margin, margin, margin)

@@ -1,13 +1,10 @@
 from PySide6.QtGui import QPainter, QResizeEvent
 from PySide6.QtCore import Qt, QPoint, QSize
-from PySide6.QtWidgets import QWidget
 from typing import overload, Optional, Dict, List, Union
 from ZenWidgets.component.base import ZWidget
 from ZenWidgets.core import ZDebug
 
-__all__ = ['ZStackContainer']
-
-class ZStackContainer(QWidget):
+class ZStackView(ZWidget):
     def __init__(self,
                  parent: Optional[ZWidget] = None,
                  start_point: QPoint = QPoint(0, 40),

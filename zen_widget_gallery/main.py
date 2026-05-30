@@ -30,7 +30,7 @@ class ZenUIGallery(ZStandardFramelessWindow):
         self.navigationBar = NavigationBar(self.centerWidget())
         self.contentLayout.addWidget(self.navigationBar, stretch=0)
 
-        self.stackContainer = ZStackContainer(self.centerWidget())
+        self.stackContainer = ZStackView(self.centerWidget())
         self.contentLayout.addWidget(self.stackContainer, stretch=1)
 
         self.panelHome = PanelHome(self.stackContainer)

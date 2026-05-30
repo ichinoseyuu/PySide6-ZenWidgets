@@ -4,30 +4,31 @@ from PySide6.QtGui import QFont, QIcon, QColor
 from ZenWidgets import *
 import random
 
-class PanelWidget(ZScrollPanel):
+class PanelWidget(ZPanel):
     def __init__(self, parent = None):
         super().__init__(parent, objectName ='PanelWidget')
-        self.setLayout(ZVBoxLayout(self, QMargins(40, 30, 40, 30), 30, Qt.AlignmentFlag.AlignTop))
+        self.setLayout(ZVBoxLayout(self, QMargins(0, 0, 0, 0), 0, Qt.AlignmentFlag.AlignTop))
         self._setup_ui()
 
     def _setup_ui(self):
-        maincontainer = ZVContainer(self)
-        # maincontainer.setExpand(True)
-        self.layout().addWidget(maincontainer)
+        # scrollview.layout().setExpand(True)
+        scrollview = ZScrollView(self)
+        scrollview.setLayout(ZVBoxLayout(scrollview, QMargins(40, 30, 40, 30), 30, Qt.AlignmentFlag.AlignTop))
+        self.layout().addWidget(scrollview)
 
         title = ZHeadLine(self, text='基础组件', display_indicator=True)
         title.setFont(QFont('Microsoft YaHei', 20, QFont.Weight.Bold))
         title.setPadding(ZPadding(6, 6, 6, 6))
-        maincontainer.addWidget(title)
+        scrollview.layout().addWidget(title)
 
         title = ZHeadLine(self, text= '基本输入组件', display_indicator=True)
         title.setFont(QFont('Microsoft YaHei', 14, QFont.Weight.Bold))
         title.setPadding(ZPadding(6, 6, 6, 6))
-        maincontainer.addWidget(title)
+        scrollview.layout().addWidget(title)
 
         flowcont = ZFlowContainer(self)
         flowcont.setLineHeight(100)
-        maincontainer.addWidget(flowcont)
+        scrollview.layout().addWidget(flowcont)
 
         # region ZButton
         card = ZCard(self)
@@ -263,7 +264,7 @@ class PanelWidget(ZScrollPanel):
 
         # region ZSlider
         card = ZCard(self)
-        maincontainer.addWidget(card)
+        scrollview.layout().addWidget(card)
 
         title = ZHeadLine(card, text= 'ZSlider')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -361,10 +362,10 @@ class PanelWidget(ZScrollPanel):
         title = ZHeadLine(self, text= '文本显示组件', display_indicator=True)
         title.setFont(QFont('Microsoft YaHei', 14, QFont.Weight.Bold))
         title.setPadding(ZPadding(6, 6, 6, 6))
-        maincontainer.addWidget(title)
+        scrollview.layout().addWidget(title)
 
         card = ZCard(self)
-        maincontainer.addWidget(card)
+        scrollview.layout().addWidget(card)
 
         title = ZHeadLine(card, text= 'ZHeadLine')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -387,7 +388,7 @@ class PanelWidget(ZScrollPanel):
 
         # region ZTextBlock
         card = ZCard(self)
-        maincontainer.addWidget(card)
+        scrollview.layout().addWidget(card)
 
         title = ZHeadLine(card, text= 'ZTextBlock')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -411,7 +412,7 @@ class PanelWidget(ZScrollPanel):
 
         # region ZLineEdit
         card = ZCard(self)
-        maincontainer.addWidget(card)
+        scrollview.layout().addWidget(card)
 
         card.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
 
@@ -455,7 +456,7 @@ class PanelWidget(ZScrollPanel):
 
         # region ZLoginEdit
         card = ZCard(self)
-        maincontainer.addWidget(card)
+        scrollview.layout().addWidget(card)
 
         title = ZHeadLine(card, text= 'ZLoginEdit')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -484,7 +485,7 @@ class PanelWidget(ZScrollPanel):
 
         # region ZNumberEdit
         card = ZCard(self)
-        maincontainer.addWidget(card)
+        scrollview.layout().addWidget(card)
 
         title = ZHeadLine(card, text= 'ZNumberEdit')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))

@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt,QRectF
+from PySide6.QtCore import Qt,QRectF,QSize
 from PySide6.QtGui import QPainter,QPen,QColor
 from ZenWidgets.component.base import ZAnimatedColor,ZAnimatedFloat,ZColorController,ZWidget
 from ZenWidgets.core import ZDebug

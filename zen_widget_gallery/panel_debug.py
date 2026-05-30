@@ -3,7 +3,7 @@ from PySide6.QtCore import Qt, QMargins,QPoint,QSize
 from PySide6.QtGui import QFont, QIcon, QColor
 from ZenWidgets import *
 
-class PanelDebug(ZScrollPanel):
+class PanelDebug(ZPanel):
     def __init__(self, parent = None):
         super().__init__(parent, objectName ='PanelInfo')
         self.setLayout(ZVBoxLayout(self, QMargins(40, 30, 40, 30), 30, Qt.AlignmentFlag.AlignTop))
@@ -14,7 +14,7 @@ class PanelDebug(ZScrollPanel):
         self.title = ZHeadLine(self, text='调试设置', display_indicator=True)
         self.title.setFont(QFont('Microsoft YaHei', 20, QFont.Weight.Bold))
         self.title.setPadding(ZPadding(6, 0, 6, 6))
-        self.content().layout().addWidget(self.title)
+        self.layout().addWidget(self.title)
 
 
         self.btn_drawrect = ZButton(self, text='绘制矩形边框')
@@ -24,4 +24,4 @@ class PanelDebug(ZScrollPanel):
             self.window().repaint()
             ZGlobal.themeManager.updateStyle()
         self.btn_drawrect.clicked.connect(_debug)
-        self.content().layout().addWidget(self.btn_drawrect)
+        self.layout().addWidget(self.btn_drawrect)
