@@ -46,7 +46,24 @@ class PanelHome(ZPanel):
         cardlist.setFixedHeight(170)
         scrollview.layout().addWidget(cardlist)
         cardlist.layout().addSpacerItem(ZHSpacerItem(30).setExpanding(horizontal=False))
-        cardlist.layout().addWidget(CardWebLink(cardlist, title='Github', description='展示当前组件的状态和信息', icon=':/image/componentImages/Button.png'))
+        cardlist.layout().addWidget(
+            CardWebLink(
+                cardlist,
+                title='ZenWidgets on Github',
+                description='Explore the source code and contribute to the project',
+                icon=':/image/other/github.svg',
+                url='https://github.com/ichinoseyuu/PySide6-ZenWidgets'
+                )
+            )
+        cardlist.layout().addWidget(
+            CardWebLink(
+                cardlist,
+                title='Code Samples',
+                description='Find code snippets and examples to help you get started quickly',
+                icon=':/image/other/Python.svg',
+                url=''
+                )
+            )
         cardlist.layout().addSpacerItem(ZHSpacerItem(30))
         scrollview.layout().addSpacerItem(ZVSpacerItem(120))
         pass

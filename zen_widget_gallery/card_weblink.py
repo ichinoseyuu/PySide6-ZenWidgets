@@ -21,9 +21,10 @@ colordata = {
 }
 
 @colordata_provider(datamap=colordata, classtype=CardWebLinkColorData)
-class CardWebLink(ZClickWidget[ZButtonStyle]):
+class CardWebLink(ZClickWidget):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
+    opacityLayerCtrl: ZOpacityEffect
     colorDataCtrl: ZColorController[CardWebLinkColorData]
     __controllers_kwargs__ = {
         'colorDataCtrl':{'key': 'CardWebLink'}
@@ -34,7 +35,8 @@ class CardWebLink(ZClickWidget[ZButtonStyle]):
                  title: str = "",
                  description: str = "",
                  icon: str = "",
-                 font: QFont = QFont('Microsoft YaHei', 8)
+                 font: QFont = QFont('Microsoft YaHei', 8),
+                 url: str = ""
                  ):
         super().__init__(parent=parent, font=font)
         self._icon = ZImage(self)
@@ -43,17 +45,25 @@ class CardWebLink(ZClickWidget[ZButtonStyle]):
         self._icon.setFixedSize(48, 48)
         self._title = ZHeadLine(self, text=title, font=QFont('Microsoft YaHei', 9, QFont.Weight.Bold))
         self._desc = ZTextBlock(self, text=description, font=QFont('Microsoft YaHei', 8), height_for_width=True)
+        self._target = url
+        self._callback = None
 
         self._icon.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self._title.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self._desc.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-
+        self.image_bg = ZImage(
+            parent=self,
+            image_path=":/image/other/JumpTo.svg",
+            corner_radius=4
+            )
         layout = ZVBoxLayout(self, margins=QMargins(16, 16, 16, 16), spacing=8)
         layout.addWidget(self._icon)
         layout.addWidget(self._title)
         layout.addWidget(self._desc)
         self.setLayout(layout)
         self.setFixedSize(230, 170)
+        self.image_bg.resize(QSize(16, 16))
+        self.image_bg.move(206, 144)
         self._init_color_data_()
 
     def _init_color_data_(self):
@@ -72,16 +82,22 @@ class CardWebLink(ZClickWidget[ZButtonStyle]):
 
     def _mouse_enter_(self):
         self.borderColorCtrl.toOpaque()
-        self.bodyColorCtrl.setAlphaFTo(0.9)
-        self.update()
+        self.opacityLayerCtrl.setAlphaFTo(0.08)
 
     def _mouse_leave_(self):
         self.borderColorCtrl.setAlphaFTo(0.6)
-        self.bodyColorCtrl.setAlphaFTo(0.8)
-        self.update()
+        self.opacityLayerCtrl.toTransparent()
 
     def _mouse_click_(self):
-        pass
+        if self._callback: self._callback(self._target)
+        elif self._target: QDesktopServices.openUrl(QUrl(self._target))
+
+    def _mouse_press_(self):
+        self.opacityLayerCtrl.setAlphaFTo(0.12)
+
+    def _mouse_release_(self):
+        self.opacityLayerCtrl.setAlphaFTo(0.08)
+
 
     def setTarget(self, target):
         self._target = target
@@ -102,6 +118,8 @@ class CardWebLink(ZClickWidget[ZButtonStyle]):
         painter.setPen(QPen(self.borderColorCtrl.color, 1))
         painter.setBrush(self.bodyColorCtrl.color)
         painter.drawRoundedRect(rect, radius, radius)
+        self.opacityLayerCtrl.drawOpacityLayer(painter, rect, radius)
+
 
     def focusInEvent(self, event):
         super().focusInEvent(event)
