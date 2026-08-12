@@ -120,7 +120,8 @@ class ABCFlowContainer(QWidget):
 
     def resizeEvent(self, event):
         self.arrangeWidgets()
-
+        self.updateGeometry()
+        super().resizeEvent(event)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -182,9 +183,13 @@ class ZFlowContainer(ABCFlowContainer):
 
         self._preferred_height = used_height + self._line_height + self._margin.bottom
         self.adjustSize()
+        self.updateGeometry()
+        parent = self.parentWidget()
+        if parent is not None:
+            parent.updateGeometry()
 
     def sizeHint(self):
-        return QSize(self.width(), max(self._preferred_height, 0))
+        return QSize(0, max(self._preferred_height, 0))
 
 # region ZMasonryContainer
 class ZMasonryContainer(ABCFlowContainer):
@@ -232,7 +237,10 @@ class ZMasonryContainer(ABCFlowContainer):
         self._preferred_height = max(max(used_height) - self._spacing[1], 0) + self._margin.bottom
         if adjust_size:
             self.adjustSize()
-
+            self.updateGeometry()
+            parent = self.parentWidget()
+            if parent is not None:
+                parent.updateGeometry()
 
     def adjustColumnAmount(self, width=None):
         if width is None:
@@ -251,6 +259,7 @@ class ZMasonryContainer(ABCFlowContainer):
 
     def adjustSize(self):
         self.resize(self.width(), self._preferred_height)
+        self.updateGeometry()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

@@ -16,9 +16,9 @@ class PanelTest(ZPanel):
         self.title.setPadding(ZPadding(6, 0, 6, 6))
         self.layout().addWidget(self.title)
 
-        # flowlayout = ZFlowLayout()
+        # flowlayout = ZFlowLayout(animate=True)
         # flowlayout.setLineHeight(64)
-        # self.content().layout().addLayout(flowlayout)
+        # self.layout().addLayout(flowlayout)
 
         # i = 0
         # for icon_name, pixmap in ZGlobal.iconPack.icons(size=QSize(64, 64)):
@@ -29,7 +29,20 @@ class PanelTest(ZPanel):
         #     m.setPixmap(pixmap)
         #     flowlayout.addWidget(m)
         #     i += 1
-        # splitview 示例：水平 2 分，在右侧嵌套竖直 3 分
+        container = ZFlowContainer(self)
+        self.layout().addWidget(container)
+        container.setLineHeight(64)
+        i = 0
+        for _, pixmap in ZGlobal.iconPack.icons(size=QSize(64, 64)):
+            if i > 20: break
+            #print(f"图标名称: {icon_name}")
+            m = ZImage(container)
+            m.resize(pixmap.size())
+            m.setPixmap(pixmap)
+            container.addWidget(m)
+            container.regDraggableWidget(m)
+            i += 1
+
         split = ZHSplitView(self,initial_ratios=[0.25, 0.75])
 
         left_panel = ZVListView(split)

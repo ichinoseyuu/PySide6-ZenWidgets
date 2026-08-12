@@ -33,6 +33,7 @@ class PanelWidget(ZPanel):
         # region ZButton
         card = ZCard(self)
         flowcont.addWidget(card)
+        flowcont.regDraggableWidget(card)
 
         title = ZHeadLine(card, text= 'ZButton')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -123,6 +124,7 @@ class PanelWidget(ZPanel):
         # region ZToggleButton
         card = ZCard(self)
         flowcont.addWidget(card)
+        flowcont.regDraggableWidget(card)
 
         title = ZHeadLine(card, text= 'ZToggleButton')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -153,6 +155,7 @@ class PanelWidget(ZPanel):
         # region ZRepeatButton
         card = ZCard(self)
         flowcont.addWidget(card)
+        flowcont.regDraggableWidget(card)
 
         title = ZHeadLine(card, text= 'ZRepeatButton')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -179,6 +182,7 @@ class PanelWidget(ZPanel):
         # region ZLongPressButton
         card = ZCard(self)
         flowcont.addWidget(card)
+        flowcont.regDraggableWidget(card)
 
         title = ZHeadLine(card, text= 'ZLongPressButton')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -199,6 +203,7 @@ class PanelWidget(ZPanel):
         # region ZProgressButton
         card = ZCard(self)
         flowcont.addWidget(card)
+        flowcont.regDraggableWidget(card)
 
         title = ZHeadLine(card, text= 'ZProgressButton')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -223,6 +228,7 @@ class PanelWidget(ZPanel):
         # region ZSwitch
         card = ZCard(self)
         flowcont.addWidget(card)
+        flowcont.regDraggableWidget(card)
 
         title = ZHeadLine(card, text= 'ZSwitch')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -244,6 +250,7 @@ class PanelWidget(ZPanel):
         # region ZComboBox
         card = ZCard(self)
         flowcont.addWidget(card)
+        flowcont.regDraggableWidget(card)
 
         title = ZHeadLine(card, text= 'ZComboBox')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
@@ -258,8 +265,8 @@ class PanelWidget(ZPanel):
         self.combo_box_1.addOptions(options)
         container.addWidget(self.combo_box_1)
 
-        flowcont.adjustSize()
-        flowcont.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        #flowcont.adjustSize()
+        flowcont.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         # 或更稳：flowcont.setFixedHeight(flowcont.height())
 
         # region ZSlider
