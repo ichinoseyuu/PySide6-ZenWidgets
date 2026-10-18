@@ -1,35 +1,12 @@
 # ZenWidgets
 
-## preview
-
-!\[预览](https://cdn.jsdelivr.net/gh/ichinoseyuu/Image/202511141737733.png)
-
-## initialization
-
-Recommend using uv tools to manage projects
-
-```powershell
-uv init
-uv sync
-uv pip install -e .
-```
-
-## build
-
-```powershell
-uv build
-```
-
-## install
-
-```powershell
-uv add ./dist/zenui-0.1.0-py3-none-any.whl #or
-uv add ./dist/zenui-0.1.0.tar.gz
-```
-
 本文档介绍项目的定位、源码结构、运行方式以及扩展和打包时需要了解的约定。组件的详细行为以源码和 Gallery 示例为准。
 
 This document describes the project's purpose, source layout, development workflow, extension points, and packaging notes. For exact widget behavior, refer to the implementation and the Gallery application.
+
+## preview
+
+!\[预览](https://cdn.jsdelivr.net/gh/ichinoseyuu/Image/202511141737733.png)
 
 ## 1. 项目简介 / Project overview
 
