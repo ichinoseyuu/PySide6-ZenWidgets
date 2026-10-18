@@ -105,16 +105,6 @@ class ZListView(ZWidget):
         self._content.widgetPositionCtrl.moveTo(int(current_x), int(current_y))
         self._update_handle_and_content()
 
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        w, h = event.size().width(), event.size().height()
-        size_hint = self._content.sizeHint()
-        content_w = max(size_hint.width(), w)
-        content_h = max(size_hint.height(), h)
-        # 更新内容区域大小
-        self._content.resize(content_w, content_h)
-        self._update_handle_and_content()
-
     def setHandlesVisible(self, visible: bool) -> None:
         self._handles_visible = bool(visible)
         self._handle.opacityCtrl.setOpacity(1.0 if self._handles_visible else 0.0)

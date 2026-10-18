@@ -17,6 +17,10 @@ from ZenWidgets.gui import (
     colordata_provider
 )
 
+class ZInputControl(ZWidget):
+    """文本输入控件的公共基类。"""
+    editingFinished = Signal()
+
 class ZLineEditColorData(ZColorData):
     Body: QColor
     BodyFocused: QColor
@@ -53,10 +57,8 @@ colordata = {
     }
 }
 
-@colordata_provider(datamap=colordata, classtype=ZLineEditColorData)
-class ZLineEdit(ZWidget):
-    editingFinished = Signal()
-
+@colordata_provider(name='ZLineEdit', datamap=colordata, classtype=ZLineEditColorData)
+class ZTextInput(ZInputControl):
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
@@ -96,12 +98,14 @@ class ZLineEdit(ZWidget):
         self._selected_text = ""
         self._preedit_text = ""
 
-        self._cursor_pos = 0
+        self._cursor_pos = len(self._text)
         self._selection_start = -1
         self._selection_end = -1
         self._read_only = read_only
         self._is_selecting = False
         self._selectable = selectable
+        self._focus_select_complete = False
+        self._select_all_on_focus = False
 
         self._padding = ZPadding(6, 6, 6, 6)
         self._alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
@@ -192,6 +196,18 @@ class ZLineEdit(ZWidget):
         else:
             self.cursorColorCtrl.toOpaque()
 
+    def _filter_valid_chars(self, text: str) -> str:
+        return text
+
+    def _validate_text(self, text: str) -> str:
+        return text
+
+    def _emit_text_changed(self) -> None:
+        pass
+
+    def _format_text_for_display(self, text: str) -> str:
+        return text
+
     def _should_show_cursor(self) -> bool:
         return (self.hasFocus() and
                 not self._read_only and
@@ -255,6 +271,7 @@ class ZLineEdit(ZWidget):
             self._cursor_pos = start
             self._clear_selection()
             self._push_undo(old, self._text, oldpos, self._cursor_pos)
+            self._emit_text_changed()
 
     def _copy(self):
         if self._is_selection():
@@ -263,21 +280,22 @@ class ZLineEdit(ZWidget):
 
     def _paste(self, event: QKeyEvent):
         text = QApplication.clipboard().text()
-        if not text:
-            return
+        text = self._filter_valid_chars(text)
+        if not text: return
         old, oldpos = self._text, self._cursor_pos
         if self._is_selection():
             s, e = self._get_selection_range()
-            self._text = self._text[:s] + text + self._text[e:]
-            self._cursor_pos = s + len(text)
+            self._text = self._validate_text(self._text[:s] + text + self._text[e:])
+            self._cursor_pos = min(len(self._text), s + len(text))
             self._clear_selection()
         else:
-            self._text = self._text[:self._cursor_pos] + text + self._text[self._cursor_pos:]
-            self._cursor_pos += len(text)
+            self._text = self._validate_text(self._text[:self._cursor_pos] + text + self._text[self._cursor_pos:])
+            self._cursor_pos = min(len(self._text), oldpos + len(text))
         if not event.isAutoRepeat():
             self._push_undo_delay(old, self._text, oldpos, self._cursor_pos)
         self._ensure_cursor_visible()
         self.update()
+        self._emit_text_changed()
 
     # region undo/redo
     def _undo(self):
@@ -292,6 +310,7 @@ class ZLineEdit(ZWidget):
         self._cursor_pos = cmd.old_pos
         self._clear_selection()
         self.update()
+        self._emit_text_changed()
 
     def _redo(self):
         if self._undo_timer.isActive():
@@ -305,6 +324,7 @@ class ZLineEdit(ZWidget):
         self._cursor_pos = cmd.new_pos
         self._clear_selection()
         self.update()
+        self._emit_text_changed()
 
     # region del/backspace/insert
     def _delete_forward(self, auto_repeat=False):
@@ -320,21 +340,25 @@ class ZLineEdit(ZWidget):
             self._push_undo_delay(old, self._text, oldpos, self._cursor_pos)
         self._ensure_cursor_visible()
         self.update()
+        self._emit_text_changed()
 
     def _insert_text(self, text: str, auto_repeat=False):
+        text = self._filter_valid_chars(text)
+        if not text: return
         old, oldpos = self._text, self._cursor_pos
         if self._is_selection():
             s, e = self._get_selection_range()
-            self._text = self._text[:s] + text + self._text[e:]
-            self._cursor_pos = s + len(text)
+            self._text = self._validate_text(self._text[:s] + text + self._text[e:])
+            self._cursor_pos = min(len(self._text), s + len(text))
             self._clear_selection()
         else:
-            self._text = self._text[:self._cursor_pos] + text + self._text[self._cursor_pos:]
-            self._cursor_pos += len(text)
+            self._text = self._validate_text(self._text[:self._cursor_pos] + text + self._text[self._cursor_pos:])
+            self._cursor_pos = min(len(self._text), oldpos + len(text))
         if not auto_repeat:
             self._push_undo_delay(old, self._text, oldpos, self._cursor_pos)
         self._ensure_cursor_visible()
         self.update()
+        self._emit_text_changed()
 
     def _backspace(self, auto_repeat=False):
         old, oldpos = self._text, self._cursor_pos
@@ -347,6 +371,7 @@ class ZLineEdit(ZWidget):
                 self._push_undo_delay(old, self._text, oldpos, self._cursor_pos)
             self._ensure_cursor_visible()
             self.update()
+            self._emit_text_changed()
             return
         if self._cursor_pos > 0:
             self._text = self._text[:oldpos - 1] + self._text[oldpos:]
@@ -355,11 +380,14 @@ class ZLineEdit(ZWidget):
                 self._push_undo_delay(old, self._text, oldpos, self._cursor_pos)
             self._ensure_cursor_visible()
             self.update()
+            self._emit_text_changed()
 
     def _display_text(self) -> str:
+        before = self._format_text_for_display(self._text[:self._cursor_pos])
+        after = self._format_text_for_display(self._text[self._cursor_pos:])
         if self._preedit_text:
-            return self._text[:self._cursor_pos] + self._preedit_text + self._text[self._cursor_pos:]
-        return self._text
+            return before + self._preedit_text + after
+        return before + after
 
     def _text_rect(self) -> QRectF:
         r = QRectF(self.rect())
@@ -572,16 +600,18 @@ class ZLineEdit(ZWidget):
             return
         if event.commitString():
             old, oldpos = self._text, self._cursor_pos
-            c = event.commitString()
-            if self._is_selection():
+            c = self._filter_valid_chars(event.commitString())
+            if c and self._is_selection():
                 s, e = self._get_selection_range()
-                self._text = self._text[:s] + c + self._text[e:]
-                self._cursor_pos = s + len(c)
+                self._text = self._validate_text(self._text[:s] + c + self._text[e:])
+                self._cursor_pos = min(len(self._text), s + len(c))
                 self._clear_selection()
-            else:
-                self._text = self._text[:self._cursor_pos] + c + self._text[self._cursor_pos:]
-                self._cursor_pos += len(c)
-            self._push_undo(old, self._text, oldpos, self._cursor_pos)
+            elif c:
+                self._text = self._validate_text(self._text[:self._cursor_pos] + c + self._text[self._cursor_pos:])
+                self._cursor_pos = min(len(self._text), oldpos + len(c))
+            if c:
+                self._push_undo(old, self._text, oldpos, self._cursor_pos)
+                self._emit_text_changed()
             self._preedit_text = ""
         else:
             self._preedit_text = event.preeditString()
@@ -610,6 +640,9 @@ class ZLineEdit(ZWidget):
         if not self._selectable:
             return
         if event.button() == Qt.MouseButton.LeftButton:
+            if self._focus_select_complete:
+                self._focus_select_complete = False
+                return
             pos = self._get_char_position_at_point(event.position())
             self._cursor_pos = pos
             self.cursorColorCtrl.toOpaque()
@@ -659,6 +692,10 @@ class ZLineEdit(ZWidget):
 
     def focusInEvent(self, event):
         super().focusInEvent(event)
+        if self._select_all_on_focus:
+            self._selection_start = 0
+            self._selection_end = len(self._text)
+            self._focus_select_complete = True
         if not self._read_only:
             self.cursorColorCtrl.toOpaque()
         self.bodyColorCtrl.setColorTo(self.colorDataCtrl.data.BodyFocused)
@@ -681,6 +718,26 @@ class ZLineEdit(ZWidget):
     def leaveEvent(self, event):
         super().leaveEvent(event)
         self.opacityEffectCtrl.toTransparent()
+
+
+class ZLineEdit(ZTextInput):
+    """标准单行文本输入框。"""
+    pass
+
+
+class ZSearchEdit(ZLineEdit):
+    searchRequested = Signal(str)
+
+    def __init__(self, *args, placeholder: str = "Search", **kwargs):
+        super().__init__(*args, placeholder=placeholder, **kwargs)
+
+    def clear(self) -> None:
+        self.setText("")
+
+    def keyPressEvent(self, event: QKeyEvent):
+        super().keyPressEvent(event)
+        if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
+            self.searchRequested.emit(self.text())
 
 # import sys
 # if __name__ == '__main__':
