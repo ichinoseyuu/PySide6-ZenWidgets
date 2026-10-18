@@ -83,8 +83,9 @@ Runtime code uses a `src` layout. The main package is under `src/ZenWidgets/`:
 | `src/ZenWidgets/__init__.py` | 顶层公共导入入口，重导出组件、核心辅助和 GUI/主题 API。 / Top-level import entry point; re-exports components, core helpers, and GUI/theme APIs. |
 | `src/ZenWidgets/component/base/` | 自定义控件基类、控件组以及颜色、尺寸、位置、透明度、动画等控制器。 / Widget foundations, groups, and controllers for color, size, position, opacity, and animation. |
 | `src/ZenWidgets/component/input/` | 按钮、开关、滑块、下拉框等输入控件。 / Input controls such as buttons, switches, sliders, and combo boxes. |
-| `src/ZenWidgets/component/container/` | 普通、流式、密集、列表、滚动、分割和堆叠等容器。 / Standard, flow, dense, list, scroll, split, and stacked containers. |
-| `src/ZenWidgets/component/layouts/` | 布局、流式布局和间隔项。 / Layouts, flow layout, and spacer items. |
+| `src/ZenWidgets/component/container/` | 堆叠、分割、滚动及列表视图控件。 / Stacked, split, scroll, and list-view widgets. |
+| `src/ZenWidgets/component/layouts/` | `QLayout` 实现（盒式/流式布局）和间隔项；布局不是 widget。 / `QLayout` implementations (box/flow layouts) and spacer items; layouts are not widgets. |
+| `src/ZenWidgets/component/developing/` | 开发中的自定义水平/垂直、密集、流式和 masonry 容器。 / Custom horizontal/vertical, dense, flow, and masonry containers under development. |
 | `src/ZenWidgets/component/text/` | 标题、文本块、单行编辑、登录编辑和数字编辑控件。 / Headline, text block, line edit, login edit, and number edit controls. |
 | `src/ZenWidgets/component/navigations/`、`menu/`、`dialogs/` | 导航栏、菜单和对话框组件。 / Navigation bars, menus, and dialogs. |
 | `src/ZenWidgets/component/panel/`、`cards/`、`media/`、`info/` | 面板、卡片、图像和提示信息组件。 / Panels, cards, images, and informational components. |
@@ -105,12 +106,17 @@ The following representative APIs help locate the source; this is not an exhaust
 
 * 输入控件 / Inputs: `ZButton`, `ZRepeatButton`, `ZToggleButton`, `ZLongPressButton`, `ZProgressButton`, `ZSlider`, `ZSwitch`, `ZComboBox`
 * 容器 / Containers: `ZStackView`, `ZSplitView`, `ZHSplitView`, `ZVSplitView`, `ZScrollView`, `ZListView`, `ZHListView`, `ZVListView`
-* 布局 / Layouts: `ZBoxLayout`, `ZHBoxLayout`, `ZVBoxLayout`, `ZFlowLayout`
+* 布局 / Layouts (`QLayout`): `ZBoxLayout`, `ZHBoxLayout`, `ZVBoxLayout`, `ZFlowLayout`
+* 开发中容器 / Developing containers: `ZHContainer`, `ZVContainer`, `ZHDenseContainer`, `ZVDenseContainer`, `ZFlowContainer`, `ZMasonryContainer`
 * 文本与展示 / Text and display: `ZHeadLine`, `ZTextBlock`, `ZLineEdit`, `ZLoginEdit`, `ZNumberEdit`, `ZImage`
 * 导航与窗口 / Navigation and windows: `ZNavigationBar`, `ZTitleBar`, `ZFramelessWindow`, `ZStandardFramelessWindow`
 * 其他 / Other: `ZPanel`, `ZCard`, `ZDialog`, `ZMenu`, `ZContextMenu`, `ZToolTip`
 
 具体名称及导出范围以各目录的 `__init__.py` 和实现为准。/ Verify exact names and exports in the relevant `__init__.py` files and implementations.
+
+**注意：** `QLayout` 类型应通过 `QWidget.setLayout()` 或父布局的 `addLayout()` 安装，不可传给 `addWidget()`。`ZFlowLayout` 是布局管理器，不提供 `ZFlowContainer` 的容器/拖拽 API。
+
+**Note:** Install a `QLayout` using `QWidget.setLayout()` or a parent layout's `addLayout()`; do not pass it to `addWidget()`. `ZFlowLayout` is a layout manager and does not provide `ZFlowContainer`'s container/drag APIs.
 
 ## 4. 主题、样式与资源 / Themes, styles, and resources
 

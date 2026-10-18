@@ -29,19 +29,6 @@ class PanelTest(ZPanel):
         #     m.setPixmap(pixmap)
         #     flowlayout.addWidget(m)
         #     i += 1
-        container = ZFlowContainer(self)
-        self.layout().addWidget(container)
-        container.setLineHeight(64)
-        i = 0
-        for _, pixmap in ZGlobal.iconPack.icons(size=QSize(64, 64)):
-            if i > 20: break
-            #print(f"图标名称: {icon_name}")
-            m = ZImage(container)
-            m.resize(pixmap.size())
-            m.setPixmap(pixmap)
-            container.addWidget(m)
-            container.regDraggableWidget(m)
-            i += 1
 
         split = ZHSplitView(self,initial_ratios=[0.25, 0.75])
 

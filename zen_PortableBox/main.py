@@ -39,35 +39,28 @@ class PortableBox(ZStandardFramelessWindow):
         self.menubar.addMenu("编辑(&E)", edit_menu)
         self.menubar.menuTriggered.connect(lambda t, v: logging.info(f"菜单 {t} 触发，参数：{v}"))
 
-        self.boxContainer = ZFlowContainer(self.centerWidget())
-        self.centerWidget().layout().addWidget(self.boxContainer)
+        self.boxContainer = ZFlowLayout()
+        self.centerWidget().layout().addLayout(self.boxContainer)
         self.boxContainer.setLineHeight(72)
 
-        app_notepad = AppIconItem(parent=self, exe_path="C:/Windows/System32/notepad.exe", app_name="Notepad")
+        app_notepad = AppIconItem(parent=self.centerWidget(), exe_path="C:/Windows/System32/notepad.exe", app_name="Notepad")
         app_notepad.toggled.connect(self._select_Change_handler)
         self._apps.addWidget(app_notepad,set_first_checked=False)
 
         self.boxContainer.addWidget(app_notepad)
-        self.boxContainer.regDraggableWidget(app_notepad)
 
-        app_calculator = AppIconItem(parent=self, exe_path="C:/Windows/System32/calc.exe", app_name="Calculator")
+        app_calculator = AppIconItem(parent=self.centerWidget(), exe_path="C:/Windows/System32/calc.exe", app_name="Calculator")
         app_calculator.toggled.connect(self._select_Change_handler)
         self._apps.addWidget(app_calculator)
         self.boxContainer.addWidget(app_calculator)
-        self.boxContainer.regDraggableWidget(app_calculator)
 
-        app_edge = AppIconItem(parent=self, exe_path="C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe", app_name="Edge")
+        app_edge = AppIconItem(parent=self.centerWidget(), exe_path="C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe", app_name="Edge")
         app_edge.toggled.connect(self._select_Change_handler)
         self._apps.addWidget(app_edge)
         self.boxContainer.addWidget(app_edge)
-        self.boxContainer.regDraggableWidget(app_edge)
 
     def _select_Change_handler(self, checked: bool):
         pass
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.boxContainer.resize(self.centerWidget().size())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

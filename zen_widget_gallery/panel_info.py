@@ -20,78 +20,80 @@ class PanelInfo(ZPanel):
         card = ZCard(self)
         self.layout().addWidget(card)
 
-        title = ZHeadLine(self, text='ZToolTip')
+        title = ZHeadLine(card, text='ZToolTip')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
         card.layout().addWidget(title)
         card.layout().setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        vcontainer = ZVContainer(self)
+        vcontainer = ZVBoxLayout()
+        card.layout().addLayout(vcontainer)
 
-        hcontainer_1 = ZHContainer(card)
+        hcontainer_1 = ZHBoxLayout()
 
-        self.headline_1 = ZHeadLine(hcontainer_1, text='显示文字：')
+        self.headline_1 = ZHeadLine(card, text='显示文字：')
         hcontainer_1.addWidget(self.headline_1)
 
-        self.lineedit = ZLineEdit(hcontainer_1, text='这是一个工具提示窗口')
+        self.lineedit = ZLineEdit(card, text='这是一个工具提示窗口')
         hcontainer_1.addWidget(self.lineedit)
 
-        hcontainer_2 = ZHContainer(card)
+        hcontainer_2 = ZHBoxLayout()
 
-        self.headline_2 = ZHeadLine(hcontainer_2, text='显示位置：')
+        self.headline_2 = ZHeadLine(card, text='显示位置：')
         hcontainer_2.addWidget(self.headline_2)
 
-        self.combobox_1 = ZComboBox(self)
+        self.combobox_1 = ZComboBox(card)
         for pos in ZPosition:
             if pos == ZPosition.Center: break
             self.combobox_1.addOption(pos.name, pos)
         self.combobox_1.toggleTo(ZPosition.TopRight.name)
         hcontainer_2.addWidget(self.combobox_1)
 
-        self.headline_3 = ZHeadLine(hcontainer_2, text='跟随目标：')
+        self.headline_3 = ZHeadLine(card, text='跟随目标：')
         hcontainer_2.addWidget(self.headline_3)
 
-        self.combobox_2 = ZComboBox(self)
+        self.combobox_2 = ZComboBox(card)
         for mode in ZToolTip.Mode:
             self.combobox_2.addOption(mode.name, mode)
         self.combobox_2.toggleTo(ZToolTip.Mode.TrackMouse.name)
         hcontainer_2.addWidget(self.combobox_2)
 
-        hcontainer_3 = ZHContainer(card)
+        hcontainer_3 = ZHBoxLayout()
 
-        self.headline_4 = ZHeadLine(hcontainer_3, text='隐藏时间：')
+        self.headline_4 = ZHeadLine(card, text='隐藏时间：')
         hcontainer_3.addWidget(self.headline_4)
 
-        self.numberedit_1 = ZNumberEdit(hcontainer_3,integer_digits=4,step=500,minimumSize=QSize(100, 30))
+        self.numberedit_1 = ZNumberEdit(card,integer_digits=4,step=500,minimumSize=QSize(100, 30))
         hcontainer_3.addWidget(self.numberedit_1)
 
-        self.headline_5 = ZHeadLine(hcontainer_3, text='位置偏移：')
+        self.headline_5 = ZHeadLine(card, text='位置偏移：')
         hcontainer_3.addWidget(self.headline_5)
 
-        self.numberedit_2 = ZNumberEdit(hcontainer_3,text='6',integer_digits=2,step=1,allow_negative=True,minimumSize=QSize(100, 30))
+        self.numberedit_2 = ZNumberEdit(card,text='6',integer_digits=2,step=1,allow_negative=True,minimumSize=QSize(100, 30))
         hcontainer_3.addWidget(self.numberedit_2)
 
-        self.numberedit_3 = ZNumberEdit(hcontainer_3,text='6',integer_digits=2,step=1,allow_negative=True,minimumSize=QSize(100, 30))
+        self.numberedit_3 = ZNumberEdit(card,text='6',integer_digits=2,step=1,allow_negative=True,minimumSize=QSize(100, 30))
         hcontainer_3.addWidget(self.numberedit_3)
 
-        hcontainer_4 = ZHContainer(card)
-        hcontainer_4.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        hcontainer_4 = ZHBoxLayout(alignment=Qt.AlignmentFlag.AlignHCenter)
 
-        self.panel_1 = ZPanel(hcontainer_4)
+        self.panel_1 = ZPanel(card)
         self.panel_1.setFixedSize(100, 100)
         hcontainer_4.addWidget(self.panel_1)
 
-        self.panel_2 = ZPanel(hcontainer_4)
+        hcontainer_4.addSpacing(60)
+        self.panel_2 = ZPanel(card)
         self.panel_2.setFixedSize(100, 100)
-        hcontainer_4.addWidget(self.panel_2,spacing=60)
+        hcontainer_4.addWidget(self.panel_2)
 
-        self.panel_3 = ZPanel(hcontainer_4)
+        hcontainer_4.addSpacing(60)
+        self.panel_3 = ZPanel(card)
         self.panel_3.setFixedSize(100, 100)
-        hcontainer_4.addWidget(self.panel_3,spacing=60)
+        hcontainer_4.addWidget(self.panel_3)
 
-        vcontainer.addWidget(hcontainer_1)
-        vcontainer.addWidget(hcontainer_2)
-        vcontainer.addWidget(hcontainer_3)
-        vcontainer.addWidget(hcontainer_4)
+        vcontainer.addLayout(hcontainer_1)
+        vcontainer.addLayout(hcontainer_2)
+        vcontainer.addLayout(hcontainer_3)
+        vcontainer.addLayout(hcontainer_4)
 
         self.panel_1.enterEvent = self._on_target_enter
         self.panel_1.leaveEvent = self._on_target_leave
@@ -99,7 +101,6 @@ class PanelInfo(ZPanel):
         self.panel_2.leaveEvent = self._on_target_leave
         self.panel_3.enterEvent = self._on_target_enter
         self.panel_3.leaveEvent = self._on_target_leave
-        card.layout().addWidget(vcontainer)
 
 
     def _on_target_enter(self, event):

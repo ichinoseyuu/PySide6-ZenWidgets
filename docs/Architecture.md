@@ -1,6 +1,6 @@
 # ZenWidgets 架构说明
 
-本文档描述当前源码中的层次、对象协作、事件/数据流，以及每个 Python 类直接声明的方法。它是面向架构优化的源码索引，不承诺所有列出的方法都是稳定的公共 API。判断以 `src/ZenWidgets/` 当前实现为准；方法索引通过 Python AST 从源码提取，继承的方法请沿基类继续查阅。
+本文档描述当前源码中的层次、对象协作、事件/数据流，以及每个 Python 类直接声明的方法。它是面向架构优化的源码索引，不承诺所有列出的方法都是稳定的公共 API。判断以当前工作区实现为准；方法索引通过 Python AST 从库源码、Gallery、示例应用和脚本提取，继承的方法请沿基类继续查阅。
 
 ## 1. 总体结构
 
@@ -9,6 +9,9 @@ flowchart TD
     App["应用 / Gallery"] --> Public["ZenWidgets 顶层重导出"]
     Public --> Components["component：具体控件与容器"]
     Components --> Base["component/base：ZWidget、交互基类、控制器"]
+    Components --> Layouts["component/layouts：Qt 布局管理器"]
+    Components --> Containers["component/container：视图容器"]
+    Components --> Developing["component/developing：孵化中的容器控件"]
     Components --> Gui["gui：主题、调色板、样式、图标资源"]
     Components --> Core["core：动画、值对象、枚举、工具"]
     Base --> Core
@@ -22,12 +25,15 @@ flowchart TD
 **依赖方向（源码现状）**
 
 * `component` 是控件实现层；具体控件依赖 `component/base` 提供的基类/控制器，并按需使用 `core`、`gui`。
+* `component/layouts` 存放 Qt `QLayout` 子类和 spacer item；它们负责管理 widget 几何，不是可通过父布局 `addWidget()` 加入的 widget。
+* `component/container` 当前保留 `ZStackView`、`ZSplitView`、`ZScrollView` 和 `ZListView` 等视图/容器控件。
+* `component/developing` 当前放置 `ZHContainer`、dense container 与 flow/masonry container 等仍处于开发命名空间的自定义容器。根级 `component/__init__.py` 仍重导出该包，所以这些类型仍可经 `from ZenWidgets import ...` 导入；Gallery 的新布局用法没有使用它们，不等于包已删除或停止导出它们。
 * `core` 放通用动画、数据类型和辅助功能；不承担控件组合或页面布局职责。
 * `gui` 集中管理主题、调色板、样式数据、效果和 Qt 资源。颜色数据管理通过 `ZGlobal` 与主题管理关联。
 * `component/window/win32utils` 封装 Windows 原生 API；无边框窗口将其与 Qt 窗口/标题栏拼装在一起。
 * `zen_widget_gallery` 位于源码包之外，是客户端组合示例，不是 `ZenWidgets` 包的内部层。
 
-> 图表达主要依赖方向，不是完整的逐文件 import 图。下方 AST 索引覆盖仓库中已跟踪的 Python 文件（包括库源码、Gallery 和示例应用）；模块级函数、常量以及 PySide6/第三方依赖内部的类不在索引内。
+> 图表达主要依赖方向，不是完整的逐文件 import 图。下方 AST 索引覆盖当前 `src/ZenWidgets/`、Gallery、示例应用和脚本目录中的 Python 文件；模块级函数、常量以及 PySide6/第三方依赖内部的类不在索引内。
 
 ## 2. 核心协作关系
 
@@ -93,11 +99,12 @@ flowchart LR
 
 `ZScrollView` 组合内容 widget、水平/垂直手柄，监听内容尺寸变化后更新手柄长度/位置；滚轮和 `scrollTo` 移动内容，手柄拖动则反向更新内容偏移。`ZListView` 按方向只创建一个手柄，并替内容区设置水平或垂直布局。手柄类共享 `ZScrollHandle` 的绘制/显隐/交互行为，具体方向子类处理拖拽映射。
 
-另外，`ZHContainer`/`ZVContainer`、`ZHDenseContainer`/`ZVDenseContainer`、`ZFlowContainer`/`ZMasonryContainer` 是不同的布局/排布策略，不应与滚动视图的 viewport/content 机制混为一谈。前两类容器家族中有实现直接继承 `QWidget`，不是 `ZWidget`。
+布局与容器需区分：`ZHBoxLayout`/`ZVBoxLayout`/`ZFlowLayout` 是 `QLayout` 类型，应通过 `QWidget.setLayout()`、`QLayout.addLayout()` 安装到 widget/layout；不能当成 `QWidget` 交给 `addWidget()`。`ZHContainer`/`ZVContainer`、`ZHDenseContainer`/`ZVDenseContainer`、`ZFlowContainer`/`ZMasonryContainer` 则是 `component/developing/` 下的独立 widget 容器，负责自行管理子控件的位置和几何；其中 dense/flow 基类直接继承 `QWidget`，horizontal/vertical container 继承 `ZWidget`。滚动视图的 viewport/content 机制是另一层关注点。
 
 ### 2.4 导航栏、菜单和窗口
 
 * `ZNavigationBar` 组合 `Panel`、`FooterPanel`、`Indicator`、导航按钮和 `ZExclusiveToggleGroup`。按钮存放在 panel 的布局中；toggle group 发出选择变化后更新 indicator，panel 滚动后重新同步 indicator。Gallery 通过导航按钮的 `clicked` 信号切换 `ZStackView` 当前页面。
+* Gallery 的当前结构主要用 `ZVBoxLayout`/`ZHBoxLayout` 安排页面、卡片与控件；组件子包已将通用布局和试验容器分开。此前由自定义 container 承担的流式排列/拖动能力并不会自动由 `ZFlowLayout` 提供，二者 API 与职责不同。
 * 菜单的数据/视图分离为 `ZAction`、`ZMenuItem`、`ZMenu`：`ZAction` 保存标签、值、图标、快捷键、子菜单和触发信号；`ZMenu` 创建/维护 action 对应的菜单项，处理子菜单打开/关闭、键盘和鼠标事件；`ZMenubar` 管理菜单栏项并驱动菜单显示。`ZContextMenu` 基于 `ZMenu` 扩展事件过滤。
 * `ZFramelessWindow` 继承原生 `QWidget` 而非 `ZWidget`，持有 `WindowsWindowEffect`、窗口背景颜色控制器与 `ZColorController`；`nativeEvent` 处理 Win32 非客户区命中测试、最大化边界及焦点边框效果。`ZStandardFramelessWindow` 再组合 `ZTitleBar` 和中心内容区域，并设置共享 tooltip。
 * `ZTitleBar` 建立在 `ZTitleBarBase` 上，组合关闭、最大化、最小化、主题切换按钮。窗口特效/任务栏辅助由 `win32utils` 内部函数及 `WinTaskbar` 提供。此层是平台耦合最集中的区域。
@@ -116,8 +123,9 @@ flowchart LR
 4. **编辑器行为重复**：几个自绘文本编辑器存在相似的选择/撤销/光标逻辑，但其输入校验不同。可先提取共享状态机/编辑缓冲区并保留各自渲染与规则。
 5. **相似滚动逻辑**：`ZScrollView` 与 `ZListView` 都维护内容偏移、滚动手柄和滚轮。若统一逻辑，应先明确双轴/单轴、布局约束及手柄显隐行为差异。
 6. **直接继承 QWidget 的容器**：dense/flow 容器绕过 `ZWidget` 的状态和 controller 机制。应确认这是性能/行为设计还是历史差异，再决定是否统一基类。
-7. **可维护性细节**：`ZListView` 当前类体声明了两次 `resizeEvent`；Python 后一个定义覆盖前一个定义，需确认前一份逻辑是否已冗余或有意保留。
-8. **类索引边界**：索引列出每个类直接声明的方法名；继承实现、装饰器运行时注入的方法、模块级函数和动态信号/属性不一定出现在该列表中。分析调用关系时需回到源文件或使用 IDE 的引用/调用层级。
+7. **Gallery 布局与容器能力边界**：`ZFlowLayout` 继承 `QLayout`，不是 `QWidget`，也没有 `regDraggableWidget()`。当前 Gallery 和 PortableBox 将其作为 layout 安装，并不再包含旧流式容器提供的拖动重排行为；若产品仍需要该交互，应由容器/独立交互层负责，而不是把它假定为布局管理器的能力。
+8. **可维护性细节**：`ZListView` 当前类体声明了两次 `resizeEvent`；Python 后一个定义覆盖前一个定义，需确认前一份逻辑是否已冗余或有意保留。
+9. **类索引边界**：索引列出每个类直接声明的方法名；继承实现、装饰器运行时注入的方法、模块级函数和动态信号/属性不一定出现在该列表中。分析调用关系时需回到源文件或使用 IDE 的引用/调用层级。
 
 ## 4. 类与方法索引
 
@@ -125,7 +133,7 @@ flowchart LR
 
 <!-- GENERATED CLASS INDEX -->
 
-Index totals: **120 tracked Python files, 224 classes, 1675 direct method definitions**.
+Index totals: **121 current Python files in the library, Gallery, sample apps, and scripts; 224 classes; 1674 direct method definitions**.
 
 ### `src/ZenWidgets/component/base/controller/color.py`
 
@@ -219,29 +227,6 @@ Index totals: **120 tracked Python files, 224 classes, 1675 direct method defini
 | [ZCardColorData](../src/ZenWidgets/component/cards/card.py#L15) | `ZColorData` | - |
 | [ZCard](../src/ZenWidgets/component/cards/card.py#L34) | `ZWidget` | [__init__()](../src/ZenWidgets/component/cards/card.py#L46), [setShadowDisplay()](../src/ZenWidgets/component/cards/card.py#L65), [setBorderDisplay()](../src/ZenWidgets/component/cards/card.py#L69), [sizeHint()](../src/ZenWidgets/component/cards/card.py#L73), [_init_color_data_()](../src/ZenWidgets/component/cards/card.py#L76), [_color_data_change_handler_()](../src/ZenWidgets/component/cards/card.py#L82), [paintEvent()](../src/ZenWidgets/component/cards/card.py#L89) |
 
-### `src/ZenWidgets/component/container/container.py`
-
-| Class | Direct bases | Direct methods (source order; links open definitions) |
-| --- | --- | --- |
-| [ZHContainer](../src/ZenWidgets/component/container/container.py#L15) | `ZWidget` | [__init__()](../src/ZenWidgets/component/container/container.py#L17), [widgets()](../src/ZenWidgets/component/container/container.py#L36), [margins()](../src/ZenWidgets/component/container/container.py#L38), [setMargins()](../src/ZenWidgets/component/container/container.py#L40), [alignment()](../src/ZenWidgets/component/container/container.py#L45), [setAlignment()](../src/ZenWidgets/component/container/container.py#L47), [spacing()](../src/ZenWidgets/component/container/container.py#L56) (2 overload declarations), [setSpacing()](../src/ZenWidgets/component/container/container.py#L65) (2 overload declarations)<br>[isExpand()](../src/ZenWidgets/component/container/container.py#L79), [setExpand()](../src/ZenWidgets/component/container/container.py#L81), [isMinExpand()](../src/ZenWidgets/component/container/container.py#L86), [setMinExpand()](../src/ZenWidgets/component/container/container.py#L88), [usedSpace()](../src/ZenWidgets/component/container/container.py#L93), [spareSpace()](../src/ZenWidgets/component/container/container.py#L100), [adjustSize()](../src/ZenWidgets/component/container/container.py#L105), [sizeHint()](../src/ZenWidgets/component/container/container.py#L113)<br>[arrangeWidgets()](../src/ZenWidgets/component/container/container.py#L129), [addWidget()](../src/ZenWidgets/component/container/container.py#L180), [removeWidget()](../src/ZenWidgets/component/container/container.py#L205), [eventFilter()](../src/ZenWidgets/component/container/container.py#L224), [resizeEvent()](../src/ZenWidgets/component/container/container.py#L229), [paintEvent()](../src/ZenWidgets/component/container/container.py#L233) |
-| [ZVContainer](../src/ZenWidgets/component/container/container.py#L240) | `ZWidget` | [__init__()](../src/ZenWidgets/component/container/container.py#L242), [widgets()](../src/ZenWidgets/component/container/container.py#L261), [margins()](../src/ZenWidgets/component/container/container.py#L263), [setMargins()](../src/ZenWidgets/component/container/container.py#L265), [alignment()](../src/ZenWidgets/component/container/container.py#L270), [setAlignment()](../src/ZenWidgets/component/container/container.py#L272), [spacing()](../src/ZenWidgets/component/container/container.py#L281) (2 overload declarations), [setSpacing()](../src/ZenWidgets/component/container/container.py#L290) (2 overload declarations)<br>[isExpand()](../src/ZenWidgets/component/container/container.py#L304), [setExpand()](../src/ZenWidgets/component/container/container.py#L306), [isMinExpand()](../src/ZenWidgets/component/container/container.py#L311), [setMinExpand()](../src/ZenWidgets/component/container/container.py#L313), [usedSpace()](../src/ZenWidgets/component/container/container.py#L318), [spareSpace()](../src/ZenWidgets/component/container/container.py#L325), [adjustSize()](../src/ZenWidgets/component/container/container.py#L330), [sizeHint()](../src/ZenWidgets/component/container/container.py#L338)<br>[arrangeWidgets()](../src/ZenWidgets/component/container/container.py#L354), [addWidget()](../src/ZenWidgets/component/container/container.py#L406), [removeWidget()](../src/ZenWidgets/component/container/container.py#L428), [eventFilter()](../src/ZenWidgets/component/container/container.py#L445), [resizeEvent()](../src/ZenWidgets/component/container/container.py#L450), [paintEvent()](../src/ZenWidgets/component/container/container.py#L454) |
-
-### `src/ZenWidgets/component/container/densecontainer.py`
-
-| Class | Direct bases | Direct methods (source order; links open definitions) |
-| --- | --- | --- |
-| [ABCDenseContainer](../src/ZenWidgets/component/container/densecontainer.py#L13) | `QWidget` | [__init__()](../src/ZenWidgets/component/container/densecontainer.py#L14), [setUseMoveTo()](../src/ZenWidgets/component/container/densecontainer.py#L24), [setAdjustWidgetsSize()](../src/ZenWidgets/component/container/densecontainer.py#L27), [setShrinking()](../src/ZenWidgets/component/container/densecontainer.py#L31), [setAlignCenter()](../src/ZenWidgets/component/container/densecontainer.py#L35), [setAlignment()](../src/ZenWidgets/component/container/densecontainer.py#L41), [alignment()](../src/ZenWidgets/component/container/densecontainer.py#L44), [setSpacing()](../src/ZenWidgets/component/container/densecontainer.py#L47)<br>[widgets()](../src/ZenWidgets/component/container/densecontainer.py#L51), [get_widget_except_placeholders()](../src/ZenWidgets/component/container/densecontainer.py#L55){staticmethod}, [__enter__()](../src/ZenWidgets/component/container/densecontainer.py#L62), [__exit__()](../src/ZenWidgets/component/container/densecontainer.py#L65) |
-| [ZHDenseContainer](../src/ZenWidgets/component/container/densecontainer.py#L69) | `ABCDenseContainer` | [__init__()](../src/ZenWidgets/component/container/densecontainer.py#L71), [addPlaceholder()](../src/ZenWidgets/component/container/densecontainer.py#L77), [addWidget()](../src/ZenWidgets/component/container/densecontainer.py#L84), [getUsedSpace()](../src/ZenWidgets/component/container/densecontainer.py#L98), [getSpareSpace()](../src/ZenWidgets/component/container/densecontainer.py#L106), [widgets()](../src/ZenWidgets/component/container/densecontainer.py#L109), [removeWidget()](../src/ZenWidgets/component/container/densecontainer.py#L120), [sizeHint()](../src/ZenWidgets/component/container/densecontainer.py#L134)<br>[arrangeWidget()](../src/ZenWidgets/component/container/densecontainer.py#L154), [resizeEvent()](../src/ZenWidgets/component/container/densecontainer.py#L210), [adjustSize()](../src/ZenWidgets/component/container/densecontainer.py#L214) |
-| [ZVDenseContainer](../src/ZenWidgets/component/container/densecontainer.py#L229) | `ABCDenseContainer` | [__init__()](../src/ZenWidgets/component/container/densecontainer.py#L232), [addPlaceholder()](../src/ZenWidgets/component/container/densecontainer.py#L238), [addWidget()](../src/ZenWidgets/component/container/densecontainer.py#L245), [sizeHint()](../src/ZenWidgets/component/container/densecontainer.py#L259), [getUsedSpace()](../src/ZenWidgets/component/container/densecontainer.py#L279), [getSpareSpace()](../src/ZenWidgets/component/container/densecontainer.py#L287), [widgets()](../src/ZenWidgets/component/container/densecontainer.py#L290), [removeWidget()](../src/ZenWidgets/component/container/densecontainer.py#L301)<br>[arrangeWidget()](../src/ZenWidgets/component/container/densecontainer.py#L315), [resizeEvent()](../src/ZenWidgets/component/container/densecontainer.py#L371), [adjustSize()](../src/ZenWidgets/component/container/densecontainer.py#L375) |
-
-### `src/ZenWidgets/component/container/flowcontainer.py`
-
-| Class | Direct bases | Direct methods (source order; links open definitions) |
-| --- | --- | --- |
-| [ABCFlowContainer](../src/ZenWidgets/component/container/flowcontainer.py#L15) | `QWidget` | [__init__()](../src/ZenWidgets/component/container/flowcontainer.py#L16), [setSpacing()](../src/ZenWidgets/component/container/flowcontainer.py#L23), [widgets()](../src/ZenWidgets/component/container/flowcontainer.py#L29), [addWidget()](../src/ZenWidgets/component/container/flowcontainer.py#L32), [removeWidget()](../src/ZenWidgets/component/container/flowcontainer.py#L39), [arrangeWidgets()](../src/ZenWidgets/component/container/flowcontainer.py#L61), [shuffle()](../src/ZenWidgets/component/container/flowcontainer.py#L64), [swapByIndex()](../src/ZenWidgets/component/container/flowcontainer.py#L68)<br>[insertToByIndex()](../src/ZenWidgets/component/container/flowcontainer.py#L75), [regDraggableWidget()](../src/ZenWidgets/component/container/flowcontainer.py#L87), [_on_widget_dragged()](../src/ZenWidgets/component/container/flowcontainer.py#L100), [mouseReleaseEvent()](../src/ZenWidgets/component/container/flowcontainer.py#L116), [resizeEvent()](../src/ZenWidgets/component/container/flowcontainer.py#L121), [paintEvent()](../src/ZenWidgets/component/container/flowcontainer.py#L126) |
-| [ZFlowContainer](../src/ZenWidgets/component/container/flowcontainer.py#L134) | `ABCFlowContainer` | [__init__()](../src/ZenWidgets/component/container/flowcontainer.py#L135), [adjustSize()](../src/ZenWidgets/component/container/flowcontainer.py#L140), [setLineHeight()](../src/ZenWidgets/component/container/flowcontainer.py#L143), [arrangeWidgets()](../src/ZenWidgets/component/container/flowcontainer.py#L148), [sizeHint()](../src/ZenWidgets/component/container/flowcontainer.py#L191) |
-| [ZMasonryContainer](../src/ZenWidgets/component/container/flowcontainer.py#L195) | `ABCFlowContainer` | [__init__()](../src/ZenWidgets/component/container/flowcontainer.py#L196), [setAutoAdjustColumnAmount()](../src/ZenWidgets/component/container/flowcontainer.py#L203), [setColumns()](../src/ZenWidgets/component/container/flowcontainer.py#L206), [setColumnWidth()](../src/ZenWidgets/component/container/flowcontainer.py#L209), [arrangeWidgets()](../src/ZenWidgets/component/container/flowcontainer.py#L212), [adjustColumnAmount()](../src/ZenWidgets/component/container/flowcontainer.py#L245), [calculateColumnAmount()](../src/ZenWidgets/component/container/flowcontainer.py#L255), [adjustSize()](../src/ZenWidgets/component/container/flowcontainer.py#L260)<br>[resizeEvent()](../src/ZenWidgets/component/container/flowcontainer.py#L264) |
-
 ### `src/ZenWidgets/component/container/listview.py`
 
 | Class | Direct bases | Direct methods (source order; links open definitions) |
@@ -269,6 +254,29 @@ Index totals: **120 tracked Python files, 224 classes, 1675 direct method defini
 | Class | Direct bases | Direct methods (source order; links open definitions) |
 | --- | --- | --- |
 | [ZStackView](../src/ZenWidgets/component/container/stackview.py#L7) | `ZWidget` | [__init__()](../src/ZenWidgets/component/container/stackview.py#L8), [currentWidget()](../src/ZenWidgets/component/container/stackview.py#L25), [currentWidgetIndex()](../src/ZenWidgets/component/container/stackview.py#L27), [lastWidget()](../src/ZenWidgets/component/container/stackview.py#L29), [widget()](../src/ZenWidgets/component/container/stackview.py#L32) (2 overload declarations), [widgets()](../src/ZenWidgets/component/container/stackview.py#L44), [widgetCount()](../src/ZenWidgets/component/container/stackview.py#L46), [addWidget()](../src/ZenWidgets/component/container/stackview.py#L48)<br>[removeWidget()](../src/ZenWidgets/component/container/stackview.py#L72) (2 overload declarations), [setCurrentWidget()](../src/ZenWidgets/component/container/stackview.py#L101) (3 overload declarations), [sizeHint()](../src/ZenWidgets/component/container/stackview.py#L146), [resizeEvent()](../src/ZenWidgets/component/container/stackview.py#L153), [paintEvent()](../src/ZenWidgets/component/container/stackview.py#L159) |
+
+### `src/ZenWidgets/component/developing/container.py`
+
+| Class | Direct bases | Direct methods (source order; links open definitions) |
+| --- | --- | --- |
+| [ZHContainer](../src/ZenWidgets/component/developing/container.py#L15) | `ZWidget` | [__init__()](../src/ZenWidgets/component/developing/container.py#L17), [widgets()](../src/ZenWidgets/component/developing/container.py#L36), [margins()](../src/ZenWidgets/component/developing/container.py#L38), [setMargins()](../src/ZenWidgets/component/developing/container.py#L40), [alignment()](../src/ZenWidgets/component/developing/container.py#L45), [setAlignment()](../src/ZenWidgets/component/developing/container.py#L47), [spacing()](../src/ZenWidgets/component/developing/container.py#L56) (2 overload declarations), [setSpacing()](../src/ZenWidgets/component/developing/container.py#L65) (2 overload declarations)<br>[isExpand()](../src/ZenWidgets/component/developing/container.py#L79), [setExpand()](../src/ZenWidgets/component/developing/container.py#L81), [isMinExpand()](../src/ZenWidgets/component/developing/container.py#L86), [setMinExpand()](../src/ZenWidgets/component/developing/container.py#L88), [usedSpace()](../src/ZenWidgets/component/developing/container.py#L93), [spareSpace()](../src/ZenWidgets/component/developing/container.py#L100), [adjustSize()](../src/ZenWidgets/component/developing/container.py#L105), [sizeHint()](../src/ZenWidgets/component/developing/container.py#L113)<br>[arrangeWidgets()](../src/ZenWidgets/component/developing/container.py#L129), [addWidget()](../src/ZenWidgets/component/developing/container.py#L180), [removeWidget()](../src/ZenWidgets/component/developing/container.py#L205), [eventFilter()](../src/ZenWidgets/component/developing/container.py#L224), [resizeEvent()](../src/ZenWidgets/component/developing/container.py#L229), [paintEvent()](../src/ZenWidgets/component/developing/container.py#L233) |
+| [ZVContainer](../src/ZenWidgets/component/developing/container.py#L240) | `ZWidget` | [__init__()](../src/ZenWidgets/component/developing/container.py#L242), [widgets()](../src/ZenWidgets/component/developing/container.py#L261), [margins()](../src/ZenWidgets/component/developing/container.py#L263), [setMargins()](../src/ZenWidgets/component/developing/container.py#L265), [alignment()](../src/ZenWidgets/component/developing/container.py#L270), [setAlignment()](../src/ZenWidgets/component/developing/container.py#L272), [spacing()](../src/ZenWidgets/component/developing/container.py#L281) (2 overload declarations), [setSpacing()](../src/ZenWidgets/component/developing/container.py#L290) (2 overload declarations)<br>[isExpand()](../src/ZenWidgets/component/developing/container.py#L304), [setExpand()](../src/ZenWidgets/component/developing/container.py#L306), [isMinExpand()](../src/ZenWidgets/component/developing/container.py#L311), [setMinExpand()](../src/ZenWidgets/component/developing/container.py#L313), [usedSpace()](../src/ZenWidgets/component/developing/container.py#L318), [spareSpace()](../src/ZenWidgets/component/developing/container.py#L325), [adjustSize()](../src/ZenWidgets/component/developing/container.py#L330), [sizeHint()](../src/ZenWidgets/component/developing/container.py#L338)<br>[arrangeWidgets()](../src/ZenWidgets/component/developing/container.py#L354), [addWidget()](../src/ZenWidgets/component/developing/container.py#L406), [removeWidget()](../src/ZenWidgets/component/developing/container.py#L428), [eventFilter()](../src/ZenWidgets/component/developing/container.py#L445), [resizeEvent()](../src/ZenWidgets/component/developing/container.py#L450), [paintEvent()](../src/ZenWidgets/component/developing/container.py#L454) |
+
+### `src/ZenWidgets/component/developing/densecontainer.py`
+
+| Class | Direct bases | Direct methods (source order; links open definitions) |
+| --- | --- | --- |
+| [ABCDenseContainer](../src/ZenWidgets/component/developing/densecontainer.py#L13) | `QWidget` | [__init__()](../src/ZenWidgets/component/developing/densecontainer.py#L14), [setUseMoveTo()](../src/ZenWidgets/component/developing/densecontainer.py#L24), [setAdjustWidgetsSize()](../src/ZenWidgets/component/developing/densecontainer.py#L27), [setShrinking()](../src/ZenWidgets/component/developing/densecontainer.py#L31), [setAlignCenter()](../src/ZenWidgets/component/developing/densecontainer.py#L35), [setAlignment()](../src/ZenWidgets/component/developing/densecontainer.py#L41), [alignment()](../src/ZenWidgets/component/developing/densecontainer.py#L44), [setSpacing()](../src/ZenWidgets/component/developing/densecontainer.py#L47)<br>[widgets()](../src/ZenWidgets/component/developing/densecontainer.py#L51), [get_widget_except_placeholders()](../src/ZenWidgets/component/developing/densecontainer.py#L55){staticmethod}, [__enter__()](../src/ZenWidgets/component/developing/densecontainer.py#L62), [__exit__()](../src/ZenWidgets/component/developing/densecontainer.py#L65) |
+| [ZHDenseContainer](../src/ZenWidgets/component/developing/densecontainer.py#L69) | `ABCDenseContainer` | [__init__()](../src/ZenWidgets/component/developing/densecontainer.py#L71), [addPlaceholder()](../src/ZenWidgets/component/developing/densecontainer.py#L77), [addWidget()](../src/ZenWidgets/component/developing/densecontainer.py#L84), [getUsedSpace()](../src/ZenWidgets/component/developing/densecontainer.py#L98), [getSpareSpace()](../src/ZenWidgets/component/developing/densecontainer.py#L106), [widgets()](../src/ZenWidgets/component/developing/densecontainer.py#L109), [removeWidget()](../src/ZenWidgets/component/developing/densecontainer.py#L120), [sizeHint()](../src/ZenWidgets/component/developing/densecontainer.py#L134)<br>[arrangeWidget()](../src/ZenWidgets/component/developing/densecontainer.py#L154), [resizeEvent()](../src/ZenWidgets/component/developing/densecontainer.py#L210), [adjustSize()](../src/ZenWidgets/component/developing/densecontainer.py#L214) |
+| [ZVDenseContainer](../src/ZenWidgets/component/developing/densecontainer.py#L229) | `ABCDenseContainer` | [__init__()](../src/ZenWidgets/component/developing/densecontainer.py#L232), [addPlaceholder()](../src/ZenWidgets/component/developing/densecontainer.py#L238), [addWidget()](../src/ZenWidgets/component/developing/densecontainer.py#L245), [sizeHint()](../src/ZenWidgets/component/developing/densecontainer.py#L259), [getUsedSpace()](../src/ZenWidgets/component/developing/densecontainer.py#L279), [getSpareSpace()](../src/ZenWidgets/component/developing/densecontainer.py#L287), [widgets()](../src/ZenWidgets/component/developing/densecontainer.py#L290), [removeWidget()](../src/ZenWidgets/component/developing/densecontainer.py#L301)<br>[arrangeWidget()](../src/ZenWidgets/component/developing/densecontainer.py#L315), [resizeEvent()](../src/ZenWidgets/component/developing/densecontainer.py#L371), [adjustSize()](../src/ZenWidgets/component/developing/densecontainer.py#L375) |
+
+### `src/ZenWidgets/component/developing/flowcontainer.py`
+
+| Class | Direct bases | Direct methods (source order; links open definitions) |
+| --- | --- | --- |
+| [ABCFlowContainer](../src/ZenWidgets/component/developing/flowcontainer.py#L15) | `QWidget` | [__init__()](../src/ZenWidgets/component/developing/flowcontainer.py#L16), [setSpacing()](../src/ZenWidgets/component/developing/flowcontainer.py#L23), [widgets()](../src/ZenWidgets/component/developing/flowcontainer.py#L29), [addWidget()](../src/ZenWidgets/component/developing/flowcontainer.py#L32), [removeWidget()](../src/ZenWidgets/component/developing/flowcontainer.py#L39), [arrangeWidgets()](../src/ZenWidgets/component/developing/flowcontainer.py#L61), [shuffle()](../src/ZenWidgets/component/developing/flowcontainer.py#L64), [swapByIndex()](../src/ZenWidgets/component/developing/flowcontainer.py#L68)<br>[insertToByIndex()](../src/ZenWidgets/component/developing/flowcontainer.py#L75), [regDraggableWidget()](../src/ZenWidgets/component/developing/flowcontainer.py#L87), [_on_widget_dragged()](../src/ZenWidgets/component/developing/flowcontainer.py#L100), [mouseReleaseEvent()](../src/ZenWidgets/component/developing/flowcontainer.py#L116), [resizeEvent()](../src/ZenWidgets/component/developing/flowcontainer.py#L121), [paintEvent()](../src/ZenWidgets/component/developing/flowcontainer.py#L126) |
+| [ZFlowContainer](../src/ZenWidgets/component/developing/flowcontainer.py#L134) | `ABCFlowContainer` | [__init__()](../src/ZenWidgets/component/developing/flowcontainer.py#L135), [adjustSize()](../src/ZenWidgets/component/developing/flowcontainer.py#L140), [setLineHeight()](../src/ZenWidgets/component/developing/flowcontainer.py#L143), [arrangeWidgets()](../src/ZenWidgets/component/developing/flowcontainer.py#L148), [sizeHint()](../src/ZenWidgets/component/developing/flowcontainer.py#L191) |
+| [ZMasonryContainer](../src/ZenWidgets/component/developing/flowcontainer.py#L195) | `ABCFlowContainer` | [__init__()](../src/ZenWidgets/component/developing/flowcontainer.py#L196), [setAutoAdjustColumnAmount()](../src/ZenWidgets/component/developing/flowcontainer.py#L203), [setColumns()](../src/ZenWidgets/component/developing/flowcontainer.py#L206), [setColumnWidth()](../src/ZenWidgets/component/developing/flowcontainer.py#L209), [arrangeWidgets()](../src/ZenWidgets/component/developing/flowcontainer.py#L212), [adjustColumnAmount()](../src/ZenWidgets/component/developing/flowcontainer.py#L245), [calculateColumnAmount()](../src/ZenWidgets/component/developing/flowcontainer.py#L255), [adjustSize()](../src/ZenWidgets/component/developing/flowcontainer.py#L260)<br>[resizeEvent()](../src/ZenWidgets/component/developing/flowcontainer.py#L264) |
 
 ### `src/ZenWidgets/component/dialogs/dialog.py`
 
@@ -662,19 +670,6 @@ Index totals: **120 tracked Python files, 224 classes, 1675 direct method defini
 | [ZThemeMode](../src/ZenWidgets/gui/theme.py#L19) | `IntEnum` | - |
 | [ZThemeManager](../src/ZenWidgets/gui/theme.py#L24) | `QObject` | [__init__()](../src/ZenWidgets/gui/theme.py#L26), [_start_monitoring()](../src/ZenWidgets/gui/theme.py#L36), [_stop_monitoring_internal()](../src/ZenWidgets/gui/theme.py#L46), [_monitor_theme()](../src/ZenWidgets/gui/theme.py#L53), [isDarkTheme()](../src/ZenWidgets/gui/theme.py#L69), [isLightTheme()](../src/ZenWidgets/gui/theme.py#L71), [getTheme()](../src/ZenWidgets/gui/theme.py#L73), [getThemeName()](../src/ZenWidgets/gui/theme.py#L75)<br>[setTheme()](../src/ZenWidgets/gui/theme.py#L77), [toggleTheme()](../src/ZenWidgets/gui/theme.py#L87), [updateStyle()](../src/ZenWidgets/gui/theme.py#L91), [setThemeMode()](../src/ZenWidgets/gui/theme.py#L93), [getSystemTheme()](../src/ZenWidgets/gui/theme.py#L106){staticmethod}, [cleanup()](../src/ZenWidgets/gui/theme.py#L116) |
 
-### `zen_PortableBox/appitem.py`
-
-| Class | Direct bases | Direct methods (source order; links open definitions) |
-| --- | --- | --- |
-| [AppIconItemColorData](../zen_PortableBox/appitem.py#L10) | `ZColorData` | - |
-| [AppIconItem](../zen_PortableBox/appitem.py#L29) | `ZToggleWidget` | [__init__()](../zen_PortableBox/appitem.py#L37), [_init_color_data_()](../zen_PortableBox/appitem.py#L62), [_color_data_change_handler_()](../zen_PortableBox/appitem.py#L73), [_init_style_()](../zen_PortableBox/appitem.py#L84), [_mouse_enter_()](../zen_PortableBox/appitem.py#L87), [_mouse_leave_()](../zen_PortableBox/appitem.py#L90), [_toggle_()](../zen_PortableBox/appitem.py#L93), [_parse_exe_icon()](../zen_PortableBox/appitem.py#L99)<br>[_init_context_menu()](../zen_PortableBox/appitem.py#L113), [open_exe()](../zen_PortableBox/appitem.py#L124), [sizeHint()](../zen_PortableBox/appitem.py#L132), [paintEvent()](../zen_PortableBox/appitem.py#L139), [mouseDoubleClickEvent()](../zen_PortableBox/appitem.py#L167), [contextMenuEvent()](../zen_PortableBox/appitem.py#L173), [focusInEvent()](../zen_PortableBox/appitem.py#L177), [focusOutEvent()](../zen_PortableBox/appitem.py#L181) |
-
-### `zen_PortableBox/main.py`
-
-| Class | Direct bases | Direct methods (source order; links open definitions) |
-| --- | --- | --- |
-| [PortableBox](../zen_PortableBox/main.py#L8) | `ZStandardFramelessWindow` | [__init__()](../zen_PortableBox/main.py#L9), [setupUi()](../zen_PortableBox/main.py#L14), [_select_Change_handler()](../zen_PortableBox/main.py#L65), [resizeEvent()](../zen_PortableBox/main.py#L68) |
-
 ### `zen_bieganmao/main.py`
 
 | Class | Direct bases | Direct methods (source order; links open definitions) |
@@ -686,6 +681,19 @@ Index totals: **120 tracked Python files, 224 classes, 1675 direct method defini
 | Class | Direct bases | Direct methods (source order; links open definitions) |
 | --- | --- | --- |
 | [PopupMessage](../zen_bieganmao/popupmessage.py#L9) | `ZWidget` | [__init__()](../zen_bieganmao/popupmessage.py#L13), [change_color()](../zen_bieganmao/popupmessage.py#L28), [parent()](../zen_bieganmao/popupmessage.py#L35), [sizeHint()](../zen_bieganmao/popupmessage.py#L38), [paintEvent()](../zen_bieganmao/popupmessage.py#L41), [mousePressEvent()](../zen_bieganmao/popupmessage.py#L55) |
+
+### `zen_PortableBox/appitem.py`
+
+| Class | Direct bases | Direct methods (source order; links open definitions) |
+| --- | --- | --- |
+| [AppIconItemColorData](../zen_PortableBox/appitem.py#L10) | `ZColorData` | - |
+| [AppIconItem](../zen_PortableBox/appitem.py#L29) | `ZToggleWidget` | [__init__()](../zen_PortableBox/appitem.py#L37), [_init_color_data_()](../zen_PortableBox/appitem.py#L62), [_color_data_change_handler_()](../zen_PortableBox/appitem.py#L73), [_init_style_()](../zen_PortableBox/appitem.py#L84), [_mouse_enter_()](../zen_PortableBox/appitem.py#L87), [_mouse_leave_()](../zen_PortableBox/appitem.py#L90), [_toggle_()](../zen_PortableBox/appitem.py#L93), [_parse_exe_icon()](../zen_PortableBox/appitem.py#L99)<br>[_init_context_menu()](../zen_PortableBox/appitem.py#L113), [open_exe()](../zen_PortableBox/appitem.py#L124), [sizeHint()](../zen_PortableBox/appitem.py#L132), [paintEvent()](../zen_PortableBox/appitem.py#L139), [mouseDoubleClickEvent()](../zen_PortableBox/appitem.py#L167), [contextMenuEvent()](../zen_PortableBox/appitem.py#L173), [focusInEvent()](../zen_PortableBox/appitem.py#L177), [focusOutEvent()](../zen_PortableBox/appitem.py#L181) |
+
+### `zen_PortableBox/main.py`
+
+| Class | Direct bases | Direct methods (source order; links open definitions) |
+| --- | --- | --- |
+| [PortableBox](../zen_PortableBox/main.py#L8) | `ZStandardFramelessWindow` | [__init__()](../zen_PortableBox/main.py#L9), [setupUi()](../zen_PortableBox/main.py#L14), [_select_Change_handler()](../zen_PortableBox/main.py#L62) |
 
 ### `zen_widget_gallery/card_weblink.py`
 
@@ -735,7 +743,7 @@ Index totals: **120 tracked Python files, 224 classes, 1675 direct method defini
 
 | Class | Direct bases | Direct methods (source order; links open definitions) |
 | --- | --- | --- |
-| [PanelInfo](../zen_widget_gallery/panel_info.py#L6) | `ZPanel` | [__init__()](../zen_widget_gallery/panel_info.py#L7), [_setup_ui()](../zen_widget_gallery/panel_info.py#L13), [_on_target_enter()](../zen_widget_gallery/panel_info.py#L105), [_on_target_leave()](../zen_widget_gallery/panel_info.py#L140) |
+| [PanelInfo](../zen_widget_gallery/panel_info.py#L6) | `ZPanel` | [__init__()](../zen_widget_gallery/panel_info.py#L7), [_setup_ui()](../zen_widget_gallery/panel_info.py#L13), [_on_target_enter()](../zen_widget_gallery/panel_info.py#L106), [_on_target_leave()](../zen_widget_gallery/panel_info.py#L141) |
 
 ### `zen_widget_gallery/panel_settings.py`
 
