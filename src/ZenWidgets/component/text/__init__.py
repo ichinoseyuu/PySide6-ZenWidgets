@@ -1,5 +1,6 @@
 from .headline import ZHeadLine
 from .textblock import ZTextBlock
-from .lineedit import ZInputControl, ZTextInput, ZLineEdit, ZSearchEdit
-from .loginedit import ZPasswordEdit, ZLoginEdit
-from .numberedit import ZNumericEdit, ZNumberEdit
+from .lineedit import ZLineEdit, ZSearchEdit
+from .passwordedit import ZPasswordEdit
+from .numbericedit import ZNumericEdit
+from .inputfilter import TextFilter, ZTextFilter

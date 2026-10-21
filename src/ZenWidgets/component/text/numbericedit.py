@@ -1,19 +1,23 @@
-from PySide6.QtCore import Signal,QSize
+from PySide6.QtCore import Signal,QSize,Qt
 from PySide6.QtGui import QFont,QWheelEvent,QColor
 from ZenWidgets.component.base import (
     ZColorController,
     ZWidget,
 )
 from ZenWidgets.component.text.lineedit import ZLineEdit
+from ZenWidgets.component.input.repeatbutton import ZRepeatButton
+from ZenWidgets.core import ZGlobal
 
 from ZenWidgets.gui import (
     ZColorData,
     ZColorDataKey,
     ZPalette,
+    ZButtonStyle,
     colordata_provider
 )
+from .inputfilter import TextFilter
 
-class ZNumberEditColorData(ZColorData):
+class ZNumericEditColorData(ZColorData):
     Body: QColor
     BodyFocused: QColor
     Border: QColor
@@ -49,14 +53,12 @@ colordata = {
     }
 }
 
-@colordata_provider(name='ZNumberEdit', datamap=colordata, classtype=ZNumberEditColorData)
+@colordata_provider(name='ZNumericEdit', datamap=colordata, classtype=ZNumericEditColorData)
 
 class ZNumericEdit(ZLineEdit):
-    textChanged = Signal(str)
-
-    colorDataCtrl: ZColorController[ZNumberEditColorData]
+    colorDataCtrl: ZColorController[ZNumericEditColorData]
     __controllers_kwargs__ = {
-        'colorDataCtrl': {'key': 'ZNumberEdit'},
+        'colorDataCtrl': {'key': 'ZNumericEdit'},
     }
 
     def __init__(self,
@@ -70,12 +72,14 @@ class ZNumericEdit(ZLineEdit):
                  allow_negative: bool = False,
                  minimumSize: QSize = QSize(200, 30),
                  objectName: str | None = None,
+                 input_filter: TextFilter | None = None,
                  ):
         super().__init__(parent=parent,
-                 text=text,
+             text="",
                          objectName=objectName,
                          minimumSize=minimumSize,
-                         font=font
+                         font=font,
+                         input_filter=input_filter,
                          )
         self._allow_decimal = allow_decimal
         self._integer_digits = integer_digits
@@ -83,6 +87,83 @@ class ZNumericEdit(ZLineEdit):
         self._allow_negative = allow_negative
         self._step = step
         self._select_all_on_focus = True
+        self.setText(text)
+        self._cursor_pos = len(self._text)
+        self._pressed_step_button = None
+        self._repeat_happened = False
+        self._repeat_start_state = None
+        self._skip_release_click = False
+        self._decrease_button = ZRepeatButton(
+            self,
+            icon=ZGlobal.iconPack.toIcon('ic_fluent_chevron_down_filled', QSize(16, 16)),
+            icon_size=QSize(16, 16),
+            style=ZButtonStyle.Flat,
+            interval=100,
+            delay=400,
+            toolTip='减少数值',
+        )
+        self._increase_button = ZRepeatButton(
+            self,
+            icon=ZGlobal.iconPack.toIcon('ic_fluent_chevron_up_filled', QSize(16, 16)),
+            icon_size=QSize(16, 16),
+            style=ZButtonStyle.Flat,
+            interval=100,
+            delay=400,
+            toolTip='增加数值',
+        )
+        self._decrease_button.setFixedSize(QSize(26, 26))
+        self._increase_button.setFixedSize(QSize(26, 26))
+        for button in (self._decrease_button, self._increase_button):
+            button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            button.pressed.connect(self._begin_step_press_)
+            button.clicked.connect(self._handle_step_click_)
+            button.released.connect(self._finish_step_press_)
+        self._set_action_buttons_(self._decrease_button, self._increase_button)
+
+    def _begin_step_press_(self) -> None:
+        self._pressed_step_button = self.sender()
+        self._repeat_happened = False
+        self._repeat_start_state = (self._text, self._cursor_pos)
+        self._skip_release_click = False
+
+    def _handle_step_click_(self) -> None:
+        button = self.sender()
+        if button is self._pressed_step_button and button.isPressed():
+            self._repeat_happened = True
+            self._apply_step_(button, auto_repeat=True)
+            return
+        if self._skip_release_click:
+            self._skip_release_click = False
+            return
+        self._apply_step_(button)
+
+    def _apply_step_(self, button: ZRepeatButton, auto_repeat: bool = False) -> None:
+        if button is self._increase_button:
+            self.increase(auto_repeat=auto_repeat)
+        else:
+            self.decrease(auto_repeat=auto_repeat)
+
+    def _finish_step_press_(self) -> None:
+        button = self.sender()
+        if button is not self._pressed_step_button:
+            return
+        if self._repeat_happened and self._repeat_start_state:
+            if self._undo_timer.isActive():
+                self._undo_timer.stop()
+                if self._pending_undo and self._pending_undo[0] == self._pending_undo[1]:
+                    self._pending_undo = None
+                else:
+                    self._commit_undo()
+            if self._text != self._repeat_start_state[0]:
+                self._redo_stack.clear()
+                self._push_undo(
+                    self._repeat_start_state[0], self._text,
+                    self._repeat_start_state[1], self._cursor_pos,
+                )
+            self._skip_release_click = True
+        self._pressed_step_button = None
+        self._repeat_happened = False
+        self._repeat_start_state = None
 
     def value(self) -> float|int:
         try:
@@ -96,8 +177,7 @@ class ZNumericEdit(ZLineEdit):
     def setIntegerDigits(self, v: int) -> None:
         if v > 0 and self._integer_digits != v:
             self._integer_digits = v
-            self._text = self._validate_text(self._text)
-            self.update()
+            self.setText(self._text)
 
     def decimalPlaces(self) -> int:
         return self._decimal_places
@@ -105,8 +185,7 @@ class ZNumericEdit(ZLineEdit):
     def setDecimalPlaces(self, v: int) -> None:
         if v >= 0 and self._decimal_places != v:
             self._decimal_places = v
-            self._text = self._validate_text(self._text)
-            self.update()
+            self.setText(self._text)
 
     def allowNegative(self) -> bool:
         return self._allow_negative
@@ -115,11 +194,11 @@ class ZNumericEdit(ZLineEdit):
         if self._allow_negative != v:
             self._allow_negative = v
             # 如果不允许负数，清除可能存在的负号
-            if not v and self._text.startswith('-'):
-                self._text = self._text[1:]
+            text = self._text
+            if not v and text.startswith('-'):
+                text = text[1:]
                 self._cursor_pos = max(0, self._cursor_pos - 1)
-            self._text = self._validate_text(self._text)
-            self.update()
+            self.setText(text)
 
     def increase(self, auto_repeat=False):
         """按步长增加数值"""
@@ -164,9 +243,6 @@ class ZNumericEdit(ZLineEdit):
             new_value = base_value - self._step
             new_text = str(new_value) if self._allow_decimal else str(int(new_value))
             self._insert_text(new_text, auto_repeat)
-
-    def _emit_text_changed(self) -> None:
-        self.textChanged.emit(self.text())
 
     def _validate_text(self, text: str) -> str:
         if not text: return ""
@@ -220,15 +296,27 @@ class ZNumericEdit(ZLineEdit):
 
         return validated
 
-    def _filter_valid_chars(self, text: str) -> str:
+    def _filter_valid_chars(self,
+                            text: str,
+                            start: int | None = None,
+                            end: int | None = None,
+                            ) -> str:
         """过滤文本中有效的字符"""
+        if start is None or end is None:
+            if self._is_selection():
+                start, end = self._get_selection_range()
+            else:
+                start = end = self._cursor_pos
+        text = super()._filter_valid_chars(text, start, end)
         valid_chars = set('0123456789')
         if self._allow_decimal:
             valid_chars.add('.')
-        # 只有允许负数时，才允许在开头添加负号
-        if self._allow_negative and (not self._text or self._cursor_pos == 0):
-            valid_chars.add('-')
-        return ''.join([c for c in text if c in valid_chars])
+        allow_negative = self._allow_negative and not self._text[:start]
+        filtered = []
+        for index, char in enumerate(text):
+            if char in valid_chars or (char == '-' and allow_negative and index == 0):
+                filtered.append(char)
+        return ''.join(filtered)
 
     def wheelEvent(self, event: QWheelEvent):
         super().wheelEvent(event)
@@ -239,9 +327,6 @@ class ZNumericEdit(ZLineEdit):
             else:
                 self.decrease()
         event.accept()
-
-# Preserve the original public name.
-ZNumberEdit = ZNumericEdit
 
 # import sys
 # if __name__ == '__main__':

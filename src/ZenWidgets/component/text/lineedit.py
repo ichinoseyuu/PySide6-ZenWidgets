@@ -8,18 +8,18 @@ from ZenWidgets.component.base import (
     ZColorController,
     ZWidget
 )
-from ZenWidgets.core import ZDebug,ZPadding,ZTextSnapshot
+from ZenWidgets.core import ZDebug,ZPadding,ZTextSnapshot,ZGlobal
 
 from ZenWidgets.gui import (
     ZColorData,
     ZColorDataKey,
     ZPalette,
+    ZButtonStyle,
     colordata_provider
 )
 
-class ZInputControl(ZWidget):
-    """文本输入控件的公共基类。"""
-    editingFinished = Signal()
+from ZenWidgets.component.input.button import ZButton
+from .inputfilter import TextFilter
 
 class ZLineEditColorData(ZColorData):
     Body: QColor
@@ -58,7 +58,10 @@ colordata = {
 }
 
 @colordata_provider(name='ZLineEdit', datamap=colordata, classtype=ZLineEditColorData)
-class ZTextInput(ZInputControl):
+class ZLineEdit(ZWidget):
+    textChanged = Signal(str)
+    editingFinished = Signal()
+
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
@@ -84,6 +87,7 @@ class ZTextInput(ZInputControl):
                  selectable: bool = True,
                  minimumSize: QSize = QSize(200, 30),
                  objectName: str | None = None,
+                 input_filter: TextFilter | None = None,
                  ):
         super().__init__(parent=parent,
                          objectName=objectName,
@@ -93,7 +97,8 @@ class ZTextInput(ZInputControl):
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus if read_only else Qt.FocusPolicy.StrongFocus)
         self.setAttribute(Qt.WidgetAttribute.WA_InputMethodEnabled)
 
-        self._text = text
+        self._input_filter = input_filter
+        self._text = self._apply_input_filter_("", 0, 0, text)
         self._placeholder = placeholder
         self._selected_text = ""
         self._preedit_text = ""
@@ -108,6 +113,10 @@ class ZTextInput(ZInputControl):
         self._select_all_on_focus = False
 
         self._padding = ZPadding(6, 6, 6, 6)
+        self._base_padding = ZPadding(self._padding)
+        self._action_buttons = []
+        self._action_button_spacing = 1
+        self._action_button_margin = 2
         self._alignment = Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
         self._text_offset = 0
 
@@ -127,10 +136,24 @@ class ZTextInput(ZInputControl):
     def text(self) -> str: return self._text
 
     def setText(self, t: str) -> None:
-        self._text = t or ""
+        old_text = self._text
+        self._text = self._validate_text(
+            self._filter_valid_chars(t or "", 0, len(old_text))
+        )
         self._cursor_pos = min(self._cursor_pos, len(self._text))
         self.adjustSize()
         self.update()
+        if self._text != old_text:
+            self._emit_text_changed()
+
+    def inputFilter(self) -> TextFilter | None:
+        return self._input_filter
+
+    def setInputFilter(self, input_filter: TextFilter | None) -> None:
+        if self._input_filter is input_filter:
+            return
+        self._input_filter = input_filter
+        self.setText(self._text)
 
     def selectedText(self) -> str: return self._selected_text
 
@@ -165,6 +188,43 @@ class ZTextInput(ZInputControl):
     def adjustSize(self):
         self.resize(self.sizeHint())
 
+    def _set_action_buttons_(self, *buttons) -> None:
+        self._action_buttons = list(buttons)
+        self._update_action_button_padding_()
+        self.resized.connect(self._layout_action_buttons_)
+        self._layout_action_buttons_()
+        self.adjustSize()
+
+    def _update_action_button_padding_(self) -> None:
+        visible_buttons = [
+            button for button in self._action_buttons
+            if button.property('_zen_action_visible') is not False
+        ]
+        button_width = sum(button.width() for button in visible_buttons)
+        spacing = self._action_button_spacing * max(0, len(visible_buttons) - 1)
+        margins = self._action_button_margin * 2 if visible_buttons else 0
+        self._padding = ZPadding(
+            self._base_padding.left,
+            self._base_padding.top,
+            self._base_padding.right + button_width + spacing + margins,
+            self._base_padding.bottom,
+        )
+
+    def _layout_action_buttons_(self, _size: QSize | None = None) -> None:
+        x = self.width() - self._base_padding.right - self._action_button_margin
+        visible_buttons = [
+            button for button in self._action_buttons
+            if button.property('_zen_action_visible') is not False
+        ]
+        for button in reversed(visible_buttons):
+            x -= button.width()
+            button.move(x, (self.height() - button.height()) // 2)
+            x -= self._action_button_spacing
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._layout_action_buttons_()
+
     # region private method
     def _init_color_data_(self):
         data = self.colorDataCtrl.data
@@ -196,14 +256,36 @@ class ZTextInput(ZInputControl):
         else:
             self.cursorColorCtrl.toOpaque()
 
-    def _filter_valid_chars(self, text: str) -> str:
-        return text
+    def _filter_valid_chars(self,
+                            text: str,
+                            start: int | None = None,
+                            end: int | None = None,
+                            ) -> str:
+        if start is None or end is None:
+            if self._is_selection():
+                start, end = self._get_selection_range()
+            else:
+                start = end = self._cursor_pos
+        return self._apply_input_filter_(self._text, start, end, text)
+
+    def _apply_input_filter_(self,
+                             current_text: str,
+                             start: int,
+                             end: int,
+                             text: str,
+                             ) -> str:
+        if self._input_filter is None:
+            return text
+        filtered = self._input_filter(current_text, start, end, text)
+        if not isinstance(filtered, str):
+            raise TypeError('input_filter must return str')
+        return filtered
 
     def _validate_text(self, text: str) -> str:
         return text
 
     def _emit_text_changed(self) -> None:
-        pass
+        self.textChanged.emit(self.text())
 
     def _format_text_for_display(self, text: str) -> str:
         return text
@@ -259,7 +341,8 @@ class ZTextInput(ZInputControl):
     def _commit_undo(self):
         if self._pending_undo:
             old_text, new_text, old_pos, new_pos = self._pending_undo
-            self._push_undo(old_text, new_text, old_pos, new_pos)
+            if old_text != new_text:
+                self._push_undo(old_text, new_text, old_pos, new_pos)
             self._pending_undo = None
 
     def _cut(self):
@@ -280,7 +363,10 @@ class ZTextInput(ZInputControl):
 
     def _paste(self, event: QKeyEvent):
         text = QApplication.clipboard().text()
-        text = self._filter_valid_chars(text)
+        start, end = self._get_selection_range() if self._is_selection() else (
+            self._cursor_pos, self._cursor_pos
+        )
+        text = self._filter_valid_chars(text, start, end)
         if not text: return
         old, oldpos = self._text, self._cursor_pos
         if self._is_selection():
@@ -343,7 +429,10 @@ class ZTextInput(ZInputControl):
         self._emit_text_changed()
 
     def _insert_text(self, text: str, auto_repeat=False):
-        text = self._filter_valid_chars(text)
+        start, end = self._get_selection_range() if self._is_selection() else (
+            self._cursor_pos, self._cursor_pos
+        )
+        text = self._filter_valid_chars(text, start, end)
         if not text: return
         old, oldpos = self._text, self._cursor_pos
         if self._is_selection():
@@ -600,7 +689,10 @@ class ZTextInput(ZInputControl):
             return
         if event.commitString():
             old, oldpos = self._text, self._cursor_pos
-            c = self._filter_valid_chars(event.commitString())
+            start, end = self._get_selection_range() if self._is_selection() else (
+                self._cursor_pos, self._cursor_pos
+            )
+            c = self._filter_valid_chars(event.commitString(), start, end)
             if c and self._is_selection():
                 s, e = self._get_selection_range()
                 self._text = self._validate_text(self._text[:s] + c + self._text[e:])
@@ -720,16 +812,28 @@ class ZTextInput(ZInputControl):
         self.opacityEffectCtrl.toTransparent()
 
 
-class ZLineEdit(ZTextInput):
-    """标准单行文本输入框。"""
-    pass
 
 
+# region ZSearchEdit
 class ZSearchEdit(ZLineEdit):
     searchRequested = Signal(str)
 
     def __init__(self, *args, placeholder: str = "Search", **kwargs):
         super().__init__(*args, placeholder=placeholder, **kwargs)
+        self._search_button = ZButton(
+            self,
+            icon=ZGlobal.iconPack.toIcon('ic_fluent_search_regular', QSize(16, 16)),
+            icon_size=QSize(16, 16),
+            style=ZButtonStyle.Flat,
+            toolTip='搜索',
+        )
+        self._search_button.setFixedSize(QSize(26, 26))
+        self._search_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self._search_button.clicked.connect(self._emit_search_requested_)
+        self._set_action_buttons_(self._search_button)
+
+    def _emit_search_requested_(self) -> None:
+        self.searchRequested.emit(self.text())
 
     def clear(self) -> None:
         self.setText("")
@@ -737,7 +841,7 @@ class ZSearchEdit(ZLineEdit):
     def keyPressEvent(self, event: QKeyEvent):
         super().keyPressEvent(event)
         if event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
-            self.searchRequested.emit(self.text())
+            self._emit_search_requested_()
 
 # import sys
 # if __name__ == '__main__':

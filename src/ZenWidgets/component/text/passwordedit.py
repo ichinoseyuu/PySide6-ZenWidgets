@@ -1,19 +1,23 @@
 from PySide6.QtWidgets import QApplication,QWidget,QVBoxLayout
-from PySide6.QtCore import Signal,QSize
+from PySide6.QtCore import Signal,QSize,Qt
 from PySide6.QtGui import QFont,QColor
+from ZenWidgets.component.input.button import ZButton
 from ZenWidgets.component.base import (
     ZColorController,
     ZWidget,
 )
 from ZenWidgets.component.text.lineedit import ZLineEdit
+from ZenWidgets.core import ZGlobal
+from ZenWidgets.gui import ZButtonStyle
 from ZenWidgets.gui import (
     ZColorData,
     ZColorDataKey,
     ZPalette,
     colordata_provider
 )
+from .inputfilter import TextFilter, ZTextFilter
 
-class ZLoginEditColorData(ZColorData):
+class ZPasswordEditColorData(ZColorData):
     Body: QColor
     BodyFocused: QColor
     Border: QColor
@@ -49,101 +53,77 @@ colordata = {
     }
 }
 
-@colordata_provider(name='ZLoginEdit', datamap=colordata, classtype=ZLoginEditColorData)
+@colordata_provider(name='ZPasswordEdit', datamap=colordata, classtype=ZPasswordEditColorData)
 class ZPasswordEdit(ZLineEdit):
     valueChanged = Signal(str)
 
-    colorDataCtrl: ZColorController[ZLoginEditColorData]
+    colorDataCtrl: ZColorController[ZPasswordEditColorData]
     __controllers_kwargs__ = {
-        'colorDataCtrl': {'key': 'ZLoginEdit'},
+        'colorDataCtrl': {'key': 'ZPasswordEdit'},
     }
     def __init__(self,
                  parent: ZWidget | None = None,
                  text: str = '',
                  font: QFont = QFont('Microsoft YaHei', 9),
-                 digits: int = 0,
                  is_masked = True,
-                 allow_characters = True,
                  minimumSize: QSize = QSize(200, 30),
                  objectName: str | None = None,
+                 input_filter: TextFilter | None = None,
                  ):
+        password_filter = ZTextFilter.printableOnly()
+        if input_filter is not None:
+            password_filter = ZTextFilter.compose(password_filter, input_filter)
         super().__init__(parent=parent,
-                         text=text,
+                         text="",
                          objectName=objectName,
                          minimumSize=minimumSize,
-                         font=font
+                         font=font,
+                         input_filter=password_filter,
                          )
-        self._digits = digits
         self._is_masked = is_masked
-        self._allow_characters = allow_characters
+        self.setText(text)
         self._cursor_pos = len(self._text)
+        self._visibility_button = ZButton(
+            self,
+            icon_size=QSize(16, 16),
+            style=ZButtonStyle.Flat,
+            toolTip='显示密码',
+        )
+        self._visibility_button.setFixedSize(QSize(26, 26))
+        self._visibility_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self._visibility_button.clicked.connect(self._toggle_password_visibility_)
+        self._set_action_buttons_(self._visibility_button)
+        self._update_visibility_button_()
 
-    # region input policy
-    def _validate_text(self, text: str) -> str:
-        if text is None:
-            return ""
-        # 保留所有允许字符（类型过滤在 _filter_valid_chars 中已做），这里只负责长度限制
-        if self._digits is None or self._digits <= 0:
-            return text
-        # 截断到最大位数
-        return text[: self._digits]
+    def _toggle_password_visibility_(self) -> None:
+        self._is_masked = not self._is_masked
+        self._update_visibility_button_()
+        self.update()
 
-    def _filter_valid_chars(self, text: str) -> str:
-        """过滤文本中有效的字符"""
-        if not text:
-            return ""
-        out_chars = []
-        for ch in text:
-            # 跳过控制字符
-            if ch in ("\n", "\r", "\t"):
-                continue
-            # 当不允许字符输入时，只保留数字
-            if not self._allow_characters:
-                if ch.isdigit():
-                    out_chars.append(ch)
-            else:
-                # 允许所有可见字符（排除非打印字符）
-                # 简单判断：使用 isprintable()
-                if ch.isprintable():
-                    out_chars.append(ch)
-        return "".join(out_chars)
+    def _update_visibility_button_(self) -> None:
+        icon_name = 'ic_fluent_eye_regular' if self._is_masked else 'ic_fluent_eye_off_regular'
+        tooltip = '显示密码' if self._is_masked else '隐藏密码'
+        self._visibility_button.setIcon(ZGlobal.iconPack.toIcon(icon_name, QSize(16, 16)))
+        self._visibility_button.setToolTip(tooltip)
+        self._visibility_button.setProperty('_zen_action_visible', True)
+        self._visibility_button.show()
+        self._update_action_button_padding_()
+        self._layout_action_buttons_()
 
     def _format_text_for_display(self, text: str) -> str:
         return "•" * len(text) if self._is_masked else text
 
     def _emit_text_changed(self) -> None:
+        super()._emit_text_changed()
         self.valueChanged.emit(self.text())
-
-class ZLoginEdit(ZPasswordEdit):
-    """兼容旧名称，默认不遮罩文本。"""
-
-    def __init__(self,
-                 parent: ZLineEdit | None = None,
-                 text: str = '',
-                 font: QFont = QFont('Microsoft YaHei', 9),
-                 digits: int = 0,
-                 is_masked: bool = False,
-                 allow_characters: bool = True,
-                 minimumSize: QSize = QSize(200, 30),
-                 objectName: str | None = None,
-                 ):
-        super().__init__(parent=parent,
-                         text=text,
-                         font=font,
-                         digits=digits,
-                         is_masked=is_masked,
-                         allow_characters=allow_characters,
-                         minimumSize=minimumSize,
-                         objectName=objectName)
-
 import sys
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = QWidget()
     layout = QVBoxLayout()
     window.setLayout(layout)
-    edit = ZLoginEdit(window,allow_characters=False)
-    edit2 = ZLoginEdit(window,is_masked=True)
+    edit = ZPasswordEdit(window)
+    edit2 = ZPasswordEdit(window, is_masked=False)
     layout.addWidget(edit)
     layout.addWidget(edit2)
     # edit.valueChanged.connect(print)

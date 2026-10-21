@@ -451,11 +451,24 @@ class PanelWidget(ZPanel):
         )
         container.addWidget(self.lineedit_4)
 
-        # region ZLoginEdit
+        # region ZSearchEdit
         card = ZCard(self)
         scrollview.layout().addWidget(card)
 
-        title = ZHeadLine(card, text= 'ZLoginEdit')
+        title = ZHeadLine(card, text= 'ZSearchEdit')
+        title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
+        card.layout().addWidget(title)
+
+        container = ZVBoxLayout()
+        card.layout().addLayout(container)
+        self.search_edit_1 = ZSearchEdit(card, placeholder = '请输入搜索内容')
+        container.addWidget(self.search_edit_1)
+
+        # region ZPasswordEdit
+        card = ZCard(self)
+        scrollview.layout().addWidget(card)
+
+        title = ZHeadLine(card, text= 'ZPasswordEdit')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
         card.layout().addWidget(title)
 
@@ -468,7 +481,13 @@ class PanelWidget(ZPanel):
         title_account = ZHeadLine(card, text= '账号:')
         container_sub.addWidget(title_account)
 
-        self.login_edit_1 = ZLoginEdit(card, allow_characters=False)
+        self.login_edit_1 = ZLineEdit(
+            card,
+            input_filter=ZTextFilter.compose(
+                ZTextFilter.digitsOnly(),
+                ZTextFilter.maxLength(20),
+            ),
+        )
         container_sub.addWidget(self.login_edit_1)
 
         container_sub = ZHBoxLayout()
@@ -477,21 +496,24 @@ class PanelWidget(ZPanel):
         title_password = ZHeadLine(card, text= '密码:')
         container_sub.addWidget(title_password)
 
-        self.login_edit_2 = ZLoginEdit(card, is_masked=True)
+        self.login_edit_2 = ZPasswordEdit(
+            card,
+            input_filter=ZTextFilter.maxLength(32),
+        )
         container_sub.addWidget(self.login_edit_2)
 
-        # region ZNumberEdit
+        # region ZNumericEdit
         card = ZCard(self)
         scrollview.layout().addWidget(card)
 
-        title = ZHeadLine(card, text= 'ZNumberEdit')
+        title = ZHeadLine(card, text= 'ZNumericEdit')
         title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
         card.layout().addWidget(title)
 
         container = ZVBoxLayout()
         card.layout().addLayout(container)
-        self.number_edit_1 = ZNumberEdit(card)
+        self.number_edit_1 = ZNumericEdit(card)
         container.addWidget(self.number_edit_1)
 
-        self.number_edit_2 = ZNumberEdit(card, allow_negative=True, allow_decimal=True)
+        self.number_edit_2 = ZNumericEdit(card, allow_negative=True, allow_decimal=True)
         container.addWidget(self.number_edit_2)

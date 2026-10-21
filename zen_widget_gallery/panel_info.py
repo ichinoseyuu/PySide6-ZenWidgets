@@ -62,16 +62,16 @@ class PanelInfo(ZPanel):
         self.headline_4 = ZHeadLine(card, text='隐藏时间：')
         hcontainer_3.addWidget(self.headline_4)
 
-        self.numberedit_1 = ZNumberEdit(card,integer_digits=4,step=500,minimumSize=QSize(100, 30))
+        self.numberedit_1 = ZNumericEdit(card,integer_digits=4,step=500,minimumSize=QSize(100, 30))
         hcontainer_3.addWidget(self.numberedit_1)
 
         self.headline_5 = ZHeadLine(card, text='位置偏移：')
         hcontainer_3.addWidget(self.headline_5)
 
-        self.numberedit_2 = ZNumberEdit(card,text='6',integer_digits=2,step=1,allow_negative=True,minimumSize=QSize(100, 30))
+        self.numberedit_2 = ZNumericEdit(card,text='6',integer_digits=2,step=1,allow_negative=True,minimumSize=QSize(100, 30))
         hcontainer_3.addWidget(self.numberedit_2)
 
-        self.numberedit_3 = ZNumberEdit(card,text='6',integer_digits=2,step=1,allow_negative=True,minimumSize=QSize(100, 30))
+        self.numberedit_3 = ZNumericEdit(card,text='6',integer_digits=2,step=1,allow_negative=True,minimumSize=QSize(100, 30))
         hcontainer_3.addWidget(self.numberedit_3)
 
         hcontainer_4 = ZHBoxLayout(alignment=Qt.AlignmentFlag.AlignHCenter)
