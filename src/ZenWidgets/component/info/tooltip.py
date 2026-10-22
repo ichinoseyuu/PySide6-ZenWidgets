@@ -75,6 +75,7 @@ class ZToolTip(ZWidget):
 
 
         self._target: QWidget | None = None
+        self._hide_on_target_leave = False
         self._mode = self.Mode.TrackMouse
         self._position = ZPosition.Top
         self._offset = QPoint(0, 0)
@@ -86,7 +87,6 @@ class ZToolTip(ZWidget):
         self._tracker_timer.setInterval(int(1000/60))
         self._tracker_timer.timeout.connect(self._update_pos_for_tracker)
 
-        self._show_timer = QTimer(singleShot=True, interval=1000)
         self._hide_timer = QTimer(singleShot=True)
         self._hide_timer.timeout.connect(self.hideTip)
 
@@ -269,11 +269,13 @@ class ZToolTip(ZWidget):
                 position: ZPosition = ZPosition.Top,
                 offset: QPoint = QPoint(0, 0),
                 hide_delay: int = 0,
-                flash: bool = False):
+                flash: bool = False,
+                hide_on_target_leave: bool = False):
         if self._cd_timer.isValid() and self._cd_timer.elapsed() < self._show_cd: return
         if self._hide_timer.isActive(): self._hide_timer.stop()
         self.setText(text, flash)
         self._target = target
+        self._hide_on_target_leave = hide_on_target_leave
         self._mode = mode
         self._offset = offset
         self._position = position
@@ -300,9 +302,16 @@ class ZToolTip(ZWidget):
         if hide_delay > 0: self._hide_timer.start(hide_delay)
         self._cd_timer.start()
 
-    def hideTip(self):
+    def hideTip(self,
+                target: QWidget | None = None,
+                hover_only: bool = False):
+        if target is not None and self._target is not target:
+            return
+        if hover_only and not self._hide_on_target_leave:
+            return
         self.windowOpacityCtrl.fadeOut()
         self._target = None
+        self._hide_on_target_leave = False
         if self._tracker_timer.isActive():self._tracker_timer.stop()
 
     def hideTipDelayed(self, delay: int):

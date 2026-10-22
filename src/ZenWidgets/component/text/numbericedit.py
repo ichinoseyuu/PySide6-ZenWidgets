@@ -101,6 +101,7 @@ class ZNumericEdit(ZLineEdit):
             interval=100,
             delay=400,
             toolTip='减少数值',
+            toolTipDelay=500
         )
         self._increase_button = ZRepeatButton(
             self,
@@ -110,6 +111,7 @@ class ZNumericEdit(ZLineEdit):
             interval=100,
             delay=400,
             toolTip='增加数值',
+            toolTipDelay=500
         )
         self._decrease_button.setFixedSize(QSize(26, 26))
         self._increase_button.setFixedSize(QSize(26, 26))

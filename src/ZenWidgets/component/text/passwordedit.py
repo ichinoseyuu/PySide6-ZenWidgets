@@ -88,6 +88,7 @@ class ZPasswordEdit(ZLineEdit):
             icon_size=QSize(16, 16),
             style=ZButtonStyle.Flat,
             toolTip='显示密码',
+            toolTipDelay=500
         )
         self._visibility_button.setFixedSize(QSize(26, 26))
         self._visibility_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)

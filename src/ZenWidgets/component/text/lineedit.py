@@ -826,6 +826,7 @@ class ZSearchEdit(ZLineEdit):
             icon_size=QSize(16, 16),
             style=ZButtonStyle.Flat,
             toolTip='搜索',
+            toolTipDelay=500
         )
         self._search_button.setFixedSize(QSize(26, 26))
         self._search_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)

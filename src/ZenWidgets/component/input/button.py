@@ -1,5 +1,5 @@
 from PySide6.QtGui import QPainter,QFont,QPen,QIcon,QPixmap,QColor
-from PySide6.QtCore import Qt,QRect,QSize,QRectF,QPoint
+from PySide6.QtCore import Qt,QRect,QSize,QRectF
 from PySide6.QtWidgets import QSizePolicy
 from ZenWidgets.component.base import (
     ZAnimatedColor,
@@ -12,8 +12,6 @@ from ZenWidgets.component.base import (
     )
 from ZenWidgets.core import (
     ZDebug,
-    ZGlobal,
-    ZPosition,
 )
 from ZenWidgets.gui import (
     ZButtonStyle,
@@ -46,6 +44,9 @@ colordata = {
 
 @colordata_provider(datamap=colordata, classtype=ZButtonColorData)
 class ZButton(ZClickWidget[ZButtonStyle]):
+    '''
+    基础按钮控件，支持文本、图标、文本+图标三种显示方式，支持自定义间距，支持自定义圆角半径，支持自定义颜色数据，支持点击闪烁效果，支持鼠标悬停透明度效果。
+    '''
     bodyColorCtrl: ZAnimatedColor
     borderColorCtrl: ZAnimatedColor
     radiusCtrl: ZAnimatedFloat
@@ -68,12 +69,16 @@ class ZButton(ZClickWidget[ZButtonStyle]):
                  style: ZButtonStyle = ZButtonStyle.Default,
                  objectName: str | None = None,
                  toolTip: str | None = None,
+                 toolTipOnHover: bool = True,
+                 toolTipDelay: int = 0,
                  sizePolicy: QSizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
                  ):
         super().__init__(parent=parent,
                          style=style,
                          objectName=objectName,
                          toolTip=toolTip,
+                         toolTipOnHover=toolTipOnHover,
+                         toolTipDelay=toolTipDelay,
                          font=font,
                          sizePolicy=sizePolicy
                          )
@@ -98,18 +103,6 @@ class ZButton(ZClickWidget[ZButtonStyle]):
         self.borderColorCtrl.setColorTo(data.Border)
         self.iconColorCtrl.setColorTo(data.Icon)
         self.textColorCtrl.setColorTo(data.Text)
-
-    def _show_tooltip_(self):
-        if self.toolTip() != '':
-            ZGlobal.tooltip.showTip(
-                text=self.toolTip(),
-                target=self,
-                position=ZPosition.TopRight,
-                offset=QPoint(6, 6)
-                )
-
-    def _hide_tooltip_(self):
-        if self.toolTip() != '': ZGlobal.tooltip.hideTip()
 
     def _mouse_enter_(self): self.opacityLayerCtrl.setAlphaFTo(0.11 if self.isFlat() else 0.06)
 
@@ -160,14 +153,6 @@ class ZButton(ZClickWidget[ZButtonStyle]):
             return size
 
     # region paintEvent
-    def enterEvent(self, event):
-        super().enterEvent(event)
-        self._show_tooltip_()
-
-    def leaveEvent(self, event):
-        super().leaveEvent(event)
-        self._hide_tooltip_()
-
     def paintEvent(self, event) -> None:
         if self.opacityCtrl.opacity == 0: return
         painter = QPainter(self)

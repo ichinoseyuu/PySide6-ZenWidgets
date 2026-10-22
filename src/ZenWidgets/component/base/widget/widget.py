@@ -310,8 +310,12 @@ class ZHoverWidget(ZWidget[StyleT]):
                  style: Optional[StyleT] = None,
                  objectName: str | None = None,
                  toolTip: str | None = None,
+                 toolTipOnHover: bool = False,
+                 toolTipDelay: int = 0,
                  **kwargs
                  ):
+        if toolTipDelay < 0:
+            raise ValueError('toolTipDelay must be non-negative')
         super().__init__(parent,
                          *args,
                          style=style,
@@ -319,6 +323,58 @@ class ZHoverWidget(ZWidget[StyleT]):
                          toolTip=toolTip,
                          **kwargs
                          )
+        self._tool_tip_on_hover = bool(toolTipOnHover)
+        self._tool_tip_delay = toolTipDelay
+        self.setMouseTracking(self._tool_tip_on_hover)
+        self._tool_tip_timer = QTimer(self)
+        self._tool_tip_timer.setSingleShot(True)
+        self._tool_tip_timer.timeout.connect(self._show_tooltip_)
+
+    def toolTipDelay(self) -> int: return self._tool_tip_delay
+
+    def setToolTipDelay(self, delay: int) -> None:
+        if delay < 0:
+            raise ValueError('toolTipDelay must be non-negative')
+        self._tool_tip_delay = delay
+        if self._tool_tip_timer.isActive():
+            self._tool_tip_timer.start(delay)
+
+    def toolTipOnHover(self) -> bool: return self._tool_tip_on_hover
+
+    def setToolTipOnHover(self, enabled: bool) -> None:
+        self._tool_tip_on_hover = bool(enabled)
+        self.setMouseTracking(self._tool_tip_on_hover)
+        if not self._tool_tip_on_hover:
+            self._cancel_tooltip_()
+        elif self.isHover():
+            self._schedule_tooltip_()
+
+    def _schedule_tooltip_(self) -> None:
+        if not self._tool_tip_on_hover or not self.toolTip():
+            return
+        if self._tool_tip_delay == 0:
+            self._show_tooltip_()
+        else:
+            self._tool_tip_timer.start(self._tool_tip_delay)
+
+    def _cancel_tooltip_(self) -> None:
+        self._tool_tip_timer.stop()
+        from ZenWidgets.core import ZGlobal
+        tooltip = ZGlobal.tooltip
+        if tooltip is not None and tooltip.target() is self:
+            tooltip.hideTip(target=self, hover_only=True)
+
+    def _show_tooltip_(self) -> None:
+        if not self._tool_tip_on_hover or not self.toolTip():
+            return
+        from ZenWidgets.core import ZGlobal, ZPosition
+        ZGlobal.tooltip.showTip(
+            text=self.toolTip(),
+            target=self,
+            position=ZPosition.TopRight,
+            offset=QPoint(6, 6),
+            hide_on_target_leave=True,
+        )
 
     def _mouse_enter_(self) -> None: ...
 
@@ -329,14 +385,26 @@ class ZHoverWidget(ZWidget[StyleT]):
         super().enterEvent(event)
         self._state = ZState.Hover
         self._mouse_enter_()
+        self._schedule_tooltip_()
         self.entered.emit()
 
     @override
     def leaveEvent(self, event: QEvent):
+        self._cancel_tooltip_()
         super().leaveEvent(event)
         self._state = ZState.Idle
         self._mouse_leave_()
         self.leaved.emit()
+
+    @override
+    def mouseMoveEvent(self, event: QMouseEvent):
+        super().mouseMoveEvent(event)
+        if not self._tool_tip_on_hover or not self._tool_tip_timer.isActive():
+            return
+        if self.rect().contains(event.position().toPoint()):
+            self._tool_tip_timer.start(self._tool_tip_delay)
+        else:
+            self._cancel_tooltip_()
 
 # region ZClickWidget
 class ZClickWidget(ZHoverWidget[StyleT]):
@@ -349,6 +417,8 @@ class ZClickWidget(ZHoverWidget[StyleT]):
                  style: Optional[StyleT] = None,
                  objectName: str | None = None,
                  toolTip: str | None = None,
+                 toolTipOnHover: bool = False,
+                 toolTipDelay: int = 0,
                  **kwargs
                  ):
         super().__init__(parent,
@@ -356,6 +426,8 @@ class ZClickWidget(ZHoverWidget[StyleT]):
                          style=style,
                          objectName=objectName,
                          toolTip=toolTip,
+                         toolTipOnHover=toolTipOnHover,
+                         toolTipDelay=toolTipDelay,
                          **kwargs
                          )
 
@@ -422,6 +494,8 @@ class ZToggleWidget(ZClickWidget[StyleT]):
                  style: Optional[StyleT] = None,
                  objectName: str | None = None,
                  toolTip: str | None = None,
+                 toolTipOnHover: bool = False,
+                 toolTipDelay: int = 0,
                  **kwargs
                  ):
         super().__init__(parent,
@@ -429,6 +503,8 @@ class ZToggleWidget(ZClickWidget[StyleT]):
                          style=style,
                          objectName=objectName,
                          toolTip=toolTip,
+                         toolTipOnHover=toolTipOnHover,
+                         toolTipDelay=toolTipDelay,
                          **kwargs
                          )
         self._checkable: bool = checkable
@@ -483,6 +559,8 @@ class ZRepeatClickWidget(ZClickWidget[StyleT]):
                  style: Optional[StyleT] = None,
                  objectName: str | None = None,
                  toolTip: str | None = None,
+                 toolTipOnHover: bool = False,
+                 toolTipDelay: int = 0,
                  **kwargs
                  ):
         super().__init__(parent,
@@ -490,6 +568,8 @@ class ZRepeatClickWidget(ZClickWidget[StyleT]):
                          style=style,
                          objectName=objectName,
                          toolTip=toolTip,
+                         toolTipOnHover=toolTipOnHover,
+                         toolTipDelay=toolTipDelay,
                          **kwargs
                          )
         self._repeatable = repeatable
@@ -563,6 +643,8 @@ class ZLongPressWidget(ZClickWidget[StyleT]):
                  style: Optional[StyleT] = None,
                  objectName: str | None = None,
                  toolTip: str | None = None,
+                 toolTipOnHover: bool = False,
+                 toolTipDelay: int = 0,
                  **kwargs
                  ):
         super().__init__(parent,
@@ -570,6 +652,8 @@ class ZLongPressWidget(ZClickWidget[StyleT]):
                          style=style,
                          objectName=objectName,
                          toolTip=toolTip,
+                         toolTipOnHover=toolTipOnHover,
+                         toolTipDelay=toolTipDelay,
                          **kwargs
                          )
         self._pressed_timer = QTimer(self)
@@ -619,12 +703,16 @@ class ZProgressWidget(ZClickWidget[StyleT]):
                  reset_on_finish: bool = True,
                  objectName: str | None = None,
                  toolTip: str | None = None,
+                 toolTipOnHover: bool = False,
+                 toolTipDelay: int = 0,
                  **kwargs
                  ):
         super().__init__(parent,
                          *args,
                          objectName=objectName,
                          toolTip=toolTip,
+                         toolTipOnHover=toolTipOnHover,
+                         toolTipDelay=toolTipDelay,
                          **kwargs
                          )
         self._reset_on_finish = reset_on_finish

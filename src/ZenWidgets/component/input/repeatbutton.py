@@ -1,5 +1,5 @@
 from PySide6.QtGui import QPainter, QFont, QPen, QIcon, QPixmap, QColor
-from PySide6.QtCore import Qt, QRect, QSize, QRectF, QPoint
+from PySide6.QtCore import Qt, QRect, QSize, QRectF
 from PySide6.QtWidgets import QSizePolicy
 from ZenWidgets.component.base import (
     ZAnimatedColor,
@@ -12,8 +12,6 @@ from ZenWidgets.component.base import (
 )
 from ZenWidgets.core import (
     ZDebug,
-    ZGlobal,
-    ZPosition
 )
 from ZenWidgets.gui import (
     ZButtonStyle,
@@ -72,6 +70,8 @@ class ZRepeatButton(ZRepeatClickWidget[ZButtonStyle]):
                  style: ZButtonStyle = ZButtonStyle.Default,
                  objectName: str | None = None,
                  toolTip: str | None = None,
+                 toolTipOnHover: bool = True,
+                 toolTipDelay: int = 0,
                  sizePolicy: QSizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
                  ):
         super().__init__(parent=parent,
@@ -81,6 +81,8 @@ class ZRepeatButton(ZRepeatClickWidget[ZButtonStyle]):
                          style=style,
                          objectName=objectName,
                          toolTip=toolTip,
+                         toolTipOnHover=toolTipOnHover,
+                         toolTipDelay=toolTipDelay,
                          font=font,
                          sizePolicy=sizePolicy
                          )
@@ -105,18 +107,6 @@ class ZRepeatButton(ZRepeatClickWidget[ZButtonStyle]):
         self.borderColorCtrl.setColorTo(data.Border)
         self.iconColorCtrl.setColorTo(data.Icon)
         self.textColorCtrl.setColorTo(data.Text)
-
-    def _show_tooltip_(self):
-        if self.toolTip() != '':
-            ZGlobal.tooltip.showTip(
-                text=self.toolTip(),
-                target=self,
-                position=ZPosition.TopRight,
-                offset=QPoint(6, 6)
-                )
-
-    def _hide_tooltip_(self):
-        if self.toolTip() != '': ZGlobal.tooltip.hideTip()
 
     def _mouse_enter_(self): self.opacityLayerCtrl.setAlphaFTo(0.11 if self.isFlat() else 0.06)
 
@@ -167,14 +157,6 @@ class ZRepeatButton(ZRepeatClickWidget[ZButtonStyle]):
             return size
 
     # region event
-    def enterEvent(self, event):
-        super().enterEvent(event)
-        self._show_tooltip_()
-
-    def leaveEvent(self, event):
-        super().leaveEvent(event)
-        self._hide_tooltip_()
-
     def paintEvent(self, event):
         if self.opacityCtrl.opacity == 0: return
         painter = QPainter(self)
