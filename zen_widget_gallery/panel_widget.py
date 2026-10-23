@@ -517,3 +517,36 @@ class PanelWidget(ZPanel):
 
         self.number_edit_2 = ZNumericEdit(card, allow_negative=True, allow_decimal=True)
         container.addWidget(self.number_edit_2)
+
+        # region ZMenuBar&ZMenu
+        card = ZCard(self)
+        scrollview.layout().addWidget(card)
+
+        title = ZHeadLine(card, text= 'ZMenuBar&ZMenu')
+        title.setFont(QFont('Microsoft YaHei', 10, QFont.Weight.Bold))
+        card.layout().addWidget(title)
+
+        container = ZVBoxLayout()
+        card.layout().addLayout(container)
+
+        self.menubar = ZMenubar(card)
+        card.layout().addWidget(self.menubar)
+        # 创建菜单
+        file_menu = ZMenu()
+        file_menu.addAction(ZAction("新建(&A)"))
+        file_menu.addAction(ZAction("保存(&S)"))
+        file_menu.addAction(ZAction("退出(&Q)"))
+
+        edit_menu = ZMenu()
+        edit_menu.addAction(ZAction("剪切(&x)"))
+        edit_menu.addAction(ZAction("复制(&c)"))
+        edit_menu.addAction(ZAction("粘贴(&v)"))
+
+        about_menu = ZMenu()
+        about_menu.addAction(ZAction("关于(&A)"))
+        about_menu.addAction(ZAction("帮助(&H)"))
+
+        # 添加到菜单栏
+        self.menubar.addMenu("文件(&F)", file_menu)
+        self.menubar.addMenu("编辑(&E)", edit_menu)
+        self.menubar.addMenu("关于(&A)", about_menu)
